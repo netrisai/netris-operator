@@ -1,0 +1,21 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: VNet
+metadata:
+  name: netris-operator-test
+spec:
+  name: netris-operator-test
+  owner: 1
+  state: active
+  provisioning: 1
+  tenants: []
+  sites:
+    - 1
+  gateways:
+    - gateway: 109.23.0.6
+      gw_length: "24"
+      version: ipv4
+  members: '[{"port_id":13288,"vlan_id":"44","tenant_id":1,"childPort":0,"parentPort":0,"member_state":"active","lacp":"off","port_name":"swp5(port5)@rlab-leaf1
+    (Admin)","portIsUntagged":false}]'
+  va_mode: false
+  va_native_vlan: 1
+  va_vlans: ""
