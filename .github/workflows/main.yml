@@ -1,4 +1,4 @@
-name: Create issue on commit
+name: Release
 on:
 - push
 jobs:
@@ -13,9 +13,9 @@ jobs:
       run: sudo rm /bin/sh; sudo ln -s bash /bin/sh
 
     - name: Make test
-      run: make test
+      run: CONTROLLER_HOST="example.com" make test
 
-  build:
+  buildAndPush:
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 5
