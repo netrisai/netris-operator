@@ -30,6 +30,10 @@ func init() {
 	if err != nil {
 		log.Fatalf("configloader error: %v", err)
 	} else {
-		log.Printf("connecting to host - %v", ptr.Controller.Host)
+		if len(ptr.Controller.Host) == 0 {
+			log.Fatalln("Please set netris controller credentials")
+		} else {
+			log.Printf("connecting to host - %v", ptr.Controller.Host)
+		}
 	}
 }
