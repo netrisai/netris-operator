@@ -1,0 +1,9 @@
+name: Create issue on commit
+on:
+- push
+jobs:
+  create_commit:
+    runs-on: ubuntu-latest
+    steps:
+    - name: debug
+      run: env
