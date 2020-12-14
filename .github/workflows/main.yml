@@ -12,8 +12,8 @@ jobs:
     - name: Switch the default system shell
       run: |
         ls -al /bin/sh
-        rm /bin/sh
-        ln -s bash /bin/sh
+        sudo rm /bin/sh
+        sudo ln -s bash /bin/sh
         ls -al /bin/sh
 
     - name: make test
