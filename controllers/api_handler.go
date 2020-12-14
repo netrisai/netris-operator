@@ -72,8 +72,6 @@ func init() {
 	cred.LoginUser()
 	if err != nil {
 		log.Printf("LoginUser error %v", err)
-	} else {
-		log.Printf("Logined")
 	}
 	go cred.checkAuthWithInterval()
 }

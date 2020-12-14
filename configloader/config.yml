@@ -1,4 +1,4 @@
 controller:
-  # address: http://example.com                   # overwrite env: CONTROLLER_HOST
+  # host: http://example.com                      # overwrite env: CONTROLLER_HOST
   # login: login                                  # overwrite env: CONTROLLER_LOGIN
   # password: pass                                # overwrite env: CONTROLLER_PASSWORD
