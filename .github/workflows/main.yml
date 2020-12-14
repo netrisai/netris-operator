@@ -2,13 +2,12 @@ name: Create issue on commit
 on:
 - push
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-    - name: debug
-      run: ls -al 
     - name: Checkout
       uses: actions/checkout@v2
+
     - name: debug2
-      run: ls -al 
+      run: echo ${{ secrets.GITHUB_TOKEN }}
