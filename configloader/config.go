@@ -1,7 +1,6 @@
 package configloader
 
 import (
-	"errors"
 	"log"
 	"os"
 	"path"
@@ -12,7 +11,7 @@ type config struct {
 }
 
 type controller struct {
-	Host     string `yaml:"address" envconfig:"CONTROLLER_HOST"`
+	Host     string `yaml:"host" envconfig:"CONTROLLER_HOST"`
 	Login    string `yaml:"login" envconfig:"CONTROLLER_LOGIN"`
 	Password string `yaml:"password" envconfig:"CONTROLLER_PASSWORD"`
 }
@@ -29,12 +28,8 @@ func init() {
 	err = Unmarshal(path.Join(wd, "configloader", "config.yml"), ptr)
 	Root = ptr
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			log.Printf("%s/configloader/config.yml not found. Config not loaded, no panic for tests", wd)
-		} else {
-			panic(err)
-		}
+		log.Fatalf("configloader error: %v", err)
 	} else {
-		log.Printf("%s/configloader/config.yml config loaded", wd)
+		log.Printf("connecting to host - %v", ptr.Controller.Host)
 	}
 }
