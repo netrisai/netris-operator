@@ -2,8 +2,13 @@ name: Create issue on commit
 on:
 - push
 jobs:
-  create_commit:
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
     - name: debug
+      run: ls -al 
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: debug2
       run: ls -al 
