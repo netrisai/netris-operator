@@ -1,10 +1,10 @@
-name: Release
+name: Test, Build and Push
 on:
 - push
 jobs:
-  test:
+  main:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -14,14 +14,6 @@ jobs:
 
     - name: Make test
       run: CONTROLLER_HOST="example.com" make test
-
-  buildAndPush:
-    needs: test
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
 
     - name: Prepare
       id: prep
@@ -61,6 +53,7 @@ jobs:
       with:
         context: .
         file: ./Dockerfile
+        platforms: linux/amd64,linux/arm64
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.prep.outputs.tags }}
         labels: |
