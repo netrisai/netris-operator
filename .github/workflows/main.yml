@@ -61,7 +61,6 @@ jobs:
         context: .
         file: ./Dockerfile
         push: ${{ github.event_name != 'pull_request' }}
-        platforms: linux/amd64,linux/arm64,linux/386
         tags: ${{ steps.prep.outputs.tags }}
         labels: |
           org.opencontainers.image.source=${{ github.event.repository.html_url }}
