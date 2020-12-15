@@ -7,22 +7,22 @@ spec:
   state: active
   sites:
     - name: yerevan
+      gateways:
+      - gateway4: 109.23.0.6/24
+      - gateway4: 109.25.0.6/24
+      - gateway6: 2001:db8:acad::fffe/64
       switchPorts:
-        - name: swp4
-          switchName: rlab-leaf1
-          vlanId: 1050
-        - name: swp5
-          switchName: rlab-leaf1
-          vlanId: 1050
-    - name: san jose
+      - name: swp4@rlab-leaf1
+        vlanId: 1050
+      - name: swp5@rlab-leaf1
+        vlanId: 1050
+    - name: San Jose
+      gateways:
+      - gateway4: 109.23.0.6/24
+      - gateway4: 109.25.0.6/24
+      - gateway6: 2001:db8:acad::fffe/64
       switchPorts:
-        - name: swp10
-          switchName: slab-leaf1
-          vlanId: 1051
-        - name: swp2
-          switchName: slab-leaf1
-          vlanId: 1051
-  gateways:
-    - gateway4: 109.23.0.6/24
-    - gateway4: 109.25.0.6/24
-    - gateway6: 2001:db8:acad::fffe/64
+      - name: swp3@slab-leaf1
+        vlanId: 1050
+      - name: swp7@slab-leaf1
+        vlanId: 1053

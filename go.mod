@@ -1,4 +1,4 @@
-module github.com/netrisx/netris-operator
+module github.com/netrisai/netris-operator
 
 go 1.13
 

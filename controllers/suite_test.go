@@ -30,7 +30,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	k8sv1alpha1 "github.com/netrisx/netris-operator/api/v1alpha1"
+	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

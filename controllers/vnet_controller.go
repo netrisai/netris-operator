@@ -32,7 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8sv1alpha1 "github.com/netrisx/netris-operator/api/v1alpha1"
+	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 )
 
 // VNetReconciler reconciles a VNet object

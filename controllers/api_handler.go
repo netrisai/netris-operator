@@ -3,13 +3,14 @@ package controllers
 import (
 	"bytes"
 	"fmt"
-	"github.com/netrisx/netris-operator/configloader"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"sync"
 	"time"
+
+	"github.com/netrisai/netris-operator/configloader"
 )
 
 // HTTPReply struct
