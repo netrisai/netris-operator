@@ -88,7 +88,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					fmt.Println("id convert error")
 				}
 				reconciledResource.Spec.ID = vid
-				r.Patch(context.Background(), reconciledResource.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err = r.Patch(context.Background(), reconciledResource.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					log.Printf("r.Patch( error: %v", err)
 				}

@@ -70,7 +70,7 @@ func init() {
 	if err != nil {
 		log.Panicf("newHTTPCredentials error %v", err)
 	}
-	cred.LoginUser()
+	err = cred.LoginUser()
 	if err != nil {
 		log.Printf("LoginUser error %v", err)
 	}
@@ -123,7 +123,7 @@ func (cred *HTTPCred) LoginUser() error {
 	}
 
 	client := http.Client{
-		Timeout: time.Duration(time.Duration(cred.Timeout) * time.Second),
+		Timeout: time.Duration(cred.Timeout) * time.Second,
 	}
 
 	resp, err := client.Do(req)
@@ -162,7 +162,7 @@ func (cred *HTTPCred) Get(address string) (reply HTTPReply, err error) {
 	}
 	cred.Unlock()
 	client := http.Client{
-		Timeout: time.Duration(time.Duration(cred.Timeout) * time.Second),
+		Timeout: time.Duration(cred.Timeout) * time.Second,
 	}
 
 	resp, err := client.Do(request)
@@ -173,7 +173,7 @@ func (cred *HTTPCred) Get(address string) (reply HTTPReply, err error) {
 	reply.StatusCode = resp.StatusCode
 	reply.Status = resp.Status
 
-	defer resp.Body.Close()
+	respBodyClose(resp)
 	reply.Data, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return reply, fmt.Errorf("{Get} [%s] %s", address, err)
@@ -198,7 +198,7 @@ func (cred *HTTPCred) CustomBodyRequest(method string, address string, data []by
 	cred.Unlock()
 
 	client := http.Client{
-		Timeout: time.Duration(time.Duration(cred.Timeout) * time.Second),
+		Timeout: time.Duration(cred.Timeout) * time.Second,
 	}
 
 	resp, err := client.Do(request)
@@ -209,13 +209,22 @@ func (cred *HTTPCred) CustomBodyRequest(method string, address string, data []by
 	reply.StatusCode = resp.StatusCode
 	reply.Status = resp.Status
 
-	defer resp.Body.Close()
+	respBodyClose(resp)
 	reply.Data, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return reply, fmt.Errorf("{CustomBodyRequest} [%s] [%s] %s", method, address, err)
 	}
 
 	return reply, nil
+}
+
+func respBodyClose(resp *http.Response) {
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			log.Printf("resp.Body.Close() error: %v", err)
+		}
+	}()
 }
 
 // Post custom request

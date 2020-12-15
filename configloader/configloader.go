@@ -16,7 +16,12 @@ func readFile(path string, configPtr interface{}) error {
 	if openErr != nil {
 		return openErr
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			log.Printf("f.Close() error: %v", err)
+		}
+	}()
 
 	decoder := yaml.NewDecoder(f)
 	decErr := decoder.Decode(configPtr)
