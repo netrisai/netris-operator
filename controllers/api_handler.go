@@ -173,7 +173,7 @@ func (cred *HTTPCred) Get(address string) (reply HTTPReply, err error) {
 	reply.StatusCode = resp.StatusCode
 	reply.Status = resp.Status
 
-	respBodyClose(resp)
+	defer respBodyClose(resp)
 	reply.Data, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return reply, fmt.Errorf("{Get} [%s] %s", address, err)
@@ -209,7 +209,7 @@ func (cred *HTTPCred) CustomBodyRequest(method string, address string, data []by
 	reply.StatusCode = resp.StatusCode
 	reply.Status = resp.Status
 
-	respBodyClose(resp)
+	defer respBodyClose(resp)
 	reply.Data, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return reply, fmt.Errorf("{CustomBodyRequest} [%s] [%s] %s", method, address, err)
@@ -219,12 +219,10 @@ func (cred *HTTPCred) CustomBodyRequest(method string, address string, data []by
 }
 
 func respBodyClose(resp *http.Response) {
-	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			log.Printf("resp.Body.Close() error: %v", err)
-		}
-	}()
+	err := resp.Body.Close()
+	if err != nil {
+		log.Printf("resp.Body.Close() error: %v", err)
+	}
 }
 
 // Post custom request
