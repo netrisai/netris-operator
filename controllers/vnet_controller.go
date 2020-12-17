@@ -52,55 +52,57 @@ var unmarshaledData map[string]interface{}
 func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("vnet", req.NamespacedName)
-
+	fmt.Println("START requeue")
 	reconciledResource := &k8sv1alpha1.VNet{}
 	err := r.Get(context.Background(), req.NamespacedName, reconciledResource)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			fmt.Println("GO TO DELETE RESOURSE")
-
+			return ctrl.Result{}, nil
 		} else {
-			log.Printf("r.Get 1: %v", err)
-		}
-	} else {
-		fmt.Println("GO TO CREATE/UPDATE RESOURSE")
-		reconciledResourceSpecJSON, err := json.Marshal(reconciledResource.Spec)
-		if err != nil {
-			log.Printf("reconciledResourceSpecJSON error: %v", err)
-		}
-		if reconciledResource.Spec.ID == 0 {
-			fmt.Println("GO TO CREATE")
-			fmt.Println("Create with params: ---", string(reconciledResourceSpecJSON))
-			createVNet, err := AddVNet(cred, reconciledResourceSpecJSON)
-			if err != nil {
-				log.Printf("createVNet error: %v", err)
-			}
-			fmt.Println(string(createVNet.Data))
-			if err := json.Unmarshal(createVNet.Data, &unmarshaledData); err != nil {
-				log.Fatalf("vnetResponseUnmarshal error: %v", err)
-			}
-			isSuccess := unmarshaledData["isSuccess"].(bool)
-			if isSuccess {
-				vnetID := unmarshaledData["data"].(map[string]interface{})
-				fmt.Println("vnetID - ", vnetID["circuitID"])
-				vid, err := strconv.Atoi(fmt.Sprint(vnetID["circuitID"]))
-				if err != nil {
-					fmt.Println("id convert error")
-				}
-				reconciledResource.Spec.ID = vid
-				r.Patch(context.Background(), reconciledResource.DeepCopyObject(), client.Merge, &client.PatchOptions{})
-				if err != nil {
-					log.Printf("r.Patch( error: %v", err)
-				}
-			}
-
-		} else {
-			fmt.Println("GO TO UPDATE")
+			log.Printf("r.Get error: %v", err)
+			return ctrl.Result{}, err // requeue
 		}
 	}
-	// return ctrl.Result{}, nil
-	return ctrl.Result{RequeueAfter: time.Second * 60}, nil
+	fmt.Println("GO TO CREATE/UPDATE RESOURSE")
+	reconciledResourceSpecJSON, err := json.Marshal(reconciledResource.Spec)
+	if err != nil {
+		log.Printf("reconciledResourceSpecJSON error: %v", err)
+	}
+	if reconciledResource.Spec.ID == 0 {
+		fmt.Println("GO TO CREATE")
+		fmt.Println("Create with params: ---", string(reconciledResourceSpecJSON))
+		createVNet, err := AddVNet(cred, reconciledResourceSpecJSON)
+		if err != nil {
+			log.Printf("createVNet error: %v", err)
+		}
+		fmt.Println(string(createVNet.Data))
+		if err := json.Unmarshal(createVNet.Data, &unmarshaledData); err != nil {
+			log.Fatalf("vnetResponseUnmarshal error: %v", err)
+		}
+		isSuccess := unmarshaledData["isSuccess"].(bool)
+		if isSuccess {
+			vnetID := unmarshaledData["data"].(map[string]interface{})
+			fmt.Println("vnetID - ", vnetID["circuitID"])
+			vid, err := strconv.Atoi(fmt.Sprint(vnetID["circuitID"]))
+			if err != nil {
+				fmt.Println("id convert error")
+			}
+			reconciledResource.Spec.ID = vid
+			err = r.Patch(context.Background(), reconciledResource.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+			if err != nil {
+				log.Printf("r.Patch( error: %v", err)
+				return ctrl.Result{}, err // requeue
+			}
+			return ctrl.Result{}, nil
+		} else {
+			return ctrl.Result{}, fmt.Errorf("vnet not created") // requeue
+		}
 
+	} else {
+		fmt.Println("GO TO UPDATE")
+		return ctrl.Result{RequeueAfter: time.Second * 60}, nil // requeue
+	}
 }
 
 // SetupWithManager Resources
