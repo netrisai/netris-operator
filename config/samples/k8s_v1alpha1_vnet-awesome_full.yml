@@ -1,0 +1,38 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: VNet
+metadata:
+  name: netris-operator-test
+spec:
+  owner: admin
+  ownerId: 1
+  state: active
+  provisioning: 0
+  tenants: []
+  vaMode: false
+  vaNativeVlan: 1
+  vaVlans: ""
+  sites:
+  - name: yerevan
+    id: 1
+    gateways:
+    - gateway4: 109.23.0.6/24
+    - gateway6: 2001:db8:acad::fffe/64
+    switchPorts:
+    - name: swp4@rlab-leaf1
+      vlanId: 1050
+      portId: 13288
+      tenantId: 1
+      childPort: 0
+      parentPort: 0
+      memberState: active
+      lacp: off
+      portIsUntagged: false
+    - name: swp5@rlab-leaf1
+      vlanId: 1050
+      portId: 13289
+      tenantId: 1
+      childPort: 0
+      parentPort: 0
+      memberState: active
+      lacp: off
+      portIsUntagged: false

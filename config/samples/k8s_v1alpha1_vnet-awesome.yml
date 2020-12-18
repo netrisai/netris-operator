@@ -6,23 +6,21 @@ spec:
   owner: admin
   state: active
   sites:
-    - name: yerevan
-      gateways:
-      - gateway4: 109.23.0.6/24
-      - gateway4: 109.25.0.6/24
-      - gateway6: 2001:db8:acad::fffe/64
-      switchPorts:
-      - name: swp4@rlab-leaf1
-        vlanId: 1050
-      - name: swp5@rlab-leaf1
-        vlanId: 1050
-    - name: San Jose
-      gateways:
-      - gateway4: 109.23.0.6/24
-      - gateway4: 109.25.0.6/24
-      - gateway6: 2001:db8:acad::fffe/64
-      switchPorts:
-      - name: swp3@slab-leaf1
-        vlanId: 1050
-      - name: swp7@slab-leaf1
-        vlanId: 1053
+  - name: yerevan
+    gateways:
+    - gateway4: 109.23.0.6/24
+    - gateway6: 2001:db8:acad::fffe/64
+    switchPorts:
+    - name: swp4@rlab-leaf1
+      vlanId: 1050
+    - name: swp5@rlab-leaf1
+      vlanId: 1050
+  - name: San Jose
+    gateways:
+    - gateway4: 109.23.0.6/24
+    - gateway6: 2001:db8:acad::fffe/64
+    switchPorts:
+    - name: swp3@slab-leaf1
+      vlanId: 1050
+    - name: swp7@slab-leaf1
+      vlanId: 1053
