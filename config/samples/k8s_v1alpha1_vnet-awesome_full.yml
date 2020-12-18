@@ -8,9 +8,6 @@ spec:
   state: active
   provisioning: 0
   tenants: []
-  vaMode: false
-  vaNativeVlan: 1
-  vaVlans: ""
   sites:
   - name: yerevan
     id: 1
