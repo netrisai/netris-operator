@@ -110,5 +110,5 @@ KUSTOMIZE=$(shell which kustomize)
 endif
 
 release: generate fmt vet manifests kustomize
-	echo $$(pwd)
-	$(KUSTOMIZE) build config/crd deploy/crds
+	$(KUSTOMIZE) build config/crd > deploy/netris-operator.crds.yaml
+	$(KUSTOMIZE) build config/default > deploy/netris-operator.yaml
