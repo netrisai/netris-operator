@@ -1,9 +1,11 @@
 # Capture image tag from git branch name
-GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null || true)
 ifeq (,$(GIT_BRANCH))
 TAG = latest
 else ifeq (master, $(GIT_BRANCH))
 TAG = latest
+else ifeq (HEAD, $(GIT_BRANCH))
+TAG = $(shell git describe --abbrev=0 --tags $(shell git rev-list --abbrev-commit --tags --max-count=1) 2> /dev/null || true)
 else
 TAG = $(GIT_BRANCH)
 endif

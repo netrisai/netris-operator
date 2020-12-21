@@ -5,6 +5,5 @@ kind: Kustomization
 images:
 - name: controller
   newName: netrisai/netris-operator
-  newTag: dev
 patchesStrategicMerge:
 - custom-env.yaml
