@@ -39,5 +39,5 @@ Ref | Attribute                              | Default     | Description
 [7] | sites[n].switchPorts                   | []          | List of switchPorts.
 [8] | sites[n].switchPorts[n].name           | ""          | SwitchPorts name.
 [9] | sites[n].switchPorts[n].vlanId         | nil         | VLAN tag for current port.
-[10]| sites[n].switchPorts[n].portIsUntagged | false       | Untag for sending frames towards this port without VLAN tag. Ignored if vlanId is set. Allowed values: `true` or `false`. 
+[10]| sites[n].switchPorts[n].portIsUntagged | false       | Untag for sending frames towards this port without VLAN tag. Ignored if `vlanId` is set. Allowed values: `true` or `false`. 
 [11]| sites[n].switchPorts[n].state          | active      | Port state. Allowed values: `active` or `disable`. 
