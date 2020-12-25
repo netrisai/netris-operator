@@ -3,8 +3,7 @@ kind: VNet
 metadata:
   name: myVnet
 spec:
-  owner: admin
-  state: active
+  ownerTenant: admin
   guestTenants: []
   sites:
   - name: yerevan
@@ -16,5 +15,4 @@ spec:
     - name: swp4@rlab-leaf1
       vlanId: 1050
     - name: swp7@rlab-leaf1
-      portIsUntagged: true
       state: disable
