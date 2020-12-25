@@ -28,51 +28,6 @@ import (
 // 	Tenant_name string `json:"tenant_name"`
 // }
 
-type VNetGateways struct {
-	Id         int    `json:"id,omitempty"`
-	Gateway    string `json:"gateway"`
-	Gw_length  string `json:"gw_length"`
-	Version    string `json:"version"`
-	Va_vlan_id int    `json:"va_vlan_id,omitempty"`
-}
-
-// type VNetMembers struct {
-// 	Port_id        int    `json:"port_id"`
-// 	Vlan_id        string `json:"vlan_id"`
-// 	Tenant_id      int    `json:"tenant_id"`
-// 	ChildPort      int    `json:"childPort"`
-// 	ParentPort     int    `json:"parentPort"`
-// 	Member_state   string `json:"member_state"`
-// 	Lacp           string `json:"lacp"`
-// 	Port_name      string `json:"port_name"`
-// 	PortIsUntagged bool   `json:"portIsUntagged"`
-// }
-
-// VNetSpec defines the desired state of VNet
-type VNetSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	ID   int    `json:"id,omitempty"`
-	Name string `json:"name"`
-	// +kubebuilder:validation:Minimum=1
-	Vxlan_id       int            `json:"vxlan_id,omitempty"`
-	Mac_address    string         `json:"mac_address,omitempty"`
-	MembersCount   int            `json:"membersCount,omitempty"`
-	State          string         `json:"state"`
-	Provisioning   int            `json:"provisioning"`
-	Create_date    string         `json:"create_date,omitempty"`
-	Modified_date  string         `json:"modifiedDate,omitempty"`
-	Owner          int            `json:"owner"`
-	Va_mode        bool           `json:"va_mode"`
-	Va_native_vlan int            `json:"va_native_vlan"`
-	Va_vlans       string         `json:"va_vlans"`
-	Tenants        []int          `json:"tenants"`
-	Sites          []int          `json:"sites"`
-	Gateways       []VNetGateways `json:"gateways"`
-	Members        string         `json:"members"`
-}
-
 // VNetStatus defines the observed state of VNet
 type VNetStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
@@ -86,11 +41,11 @@ type VNetStatus struct {
 
 // VNet is the Schema for the vnets API
 type VNet struct {
+	// APIVersion        string `json:"apiVersion"`
+	// Kind              string `json:"kind"`
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   VNetSpec   `json:"spec"`
-	Status VNetStatus `json:"status,omitempty"`
+	Spec              VNetSpec `json:"spec"`
 }
 
 // +kubebuilder:object:root=true
@@ -100,6 +55,43 @@ type VNetList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []VNet `json:"items"`
+}
+
+// VNetSpec .
+type VNetSpec struct {
+	ID           int        `json:"id,omitempty"`
+	Owner        string     `json:"owner"`
+	OwnerID      int        `json:"ownerId,omitempty"`
+	State        string     `json:"state"`
+	Provisioning int        `json:"provisioning,omitempty"`
+	GuestTenants []int      `json:"guestTenants"`
+	Sites        []VNetSite `json:"sites"`
+}
+
+// VNetSite .
+type VNetSite struct {
+	Name        string           `json:"name"`
+	ID          int              `json:"id,omitempty"`
+	Gateways    []VNetGateway    `json:"gateways"`
+	SwitchPorts []VNetSwitchPort `json:"switchPorts"`
+}
+
+// VNetGateway .
+type VNetGateway struct {
+	Gateway4 string `json:"gateway4,omitempty"`
+	Gateway6 string `json:"gateway6,omitempty"`
+}
+
+// VNetSwitchPort .
+type VNetSwitchPort struct {
+	Name           string `json:"name"`
+	VlanID         int    `json:"vlanId,omitempty"`
+	PortID         int    `json:"portId,omitempty"`
+	TenantID       int    `json:"tenantId,omitempty"`
+	ChildPort      int    `json:"childPort,omitempty"`
+	ParentPort     int    `json:"parentPort,omitempty"`
+	MemberState    string `json:"memberState,omitempty"`
+	PortIsUntagged bool   `json:"portIsUntagged,omitempty"`
 }
 
 func init() {

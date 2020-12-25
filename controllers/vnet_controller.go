@@ -20,8 +20,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
-	"time"
+	"net"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
@@ -31,6 +30,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
+	api "conductor-api-go"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 )
@@ -52,73 +55,175 @@ var unmarshaledData map[string]interface{}
 func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("vnet", req.NamespacedName)
-	fmt.Println("START requeue")
 	reconciledResource := &k8sv1alpha1.VNet{}
 	err := r.Get(context.Background(), req.NamespacedName, reconciledResource)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			fmt.Println("GO TO DELETE RESOURSE")
 			return ctrl.Result{}, nil
-		} else {
-			log.Printf("r.Get error: %v", err)
-			return ctrl.Result{}, err // requeue
 		}
-	}
-	fmt.Println("GO TO CREATE/UPDATE RESOURSE")
-	reconciledResourceSpecJSON, err := json.Marshal(reconciledResource.Spec)
-	if err != nil {
-		log.Printf("reconciledResourceSpecJSON error: %v", err)
+		log.Printf("r.Get error: %v\n", err)
+		return ctrl.Result{}, err
 	}
 	if reconciledResource.Spec.ID == 0 {
 		fmt.Println("GO TO CREATE")
-		fmt.Println("Create with params: ---", string(reconciledResourceSpecJSON))
-		createVNet, err := AddVNet(cred, reconciledResourceSpecJSON)
+		reconciledResourceSpecJSON, err := json.Marshal(reconciledResource.Spec)
 		if err != nil {
-			log.Printf("createVNet error: %v", err)
-		}
-		fmt.Println(string(createVNet.Data))
-		if err := json.Unmarshal(createVNet.Data, &unmarshaledData); err != nil {
-			log.Fatalf("vnetResponseUnmarshal error: %v", err)
-		}
-		isSuccess := unmarshaledData["isSuccess"].(bool)
-		if isSuccess {
-			vnetID := unmarshaledData["data"].(map[string]interface{})
-			fmt.Println("vnetID - ", vnetID["circuitID"])
-			vid, err := strconv.Atoi(fmt.Sprint(vnetID["circuitID"]))
-			if err != nil {
-				fmt.Println("id convert error")
-			}
-			reconciledResource.Spec.ID = vid
-			err = r.Patch(context.Background(), reconciledResource.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
-			if err != nil {
-				log.Printf("r.Patch( error: %v", err)
-				return ctrl.Result{}, err // requeue
-			}
+			log.Println(err)
 			return ctrl.Result{}, nil
-		} else {
-			return ctrl.Result{}, fmt.Errorf("vnet not created") // requeue
 		}
-
+		fmt.Println("Reconcile", string(reconciledResourceSpecJSON))
+		r.createVNet(reconciledResource)
 	} else {
-		fmt.Println("GO TO UPDATE")
-		return ctrl.Result{RequeueAfter: time.Second * 60}, nil // requeue
+		if reconciledResource.DeletionTimestamp != nil {
+			fmt.Println("GO TO DELETE")
+			r.deleteVNet(reconciledResource)
+		} else {
+			fmt.Println("GO TO UPDATE")
+		}
 	}
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager Resources
 func (r *VNetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.VNet{}).
+		WithEventFilter(ignoreDeletionPredicate()).
 		Complete(r)
 }
 
-// AddVNet new
-func AddVNet(cred *HTTPCred, vnet []byte) (reply HTTPReply, err error) {
-	address := cred.URL.String() + conductorAddresses.VNet
-	reply, err = cred.Post(address, vnet)
+func makeGateway(gateway k8sv1alpha1.VNetGateway) api.APIVNetGateway {
+	addr := ""
+	version := ""
+	if len(gateway.Gateway4) > 0 {
+		version = "ipv4"
+		addr = gateway.Gateway4
+
+	} else if len(gateway.Gateway6) > 0 {
+		version = "ipv6"
+		addr = gateway.Gateway6
+	}
+	ip, ipNet, err := net.ParseCIDR(addr)
 	if err != nil {
-		return reply, err
+		fmt.Println(err)
+		return api.APIVNetGateway{}
+	}
+	gwLength, _ := ipNet.Mask.Size()
+	apiGateway := api.APIVNetGateway{
+		Gateway:  ip.String(),
+		GwLength: gwLength,
+		Version:  version,
+	}
+	return apiGateway
+}
+
+func ignoreDeletionPredicate() predicate.Predicate {
+	return predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			fmt.Println("UPDATE EVENT")
+			// Ignore updates to CR status in which case metadata.Generation does not change
+			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			fmt.Println("DELETE EVENT")
+			// Evaluates to false if the object has been confirmed deleted.
+			return true
+		},
+	}
+}
+
+func (r *VNetReconciler) deleteVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.Result, error) {
+	reply, err := cred.DeleteVNet(reconciledResource.Spec.ID, []int{1})
+
+	if err != nil {
+		fmt.Println(err)
+		return ctrl.Result{}, err
+	}
+	resp, err := api.ParseAPIResponse(reply.Data)
+	if !resp.IsSuccess {
+		fmt.Println(resp.Message)
+		return ctrl.Result{}, fmt.Errorf(resp.Message)
 	}
 
-	return reply, nil
+	reconciledResource.ObjectMeta.SetFinalizers(nil)
+	reconciledResource.SetFinalizers(nil)
+
+	err = r.Update(context.Background(), reconciledResource.DeepCopyObject(), &client.UpdateOptions{})
+	if err != nil {
+		fmt.Println(err)
+		return ctrl.Result{}, err
+	}
+	return ctrl.Result{}, nil
+}
+
+func (r *VNetReconciler) createVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.Result, error) {
+	ports := []k8sv1alpha1.VNetSwitchPort{}
+	siteNames := []string{}
+	apiGateways := []api.APIVNetGateway{}
+
+	for _, site := range reconciledResource.Spec.Sites {
+		siteNames = append(siteNames, site.Name)
+		for _, port := range site.SwitchPorts {
+			ports = append(ports, port)
+		}
+		for _, gateway := range site.Gateways {
+			apiGateways = append(apiGateways, makeGateway(gateway))
+		}
+	}
+
+	// fmt.Println(ports)
+
+	prts := getPorts(ports)
+	// js, _ := json.Marshal(prts)
+	// fmt.Printf("Ports: %s\n", js)
+
+	sites := getSites(siteNames)
+	// js, _ = json.Marshal(sites)
+	// fmt.Printf("Sites: %s\n", js)
+
+	siteIDs := []int{}
+	for _, id := range sites {
+		siteIDs = append(siteIDs, id)
+	}
+
+	tenantID := getTenantID(reconciledResource.Spec.Owner)
+	// fmt.Printf("TenantID: %d\n", tenantID)
+
+	vnetAdd := &api.APIVNetAdd{
+		Name:     reconciledResource.Name,
+		Sites:    siteIDs,
+		Owner:    tenantID,
+		Tenants:  []int{}, // AAAAAAA
+		Gateways: apiGateways,
+		Members:  prts.String(),
+
+		VaMode:       false,
+		VaNativeVLAN: 1,
+		VaVLANs:      "",
+	}
+
+	reply, err := cred.AddVNet(vnetAdd)
+	if err != nil {
+		fmt.Println(err)
+		return ctrl.Result{}, err
+	}
+	resp, err := api.ParseAPIResponse(reply.Data)
+	if !resp.IsSuccess {
+		fmt.Println(resp.Message)
+		return ctrl.Result{}, fmt.Errorf(resp.Message)
+	}
+
+	idStruct := api.APIVNetAddReply{}
+
+	api.CustomDecode(resp.Data, &idStruct)
+
+	reconciledResource.Spec.ID = idStruct.CircuitID
+	reconciledResource.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+
+	err = r.Update(context.Background(), reconciledResource.DeepCopyObject(), &client.UpdateOptions{}) // requeue
+	if err != nil {
+		fmt.Println(err)
+		return ctrl.Result{}, err
+	}
+	return ctrl.Result{}, nil
 }
