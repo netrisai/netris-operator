@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	api "github.com/netrisai/netris-api-go"
+	api "github.com/netrisai/netrisapi"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/configloader"
