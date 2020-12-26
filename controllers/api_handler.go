@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	api "conductor-api-go"
+	api "github.com/netrisai/conductor-api-go"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/configloader"
