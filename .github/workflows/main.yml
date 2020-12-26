@@ -13,7 +13,7 @@ jobs:
       run: sudo rm /bin/sh; sudo ln -s bash /bin/sh
 
     - name: Make test
-      run: GOPRIVATE=github.com/netrisai/* CONTROLLER_HOST="example.com" make test
+      run: GOPRIVATE="github.com/netrisai/*" CONTROLLER_HOST="example.com" make test
 
     - name: Prepare
       id: prep
