@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	api "github.com/netrisai/conductor-api-go"
+	api "github.com/netrisai/netris-api-go"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 )
