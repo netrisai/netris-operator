@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
@@ -72,16 +73,15 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, nil
 		}
 		fmt.Println("Reconcile", string(reconciledResourceSpecJSON))
-		r.createVNet(reconciledResource)
-	} else {
-		if reconciledResource.DeletionTimestamp != nil {
-			fmt.Println("GO TO DELETE")
-			r.deleteVNet(reconciledResource)
-		} else {
-			fmt.Println("GO TO UPDATE")
-		}
+		return r.createVNet(reconciledResource)
 	}
-	return ctrl.Result{}, nil
+	if reconciledResource.DeletionTimestamp != nil {
+		fmt.Println("GO TO DELETE")
+		return r.deleteVNet(reconciledResource)
+	}
+	fmt.Println("GO TO UPDATE")
+	fmt.Println("Nothing changed")
+	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 }
 
 // SetupWithManager Resources
@@ -225,5 +225,5 @@ func (r *VNetReconciler) createVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.
 		fmt.Println(err)
 		return ctrl.Result{}, err
 	}
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 }
