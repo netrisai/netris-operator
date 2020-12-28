@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -31,11 +30,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	api "github.com/netrisai/netrisapi"
 
+	"github.com/netrisai/netris-operator/api/v1alpha1"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 )
 
@@ -92,46 +90,6 @@ func (r *VNetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func makeGateway(gateway k8sv1alpha1.VNetGateway) api.APIVNetGateway {
-	addr := ""
-	version := ""
-	if len(gateway.Gateway4) > 0 {
-		version = "ipv4"
-		addr = gateway.Gateway4
-
-	} else if len(gateway.Gateway6) > 0 {
-		version = "ipv6"
-		addr = gateway.Gateway6
-	}
-	ip, ipNet, err := net.ParseCIDR(addr)
-	if err != nil {
-		fmt.Println(err)
-		return api.APIVNetGateway{}
-	}
-	gwLength, _ := ipNet.Mask.Size()
-	apiGateway := api.APIVNetGateway{
-		Gateway:  ip.String(),
-		GwLength: gwLength,
-		Version:  version,
-	}
-	return apiGateway
-}
-
-func ignoreDeletionPredicate() predicate.Predicate {
-	return predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			fmt.Println("UPDATE EVENT")
-			// Ignore updates to CR status in which case metadata.Generation does not change
-			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
-		},
-		DeleteFunc: func(e event.DeleteEvent) bool {
-			fmt.Println("DELETE EVENT")
-			// Evaluates to false if the object has been confirmed deleted.
-			return true
-		},
-	}
-}
-
 func (r *VNetReconciler) deleteVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.Result, error) {
 	reply, err := cred.DeleteVNet(reconciledResource.Spec.ID, []int{1})
 
@@ -156,7 +114,13 @@ func (r *VNetReconciler) deleteVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.
 	return ctrl.Result{}, nil
 }
 
-func (r *VNetReconciler) createVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.Result, error) {
+// NetrisToK8SVnet converts the Netris API structure to k8s VNet resource.
+func NetrisToK8SVnet(*api.APIVNetAdd) *v1alpha1.VNet {
+	return &v1alpha1.VNet{}
+}
+
+// K8sToNetrisVnetAdd converts the k8s VNet resource to Netris API type and used for add the VNet for Netris API.
+func (r *VNetReconciler) K8sToNetrisVnetAdd(reconciledResource *k8sv1alpha1.VNet) *api.APIVNetAdd {
 	ports := []k8sv1alpha1.VNetSwitchPort{}
 	siteNames := []string{}
 	apiGateways := []api.APIVNetGateway{}
@@ -202,6 +166,11 @@ func (r *VNetReconciler) createVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.
 		VaVLANs:      "",
 	}
 
+	return vnetAdd
+}
+
+func (r *VNetReconciler) createVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.Result, error) {
+	vnetAdd := r.K8sToNetrisVnetAdd(reconciledResource)
 	reply, err := cred.AddVNet(vnetAdd)
 	if err != nil {
 		fmt.Println(err)
