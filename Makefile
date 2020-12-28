@@ -115,3 +115,7 @@ release: generate fmt vet manifests kustomize
 	$(KUSTOMIZE) build config/crd > deploy/netris-operator.crds.yaml
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > deploy/netris-operator.yaml
+
+helm: generate fmt vet manifests
+	mkdir -p deploy/charts/netris-operator/crds/
+	cp config/crd/bases/* deploy/charts/netris-operator/crds/

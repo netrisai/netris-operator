@@ -1,0 +1,6 @@
+Netris-Operator has been deployed successfully!
+
+More information on the netris resources and how to configure them
+can be found in our documentation:
+
+https://github.com/netrisai/netris-operator/tree/master/samples
