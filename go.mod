@@ -5,9 +5,10 @@ go 1.13
 require (
 	github.com/go-logr/logr v0.1.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/netrisai/netrisapi v0.0.0-20201226143733-ad798d727e96
+	github.com/netrisai/netrisapi v0.0.0-20201228114417-21acb5475e03
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
+	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v0.18.6

@@ -68,7 +68,7 @@ func makeGateway(gateway k8sv1alpha1.VNetGateway) api.APIVNetGateway {
 }
 
 func getVNet(id int) (vnet api.APIVNet, err error) {
-	vnets, err := cred.GetVNets()
+	vnets, err := Cred.GetVNets()
 	if err != nil {
 		return vnet, err
 	}

@@ -10,32 +10,28 @@ import (
 	"github.com/netrisai/netris-operator/configloader"
 )
 
-var cred *api.HTTPCred
+// Cred .
+var Cred *api.HTTPCred
+
+// NStorage .
+var NStorage = NewStorage()
 
 func init() {
 	var err error
-	cred, err = api.NewHTTPCredentials(configloader.Root.Controller.Host, configloader.Root.Controller.Login, configloader.Root.Controller.Password, 10)
+	Cred, err = api.NewHTTPCredentials(configloader.Root.Controller.Host, configloader.Root.Controller.Login, configloader.Root.Controller.Password, 10)
 	if err != nil {
 		log.Panicf("newHTTPCredentials error %v", err)
 	}
-	err = cred.LoginUser()
+	err = Cred.LoginUser()
 	if err != nil {
 		log.Printf("LoginUser error %v", err)
 	}
-	go cred.CheckAuthWithInterval()
-}
-
-type midPortType struct {
-	Name           string
-	ChildPort      int    `json:"childPort"`
-	LACP           string `json:"lacp"`
-	MemberState    string `json:"member_state"`
-	ParentPort     int    `json:"parentPort"`
-	PortIsUntagged bool   `json:"portIsUntagged"`
-	PortID         int    `json:"port_id"`
-	PortName       string `json:"port_name"`
-	TenantID       int    `json:"tenant_id"`
-	VLANID         int    `json:"vlan_id"`
+	go Cred.CheckAuthWithInterval()
+	err = NStorage.Download()
+	if err != nil {
+		log.Printf("Storage.Download() error %v", err)
+	}
+	go NStorage.DownloadWithInterval()
 }
 
 func getPorts(portNames []k8sv1alpha1.VNetSwitchPort) *api.APIVNetMembers {
@@ -50,13 +46,8 @@ func getPorts(portNames []k8sv1alpha1.VNetSwitchPort) *api.APIVNetMembers {
 			PortIsUntagged: port.PortIsUntagged,
 		}
 	}
-	ports, err := cred.GetPorts()
-	if err != nil {
-		fmt.Println(err)
-	}
-	for _, port := range ports {
-		portName := fmt.Sprintf("%s@%s", port.SlavePortName, port.SwitchName)
-		if _, ok := hwPorts[portName]; ok {
+	for portName := range hwPorts {
+		if port, yes := NStorage.PortsStorage.FindByName(portName); yes {
 			hwPorts[portName].PortID = port.ID
 			hwPorts[portName].PortName = port.PortNameFull
 			hwPorts[portName].TenantID = port.TenantID
@@ -64,7 +55,6 @@ func getPorts(portNames []k8sv1alpha1.VNetSwitchPort) *api.APIVNetMembers {
 			hwPorts[portName].LACP = "off"
 			hwPorts[portName].ParentPort = port.ParentPort
 			// hwPorts[portName].Name = port.SlavePortName
-
 		}
 	}
 	members := &api.APIVNetMembers{}
@@ -79,20 +69,16 @@ func getSites(names []string) map[string]int {
 	for _, name := range names {
 		siteList[name] = 0
 	}
-	sites, err := cred.GetSites()
-	if err != nil {
-		fmt.Println(err)
-	}
-	for _, site := range sites {
-		if _, ok := siteList[site.Name]; ok {
-			siteList[site.Name] = site.ID
+	for siteName := range siteList {
+		if site, ok := NStorage.SitesStorage.FindByName(siteName); ok {
+			siteList[siteName] = site.ID
 		}
 	}
 	return siteList
 }
 
 func getTenantID(name string) int {
-	tenants, err := cred.GetTenants()
+	tenants, err := Cred.GetTenants()
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -44,9 +44,6 @@ type VNetReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// unmarshaledData struct
-var unmarshaledData map[string]interface{}
-
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnets/status,verbs=get;update;patch
 
@@ -91,7 +88,7 @@ func (r *VNetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *VNetReconciler) deleteVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.Result, error) {
-	reply, err := cred.DeleteVNet(reconciledResource.Spec.ID, []int{1})
+	reply, err := Cred.DeleteVNet(reconciledResource.Spec.ID, []int{1})
 
 	if err != nil {
 		fmt.Println(err)
@@ -120,7 +117,7 @@ func NetrisToK8SVnet(*api.APIVNetAdd) *v1alpha1.VNet {
 }
 
 // K8sToNetrisVnetAdd converts the k8s VNet resource to Netris API type and used for add the VNet for Netris API.
-func (r *VNetReconciler) K8sToNetrisVnetAdd(reconciledResource *k8sv1alpha1.VNet) *api.APIVNetAdd {
+func (r *VNetReconciler) K8sToNetrisVnetAdd(reconciledResource *k8sv1alpha1.VNet) (*api.APIVNetAdd, error) {
 	ports := []k8sv1alpha1.VNetSwitchPort{}
 	siteNames := []string{}
 	apiGateways := []api.APIVNetGateway{}
@@ -150,7 +147,14 @@ func (r *VNetReconciler) K8sToNetrisVnetAdd(reconciledResource *k8sv1alpha1.VNet
 		siteIDs = append(siteIDs, id)
 	}
 
-	tenantID := getTenantID(reconciledResource.Spec.Owner)
+	tenantID := 0
+
+	tenant, ok := NStorage.TenantsStorage.FindByName(reconciledResource.Spec.Owner)
+	if !ok {
+		return nil, fmt.Errorf("Tenant '%s' not found", reconciledResource.Spec.Owner)
+	}
+	tenantID = tenant.ID
+
 	// fmt.Printf("TenantID: %d\n", tenantID)
 
 	vnetAdd := &api.APIVNetAdd{
@@ -166,12 +170,16 @@ func (r *VNetReconciler) K8sToNetrisVnetAdd(reconciledResource *k8sv1alpha1.VNet
 		VaVLANs:      "",
 	}
 
-	return vnetAdd
+	return vnetAdd, nil
 }
 
 func (r *VNetReconciler) createVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.Result, error) {
-	vnetAdd := r.K8sToNetrisVnetAdd(reconciledResource)
-	reply, err := cred.AddVNet(vnetAdd)
+	vnetAdd, err := r.K8sToNetrisVnetAdd(reconciledResource)
+	if err != nil {
+		fmt.Println(err)
+		return ctrl.Result{}, err
+	}
+	reply, err := Cred.AddVNet(vnetAdd)
 	if err != nil {
 		fmt.Println(err)
 		return ctrl.Result{}, err
