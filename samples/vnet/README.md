@@ -30,7 +30,7 @@ Ref | Attribute                              | Default     | Description
 ----| -------------------------------------- | ----------- | ----------------
 [1] | ownerTenant                            | ""          | Users with permission to owner tenant can manage parameters of the V-Net as well as add/edit/remove ports assigned to any of tenants where user has permission.
 [2] | guestTenants                           | []          | List of tenants allowed to add/edit/remove ports to the V-Net but not allowed to manage other parameters of the circuit.
- -  | state                                  | active      | V-Net state. Allowed values: `active` or `disable`. 
+[]  | state                                  | active      | V-Net state. Allowed values: `active` or `disable`. 
 [3] | sites                                  | []          | List of sites. Ports from these sites will be allowed to participate to the V-Net. Multi-site circuits are possible for sites connected through a backbone port.
 [4] | sites[n].name                          | ""          | Site's name.
 [5] | sites[n].gateways                      | []          | List of gateways. Possible keys in the list: `gateway4` or `gateway6`. Selected address will be serving as anycast default gateway for selected subnet. In case of multi-site V-Net, multi-site subnet should be configured under Subnets section.
