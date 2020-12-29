@@ -1,129 +1,131 @@
 {{- if .Values.rbac.create -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: '{{ include "netris-operator.fullname" . }}-manager-role'
+rules:
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - vnets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - vnets/status
+    verbs:
+      - get
+      - patch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: '{{ include "netris-operator.fullname" . }}-manager-rolebinding'
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ include "netris-operator.fullname" . }}-manager-role'
+subjects:
+  - kind: ServiceAccount
+    name: '{{ include "netris-operator.serviceAccountName" . }}'
+    namespace: '{{ include "netris-operator.namespace" . }}'
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "netris-operator.fullname" . }}-leader-election-role
-  namespace: {{ include "netris-operator.namespace" . }}
+  name: '{{ include "netris-operator.fullname" . }}-leader-election-role'
+  namespace: '{{ include "netris-operator.namespace" . }}'
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - configmaps/status
-  verbs:
-  - get
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: {{ include "netris-operator.fullname" . }}-manager-role
-rules:
-- apiGroups:
-  - k8s.netris.ai
-  resources:
-  - vnets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - k8s.netris.ai
-  resources:
-  - vnets/status
-  verbs:
-  - get
-  - patch
-  - update
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: {{ include "netris-operator.fullname" . }}-metrics-reader
-rules:
-- nonResourceURLs:
-  - /metrics
-  verbs:
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: {{ include "netris-operator.fullname" . }}-proxy-role
-rules:
-- apiGroups:
-  - authentication.k8s.io
-  resources:
-  - tokenreviews
-  verbs:
-  - create
-- apiGroups:
-  - authorization.k8s.io
-  resources:
-  - subjectaccessreviews
-  verbs:
-  - create
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps/status
+    verbs:
+      - get
+      - update
+      - patch
+  - apiGroups:
+      - ''
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "netris-operator.fullname" . }}-leader-election-rolebinding
-  namespace: {{ include "netris-operator.namespace" . }}
+  name: '{{ include "netris-operator.fullname" . }}-leader-election-rolebinding'
+  namespace: '{{ include "netris-operator.namespace" . }}'
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "netris-operator.fullname" . }}-leader-election-role
+  name: '{{ include "netris-operator.fullname" . }}-leader-election-role'
 subjects:
-- kind: ServiceAccount
-  name: {{ include "netris-operator.serviceAccountName" . }}
-  namespace: {{ include "netris-operator.namespace" . }}
+  - kind: ServiceAccount
+    name: '{{ include "netris-operator.serviceAccountName" . }}'
+    namespace: '{{ include "netris-operator.namespace" . }}'
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: '{{ include "netris-operator.fullname" . }}-proxy-role'
+rules:
+  - apiGroups:
+      - authentication.k8s.io
+    resources:
+      - tokenreviews
+    verbs:
+      - create
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - subjectaccessreviews
+    verbs:
+      - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "netris-operator.fullname" . }}-manager-rolebinding
+  name: '{{ include "netris-operator.fullname" . }}-proxy-rolebinding'
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "netris-operator.fullname" . }}-manager-role
+  name: '{{ include "netris-operator.fullname" . }}-proxy-role'
 subjects:
-- kind: ServiceAccount
-  name: {{ include "netris-operator.serviceAccountName" . }}
-  namespace: {{ include "netris-operator.namespace" . }}
+  - kind: ServiceAccount
+    name: '{{ include "netris-operator.serviceAccountName" . }}'
+    namespace: '{{ include "netris-operator.namespace" . }}'
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: ClusterRole
 metadata:
-  name: {{ include "netris-operator.fullname" . }}-proxy-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ include "netris-operator.fullname" . }}-proxy-role
-subjects:
-- kind: ServiceAccount
-  name: {{ include "netris-operator.serviceAccountName" . }}
-  namespace: {{ include "netris-operator.namespace" . }}
+  name: '{{ include "netris-operator.fullname" . }}-metrics-reader'
+rules:
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
 {{- end }}

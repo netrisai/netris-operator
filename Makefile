@@ -116,6 +116,15 @@ release: generate fmt vet manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > deploy/netris-operator.yaml
 
-helm: generate fmt vet manifests
+pip-install-reqs:
+	pip3 install yq pyyaml
+
+helm: generate fmt vet manifests pip-install-reqs
 	mkdir -p deploy/charts/netris-operator/crds/
 	cp config/crd/bases/* deploy/charts/netris-operator/crds/
+	echo "{{- if .Values.rbac.create -}}" > deploy/charts/netris-operator/templates/rbac.yaml
+	for i in $(shell yq -y .resources config/rbac/kustomization.yaml | awk {'print $$2'});\
+	do echo "---" >> deploy/charts/netris-operator/templates/rbac.yaml && \
+	scripts/rbac-helm-template.py config/rbac/$${i} | yq -y . >> deploy/charts/netris-operator/templates/rbac.yaml;\
+	done
+	echo "{{- end }}" >> deploy/charts/netris-operator/templates/rbac.yaml
