@@ -14,6 +14,11 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+controller: {}
+  # host: http://example.com
+  # login: login
+  # password: pass
+
 rbac:
   # Specifies whether RBAC resources should be created
   create: true
@@ -42,7 +47,7 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  port: 8443
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
