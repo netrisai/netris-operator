@@ -34,90 +34,74 @@ spec:
         metadata:
           type: object
         spec:
-          description: VNetSpec defines the desired state of VNet
+          description: VNetSpec .
           properties:
-            create_date:
-              type: string
-            gateways:
+            guestTenants:
               items:
-                properties:
-                  gateway:
-                    type: string
-                  gw_length:
-                    type: string
-                  id:
-                    type: integer
-                  va_vlan_id:
-                    type: integer
-                  version:
-                    type: string
-                required:
-                - gateway
-                - gw_length
-                - version
-                type: object
+                type: integer
               type: array
             id:
               type: integer
-            mac_address:
-              type: string
-            members:
-              type: string
-            membersCount:
+            ownerId:
               type: integer
-            modifiedDate:
+            ownerTenant:
               type: string
-            name:
-              type: string
-            owner:
-              type: integer
             provisioning:
               type: integer
             sites:
               items:
-                type: integer
+                description: VNetSite .
+                properties:
+                  gateways:
+                    items:
+                      description: VNetGateway .
+                      properties:
+                        gateway4:
+                          type: string
+                        gateway6:
+                          type: string
+                      type: object
+                    type: array
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  switchPorts:
+                    items:
+                      description: VNetSwitchPort .
+                      properties:
+                        childPort:
+                          type: integer
+                        memberState:
+                          type: string
+                        name:
+                          type: string
+                        parentPort:
+                          type: integer
+                        portId:
+                          type: integer
+                        portIsUntagged:
+                          type: boolean
+                        tenantId:
+                          type: integer
+                        vlanId:
+                          type: integer
+                      required:
+                      - name
+                      type: object
+                    type: array
+                required:
+                - gateways
+                - name
+                - switchPorts
+                type: object
               type: array
             state:
               type: string
-            tenants:
-              items:
-                type: integer
-              type: array
-            va_mode:
-              type: boolean
-            va_native_vlan:
-              type: integer
-            va_vlans:
-              type: string
-            vxlan_id:
-              minimum: 1
-              type: integer
           required:
-          - gateways
-          - members
-          - name
-          - owner
-          - provisioning
+          - guestTenants
+          - ownerTenant
           - sites
-          - state
-          - tenants
-          - va_mode
-          - va_native_vlan
-          - va_vlans
-          type: object
-        status:
-          description: VNetStatus defines the observed state of VNet
-          properties:
-            status:
-              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                of cluster Important: Run "make" to regenerate code after modifying
-                this file'
-              type: string
-            type:
-              type: string
-          required:
-          - status
-          - type
           type: object
       required:
       - spec
