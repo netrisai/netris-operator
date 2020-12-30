@@ -50,12 +50,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
-          - name: CONTROLLER_HOST
-            value: {{ .Values.controller.host | quote }}
-          - name: CONTROLLER_LOGIN
-            value: {{ .Values.controller.login | quote }}
-          - name: CONTROLLER_PASSWORD
-            value: {{ .Values.controller.password | quote }}
+            {{- include "netris-operator.controller.envs" . | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -71,3 +71,36 @@ Allow the release namespace to be overridden for multi-namespace deployments in 
 {{- .Release.Namespace -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Create netris-opeator controller envs
+*/}}
+{{- define "netris-operator.controller.envs" -}}
+- name: CONTROLLER_HOST
+{{- if .Values.controller.host }}
+  value: {{ .Values.controller.host | quote }}
+{{- else }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.controllerCreds.host.secretName }}
+      key: {{ .Values.controllerCreds.host.key }}
+{{- end }}
+- name: CONTROLLER_LOGIN
+{{- if .Values.controller.login }}
+  value: {{ .Values.controller.login | quote }}
+{{- else }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.controllerCreds.login.secretName }}
+      key: {{ .Values.controllerCreds.login.key }}
+{{- end }}
+- name: CONTROLLER_PASSWORD
+{{- if .Values.controller.password }}
+  value: {{ .Values.controller.password | quote }}
+{{- else }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.controllerCreds.password.secretName }}
+      key: {{ .Values.controllerCreds.password.key }}
+{{- end -}}
+{{- end -}}

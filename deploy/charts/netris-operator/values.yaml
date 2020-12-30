@@ -19,6 +19,17 @@ controller: {}
   # login: login
   # password: pass
 
+controllerCreds:
+  host:
+    secretName: netris-creds
+    key: host
+  login:
+    secretName: netris-creds
+    key: login
+  password:
+    secretName: netris-creds
+    key: password
+
 rbac:
   # Specifies whether RBAC resources should be created
   create: true

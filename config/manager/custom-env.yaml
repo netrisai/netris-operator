@@ -10,8 +10,17 @@ spec:
         - name: manager
           env:
             - name: CONTROLLER_HOST
-              value: "http://rlab.netris.ai"
+              valueFrom:
+                secretKeyRef:
+                  name: netris-creds
+                  key: host
             - name: CONTROLLER_LOGIN
-              value: "gpoghosyan"
+              valueFrom:
+                secretKeyRef:
+                  name: netris-creds
+                  key: login
             - name: CONTROLLER_PASSWORD
-              value: "12345678"
+              valueFrom:
+                secretKeyRef:
+                  name: netris-creds
+                  key: password
