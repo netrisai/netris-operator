@@ -3,18 +3,16 @@ kind: VNet
 metadata:
   name: myvnet
 spec:
-  owner: Admin
-  state: active
+  ownerTenant: admin
   guestTenants: []
   sites:
-    - name: Yerevan
-      gateways:
-        - gateway4: 109.23.0.6/24
-        - gateway4: 109.24.0.6/24
-        - gateway6: 2001:db8:acad::fffe/64
-      switchPorts:
-        - name: swp5@rlab-leaf1
-          vlanId: 1050
-        - name: swp7@rlab-leaf1
-          portIsUntagged: true
-          state: disable
+  - name: yerevan
+    gateways:
+    - gateway4: 109.23.0.6/24
+    - gateway4: 109.24.0.6/24
+    - gateway6: 2001:db8:acad::fffe/64
+    switchPorts:
+    - name: swp4@rlab-leaf1
+      vlanId: 1050
+    - name: swp7@rlab-leaf1
+      state: disable
