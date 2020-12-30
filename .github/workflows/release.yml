@@ -9,6 +9,15 @@ jobs:
     name: Upload Release Asset
     runs-on: ubuntu-latest
     steps:
+      - name: Git configs and known_hosts
+        run: |
+          export known_hosts=$(ssh-keyscan github.com)
+          git config --global --add url."git@github.com:".insteadOf "https://github.com/"
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY_NETRISAPI }}
+          known_hosts: ${known_hosts}
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Generate Manifests
