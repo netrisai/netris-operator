@@ -67,6 +67,8 @@ jobs:
         platforms: linux/amd64,linux/arm64
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.prep.outputs.tags }}
+        secrets: |
+          GIT_AUTH_TOKEN=${{ secrets.SSH_PRIVATE_KEY_NETRISAPI }}
         labels: |
           org.opencontainers.image.source=${{ github.event.repository.html_url }}
           org.opencontainers.image.created=${{ steps.prep.outputs.created }}
