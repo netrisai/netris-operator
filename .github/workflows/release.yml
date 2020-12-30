@@ -9,6 +9,8 @@ jobs:
     name: Upload Release Asset
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Git configs and known_hosts
         run: |
           export known_hosts=$(ssh-keyscan github.com)
@@ -18,8 +20,6 @@ jobs:
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY_NETRISAPI }}
           known_hosts: ${known_hosts}
-      - name: Checkout code
-        uses: actions/checkout@v2
       - name: Generate Manifests
         run: make release
       - name: Create Release
