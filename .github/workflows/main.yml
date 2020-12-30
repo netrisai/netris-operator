@@ -68,7 +68,7 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.prep.outputs.tags }}
         ssh: |
-          ssh_private_key_ci=~/.ssh/id_rsa
+          ssh_private_key_ci=/home/runner/.ssh/id_rsa
         labels: |
           org.opencontainers.image.source=${{ github.event.repository.html_url }}
           org.opencontainers.image.created=${{ steps.prep.outputs.created }}
