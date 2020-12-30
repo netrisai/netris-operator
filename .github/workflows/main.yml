@@ -9,11 +9,22 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Git configs and known_hosts
+      run: |
+        export known_hosts=$(ssh-keyscan github.com)
+        git config --global --add url."git@github.com:".insteadOf "https://github.com/"
+
+    - name: Install SSH key
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: ${{ secrets.SSH_PRIVATE_KEY_NETRISAPI }}
+        known_hosts: ${known_hosts}
+
     - name: Switch the default system shell
       run: sudo rm /bin/sh; sudo ln -s bash /bin/sh
 
     - name: Make test
-      run: GIT_TERMINAL_PROMPT=1 GOPRIVATE="github.com/netrisai/*" CONTROLLER_HOST="example.com" make test
+      run: CONTROLLER_HOST="example.com" make test
 
     - name: Prepare
       id: prep
