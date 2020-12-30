@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -34,6 +35,7 @@ type Storage struct {
 	*PortsStorage
 	*SitesStorage
 	*TenantsStorage
+	*VNetStorage
 }
 
 // NewStorage .
@@ -42,6 +44,7 @@ func NewStorage() *Storage {
 		PortsStorage:   NewPortStorage(),
 		SitesStorage:   NewSitesStorage(),
 		TenantsStorage: NewTenantsStorage(),
+		VNetStorage:    NewVNetStorage(),
 	}
 }
 
@@ -52,6 +55,7 @@ func (s *Storage) Download() error {
 	err := s.PortsStorage.Download()
 	err = s.SitesStorage.Download()
 	err = s.TenantsStorage.Download()
+	err = s.VNetStorage.Download()
 	return err
 }
 
@@ -237,6 +241,22 @@ func (p *TenantsStorage) findByName(name string) (*api.APITenant, bool) {
 	return nil, false
 }
 
+// FindByID .
+func (p *TenantsStorage) FindByID(id int) (*api.APITenant, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByID(id)
+}
+
+func (p *TenantsStorage) findByID(id int) (*api.APITenant, bool) {
+	for _, item := range p.Tenants {
+		if item.ID == id {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
 // Download .
 func (p *TenantsStorage) download() error {
 	items, err := Cred.GetTenants()
@@ -249,6 +269,86 @@ func (p *TenantsStorage) download() error {
 
 // Download .
 func (p *TenantsStorage) Download() error {
+	p.Lock()
+	defer p.Unlock()
+	return p.download()
+}
+
+/********************************************************************************
+	VNet Storage
+*********************************************************************************/
+
+// VNetStorage .
+type VNetStorage struct {
+	sync.Mutex
+	VNets []*api.APIVNet
+}
+
+// NewVNetStorage .
+func NewVNetStorage() *VNetStorage {
+	return &VNetStorage{}
+}
+
+// GetAll .
+func (p *VNetStorage) GetAll() []*api.APIVNet {
+	p.Lock()
+	defer p.Unlock()
+	return p.getAll()
+}
+
+func (p *VNetStorage) getAll() []*api.APIVNet {
+	return p.VNets
+}
+
+func (p *VNetStorage) storeAll(items []*api.APIVNet) {
+	p.VNets = items
+}
+
+// FindByName .
+func (p *VNetStorage) FindByName(name string) (*api.APIVNet, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByName(name)
+}
+
+func (p *VNetStorage) findByName(name string) (*api.APIVNet, bool) {
+	for _, item := range p.VNets {
+		if item.Name == name {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// FindByID .
+func (p *VNetStorage) FindByID(id int) (*api.APIVNet, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByID(id)
+}
+
+func (p *VNetStorage) findByID(id int) (*api.APIVNet, bool) {
+	for _, item := range p.VNets {
+		vnetID, _ := strconv.Atoi(item.ID)
+		if vnetID == id {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// Download .
+func (p *VNetStorage) download() error {
+	items, err := Cred.GetVNets()
+	if err != nil {
+		return err
+	}
+	p.storeAll(items)
+	return nil
+}
+
+// Download .
+func (p *VNetStorage) Download() error {
 	p.Lock()
 	defer p.Unlock()
 	return p.download()

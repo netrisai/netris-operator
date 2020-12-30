@@ -21,8 +21,9 @@ import (
 	"net"
 	"strconv"
 
-	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	api "github.com/netrisai/netrisapi"
+
+	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
@@ -67,7 +68,7 @@ func makeGateway(gateway k8sv1alpha1.VNetGateway) api.APIVNetGateway {
 	return apiGateway
 }
 
-func getVNet(id int) (vnet api.APIVNet, err error) {
+func getVNet(id int) (vnet *api.APIVNet, err error) {
 	vnets, err := Cred.GetVNets()
 	if err != nil {
 		return vnet, err

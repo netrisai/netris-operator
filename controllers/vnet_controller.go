@@ -74,6 +74,15 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		fmt.Println("GO TO DELETE")
 		return r.deleteVNet(reconciledResource)
 	}
+	vnets, err := Cred.GetVNetsByID(reconciledResource.Spec.ID)
+	if err != nil {
+		log.Println(err)
+		return ctrl.Result{}, nil
+	}
+	if len(vnets) > 0 {
+		NetrisToK8SVnet(vnets[0])
+	}
+
 	fmt.Println("GO TO UPDATE")
 	fmt.Println("Nothing changed")
 	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
@@ -112,7 +121,44 @@ func (r *VNetReconciler) deleteVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.
 }
 
 // NetrisToK8SVnet converts the Netris API structure to k8s VNet resource.
-func NetrisToK8SVnet(*api.APIVNetAdd) *v1alpha1.VNet {
+func NetrisToK8SVnet(vnet *api.APIVNetInfo) *v1alpha1.VNet {
+	k8svnet := &v1alpha1.VNet{}
+	k8svnet.Name = vnet.Name
+	k8svnet.Spec.OwnerID = vnet.Owner
+
+	var apiSites []*api.APIVNETSite
+	json.Unmarshal([]byte(vnet.Sites), &apiSites)
+	sites := make(map[int]*v1alpha1.VNetSite)
+	for _, site := range apiSites {
+		for _, member := range vnet.Members {
+			portName := fmt.Sprintf("%s@%s", member.Port, member.SwitchName)
+			switchPort := k8sv1alpha1.VNetSwitchPort{
+				Name:        portName,
+				VlanID:      member.VlanID,
+				PortID:      member.PortID,
+				TenantID:    member.TenantID,
+				ChildPort:   member.ChildPort,
+				ParentPort:  member.ParentPort,
+				MemberState: member.MemberState,
+			}
+			if _, ok := sites[site.SiteID]; ok {
+				if member.SiteID == site.SiteID {
+					sites[site.SiteID].SwitchPorts = append(sites[site.SiteID].SwitchPorts, switchPort)
+				}
+			} else {
+				sites[site.SiteID] = &v1alpha1.VNetSite{
+					Name:        site.SiteName,
+					ID:          site.SiteID,
+					Gateways:    []k8sv1alpha1.VNetGateway{},
+					SwitchPorts: []k8sv1alpha1.VNetSwitchPort{switchPort},
+				}
+			}
+		}
+	}
+
+	// js, _ := json.Marshal(sites)
+	// fmt.Printf("%s\n", js)
+
 	return &v1alpha1.VNet{}
 }
 
