@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:experimental
 # Build the manager binary
 FROM golang:1.13 as builder
 
@@ -15,8 +16,12 @@ COPY api/ api/
 COPY controllers/ controllers/
 COPY configloader/ configloader/
 
+# Config ssh private key
+RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
+RUN git config --global --add url."git@github.com:".insteadOf "https://github.com/"
+
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -a -o manager main.go
+RUN --mount=type=ssh,id=ssh_private_key_ci CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -a -o manager main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
