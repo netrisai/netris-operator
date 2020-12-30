@@ -42,10 +42,10 @@ spec:
               type: array
             id:
               type: integer
-            owner:
-              type: string
             ownerId:
               type: integer
+            ownerTenant:
+              type: string
             provisioning:
               type: integer
             sites:
@@ -100,9 +100,8 @@ spec:
               type: string
           required:
           - guestTenants
-          - owner
+          - ownerTenant
           - sites
-          - state
           type: object
       required:
       - spec

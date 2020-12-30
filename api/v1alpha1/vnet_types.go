@@ -60,9 +60,9 @@ type VNetList struct {
 // VNetSpec .
 type VNetSpec struct {
 	ID           int        `json:"id,omitempty"`
-	Owner        string     `json:"owner"`
+	Owner        string     `json:"ownerTenant"`
 	OwnerID      int        `json:"ownerId,omitempty"`
-	State        string     `json:"state"`
+	State        string     `json:"state,omitempty"`
 	Provisioning int        `json:"provisioning,omitempty"`
 	GuestTenants []int      `json:"guestTenants"`
 	Sites        []VNetSite `json:"sites"`
