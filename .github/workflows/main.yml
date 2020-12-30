@@ -21,7 +21,7 @@ jobs:
         known_hosts: ${known_hosts}
 
     - name: Switch the default system shell
-      run: sudo rm /bin/sh; sudo ln -s bash /bin/sh; ls -al ~/.ssh
+      run: sudo rm /bin/sh; sudo ln -s bash /bin/sh
 
     - name: Make test
       run: CONTROLLER_HOST="example.com" make test
@@ -68,7 +68,7 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.prep.outputs.tags }}
         ssh: |
-          ssh_private_key_ci=${{ secrets.SSH_PRIVATE_KEY_NETRISAPI }}
+          ssh_private_key_ci=~/.ssh/id_rsa
         labels: |
           org.opencontainers.image.source=${{ github.event.repository.html_url }}
           org.opencontainers.image.created=${{ steps.prep.outputs.created }}
