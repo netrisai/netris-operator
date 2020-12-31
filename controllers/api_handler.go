@@ -57,6 +57,9 @@ func getPorts(portNames []k8sv1alpha1.VNetSwitchPort) *api.APIVNetMembers {
 		if port.VlanID > 0 {
 			vlanID = port.VlanID
 		}
+		if port.PortIsUntagged {
+			vlanID = 1
+		}
 		hwPorts[port.Name] = &api.APIVNetMember{
 			VLANID:         vlanID,
 			PortIsUntagged: port.PortIsUntagged,

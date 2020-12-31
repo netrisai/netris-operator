@@ -3,16 +3,17 @@ kind: VNet
 metadata:
   name: myvnet
 spec:
-  ownerTenant: admin
+  ownerTenant: Admin
   guestTenants: []
   sites:
-    - name: yerevan
+    - name: San Francisco
       gateways:
         - gateway4: 109.23.0.6/24
         - gateway4: 109.24.0.6/24
         - gateway6: 2001:db8:acad::fffe/64
       switchPorts:
-        - name: swp4@rlab-leaf1
+        - name: swp5@rlab-leaf1
           vlanId: 1050
         - name: swp7@rlab-leaf1
+          portIsUntagged: true
           state: disable
