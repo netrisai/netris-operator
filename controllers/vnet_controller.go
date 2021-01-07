@@ -248,5 +248,5 @@ func (r *VNetReconciler) createVNet(reconciledResource *k8sv1alpha1.VNet) (ctrl.
 		fmt.Println(err)
 		return ctrl.Result{}, err
 	}
-	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+	return ctrl.Result{}, nil
 }
