@@ -60,6 +60,12 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		log.Printf("r.Get error: %v\n", err)
 		return ctrl.Result{}, err
 	}
+
+	if reconciledResource.DeletionTimestamp != nil {
+		fmt.Println("GO TO DELETE")
+		return r.deleteVNet(reconciledResource)
+	}
+
 	if reconciledResource.Spec.ID == 0 {
 		fmt.Println("GO TO CREATE")
 		reconciledResourceSpecJSON, err := json.Marshal(reconciledResource.Spec)
@@ -69,10 +75,6 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		fmt.Println("Reconcile", string(reconciledResourceSpecJSON))
 		return r.createVNet(reconciledResource)
-	}
-	if reconciledResource.DeletionTimestamp != nil {
-		fmt.Println("GO TO DELETE")
-		return r.deleteVNet(reconciledResource)
 	}
 	vnets, err := Cred.GetVNetsByID(reconciledResource.Spec.ID)
 	if err != nil {
