@@ -18,7 +18,9 @@ kubectl apply -f https://github.com/netrisai/netris-operator/releases/download/v
 2) Create credentials secret for netris-operator:
 
 ```
-kubectl -n netris-operator create secret generic netris-creds --from-literal=host="http://example.com" --from-literal=login="login" --from-literal=password="pass"
+kubectl -n netris-operator create secret generic netris-creds \
+  --from-literal=host="http://example.com" \
+  --from-literal=login="login" --from-literal=password="pass"
 ```
 
 # Installing with Helm
@@ -43,7 +45,9 @@ kubectl create namespace netris-operator
 1) Create credentials secret for netris-operator:
 
 ```
-kubectl -n netris-operator create secret generic netris-creds --from-literal=host="http://example.com" --from-literal=login="login" --from-literal=password="pass"
+kubectl -n netris-operator create secret generic netris-creds \
+  --from-literal=host="http://example.com" \
+  --from-literal=login="login" --from-literal=password="pass"
 ```
 
 2) Install helm chart
