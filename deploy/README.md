@@ -59,6 +59,7 @@ helm upgrade -i netris-operator deploy/charts/netris-operator \
 
 ```
 helm upgrade -i netris-operator deploy/charts/netris-operator \
+--namespace netris-operator \
 --set controller.host="http://example.com" \
 --set controller.login="login" \
 --set controller.password="pass"
