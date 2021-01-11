@@ -128,3 +128,13 @@ helm: generate fmt vet manifests pip-install-reqs
 	scripts/rbac-helm-template.py config/rbac/$${i} | yq -y . >> deploy/charts/netris-operator/templates/rbac.yaml;\
 	done
 	echo "{{- end }}" >> deploy/charts/netris-operator/templates/rbac.yaml
+	@{ \
+	set -e ;\
+	HELM_CHART_GEN_TMP_DIR=$$(mktemp -d) ;\
+	git clone git@github.com:netrisai/charts.git --depth 1 $$HELM_CHART_GEN_TMP_DIR ;\
+	if [[ -z "$${HELM_CHART_REPO_COMMIT_MSG}" ]]; then HELM_CHART_REPO_COMMIT_MSG=Update-$$(date '+%F_%T' -u); fi ;\
+	cp -r deploy/charts $$HELM_CHART_GEN_TMP_DIR ;\
+	cd $$HELM_CHART_GEN_TMP_DIR ;\
+	git add charts && git commit -m $$HELM_CHART_REPO_COMMIT_MSG && git push -u origin main ;\
+	rm -rf $$HELM_CHART_GEN_TMP_DIR ;\
+	}
