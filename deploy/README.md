@@ -40,6 +40,18 @@ Create the namespace for netris-operator:
 kubectl create namespace netris-operator
 ```
 
+Add the Netris Helm repository:
+
+```
+helm repo add netrisai https://netrisai.github.io/charts
+```
+
+Update your local Helm chart repository cache:
+
+```
+helm repo update
+```
+
 ### Option 1: Creds from secret
 
 1) Create credentials secret for netris-operator:
@@ -53,7 +65,7 @@ kubectl -n netris-operator create secret generic netris-creds \
 2) Install helm chart
 
 ```
-helm upgrade -i netris-operator deploy/charts/netris-operator \
+helm install netris-operator netrisai/netris-operator \
 --namespace netris-operator
 ```
 
@@ -62,7 +74,7 @@ helm upgrade -i netris-operator deploy/charts/netris-operator \
  1) Install helm chart with netris controller creds
 
 ```
-helm upgrade -i netris-operator deploy/charts/netris-operator \
+helm install netris-operator netrisai/netris-operator \
 --namespace netris-operator \
 --set controller.host="http://example.com" \
 --set controller.login="login" \
