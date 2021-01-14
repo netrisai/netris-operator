@@ -5,10 +5,11 @@ go 1.14
 require (
 	github.com/go-logr/logr v0.1.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/netrisai/netrisapi v0.0.0-20201229123610-e57db0e1168e
+	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/netrisai/netrisapi v0.0.0-20210114184219-92fb20a45251
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
-	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
+	golang.org/x/sys v0.0.0-20210113181707-4bcb84eeeb78 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v0.18.6
