@@ -76,6 +76,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "VNet")
 		os.Exit(1)
 	}
+	if err = (&controllers.VNetMetaReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("VNetMeta"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VNetMeta")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
