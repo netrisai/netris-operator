@@ -24,3 +24,5 @@ spec:
                 secretKeyRef:
                   name: netris-creds
                   key: password
+            - name: CONTROLLER_INSECURE
+              value: "false"

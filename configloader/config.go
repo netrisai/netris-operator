@@ -14,6 +14,7 @@ type controller struct {
 	Host     string `yaml:"host" envconfig:"CONTROLLER_HOST"`
 	Login    string `yaml:"login" envconfig:"CONTROLLER_LOGIN"`
 	Password string `yaml:"password" envconfig:"CONTROLLER_PASSWORD"`
+	Insecure bool   `yaml:"insecure" envconfig:"CONTROLLER_INSECURE"`
 }
 
 var Root *config

@@ -18,6 +18,7 @@ controller: {}
   # host: http://example.com
   # login: login
   # password: pass
+  # insecure: false
 
 controllerCreds:
   host:

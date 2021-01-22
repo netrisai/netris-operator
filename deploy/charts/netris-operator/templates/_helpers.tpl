@@ -102,5 +102,9 @@ Create netris-opeator controller envs
     secretKeyRef:
       name: {{ .Values.controllerCreds.password.secretName }}
       key: {{ .Values.controllerCreds.password.key }}
+{{- end }}
+{{- if or (eq (lower (toString .Values.controller.insecure )) "true") (eq (lower (toString .Values.controller.insecure )) "false")  }}
+- name: CONTROLLER_INSECURE
+  value: {{ .Values.controller.insecure | quote }}
 {{- end -}}
 {{- end -}}

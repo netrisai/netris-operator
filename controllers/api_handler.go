@@ -38,6 +38,7 @@ func init() {
 	if err != nil {
 		log.Panicf("newHTTPCredentials error %v", err)
 	}
+	Cred.InsecureVerify(configloader.Root.Controller.Insecure)
 	err = Cred.LoginUser()
 	if err != nil {
 		log.Printf("LoginUser error %v", err)
