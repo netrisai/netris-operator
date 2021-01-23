@@ -59,11 +59,8 @@ type VNetList struct {
 
 // VNetSpec .
 type VNetSpec struct {
-	ID           int        `json:"id,omitempty"`
 	Owner        string     `json:"ownerTenant"`
-	OwnerID      int        `json:"ownerId,omitempty"`
 	State        string     `json:"state,omitempty"`
-	Provisioning int        `json:"provisioning,omitempty"`
 	GuestTenants []int      `json:"guestTenants"`
 	Sites        []VNetSite `json:"sites"`
 }
@@ -71,7 +68,6 @@ type VNetSpec struct {
 // VNetSite .
 type VNetSite struct {
 	Name        string           `json:"name"`
-	ID          int              `json:"id,omitempty"`
 	Gateways    []VNetGateway    `json:"gateways"`
 	SwitchPorts []VNetSwitchPort `json:"switchPorts"`
 }
@@ -86,11 +82,6 @@ type VNetGateway struct {
 type VNetSwitchPort struct {
 	Name           string `json:"name"`
 	VlanID         int    `json:"vlanId,omitempty"`
-	PortID         int    `json:"portId,omitempty"`
-	TenantID       int    `json:"tenantId,omitempty"`
-	ChildPort      int    `json:"childPort,omitempty"`
-	ParentPort     int    `json:"parentPort,omitempty"`
-	MemberState    string `json:"memberState,omitempty"`
 	PortIsUntagged bool   `json:"portIsUntagged,omitempty"`
 }
 

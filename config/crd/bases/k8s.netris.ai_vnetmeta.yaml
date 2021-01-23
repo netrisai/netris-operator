@@ -36,10 +36,66 @@ spec:
         spec:
           description: VNetMetaSpec defines the desired state of VNetMeta
           properties:
-            foo:
-              description: Foo is an example field of VNetMeta. Edit VNetMeta_types.go
-                to remove/update
+            gateways:
+              items:
+                description: VNetMetaGateway .
+                properties:
+                  gateway:
+                    type: string
+                  gwLength:
+                    type: integer
+                  id:
+                    type: integer
+                  nos:
+                    type: string
+                  vaVlanId:
+                    type: integer
+                  version:
+                    type: string
+                required:
+                - gateway
+                - gwLength
+                type: object
+              type: array
+            id:
+              type: integer
+            members:
               type: string
+            name:
+              type: string
+            owner:
+              type: integer
+            provisioning:
+              type: integer
+            sites:
+              items:
+                type: integer
+              type: array
+            state:
+              type: string
+            tenants:
+              items:
+                type: integer
+              type: array
+            vaMode:
+              type: boolean
+            vaNativeVlan:
+              type: integer
+            vaVlans:
+              type: string
+          required:
+          - gateways
+          - id
+          - members
+          - name
+          - owner
+          - provisioning
+          - sites
+          - state
+          - tenants
+          - vaMode
+          - vaNativeVlan
+          - vaVlans
           type: object
         status:
           description: VNetMetaStatus defines the observed state of VNetMeta

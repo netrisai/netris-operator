@@ -25,11 +25,28 @@ import (
 
 // VNetMetaSpec defines the desired state of VNetMeta
 type VNetMetaSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Gateways     []VNetMetaGateway `json:"gateways"`
+	ID           int               `json:"id"`
+	Members      string            `json:"members"`
+	Name         string            `json:"name"`
+	Owner        int               `json:"owner"`
+	Provisioning int               `json:"provisioning"`
+	Sites        []int             `json:"sites"`
+	State        string            `json:"state"`
+	Tenants      []int             `json:"tenants"`
+	VaMode       bool              `json:"vaMode"`
+	VaNativeVLAN int               `json:"vaNativeVlan"`
+	VaVLANs      string            `json:"vaVlans"`
+}
 
-	// Foo is an example field of VNetMeta. Edit VNetMeta_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+// VNetMetaGateway .
+type VNetMetaGateway struct {
+	Gateway  string `json:"gateway"`
+	GwLength int    `json:"gwLength"`
+	ID       int    `json:"id,omitempty"`
+	VaVLANID int    `json:"vaVlanId,omitempty"`
+	Nos      string `json:"nos,omitempty"`
+	Version  string `json:"version,omitempty"`
 }
 
 // VNetMetaStatus defines the observed state of VNetMeta

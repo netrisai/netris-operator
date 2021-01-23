@@ -40,14 +40,8 @@ spec:
               items:
                 type: integer
               type: array
-            id:
-              type: integer
-            ownerId:
-              type: integer
             ownerTenant:
               type: string
-            provisioning:
-              type: integer
             sites:
               items:
                 description: VNetSite .
@@ -62,28 +56,16 @@ spec:
                           type: string
                       type: object
                     type: array
-                  id:
-                    type: integer
                   name:
                     type: string
                   switchPorts:
                     items:
                       description: VNetSwitchPort .
                       properties:
-                        childPort:
-                          type: integer
-                        memberState:
-                          type: string
                         name:
                           type: string
-                        parentPort:
-                          type: integer
-                        portId:
-                          type: integer
                         portIsUntagged:
                           type: boolean
-                        tenantId:
-                          type: integer
                         vlanId:
                           type: integer
                       required:
