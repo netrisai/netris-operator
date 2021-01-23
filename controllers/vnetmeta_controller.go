@@ -37,6 +37,7 @@ type VNetMetaReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnetmeta,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnetmeta/status,verbs=get;update;patch
 
+// Reconcile .
 func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("vnetmeta", req.NamespacedName)
@@ -46,6 +47,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager .
 func (r *VNetMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.VNetMeta{}).
