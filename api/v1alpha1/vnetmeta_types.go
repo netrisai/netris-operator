@@ -27,16 +27,37 @@ import (
 type VNetMetaSpec struct {
 	Gateways     []VNetMetaGateway `json:"gateways"`
 	ID           int               `json:"id"`
-	Members      string            `json:"members"`
+	Members      []VNetMetaMember  `json:"members"`
 	Name         string            `json:"name"`
-	Owner        int               `json:"owner"`
+	VnetName     string            `json:"vnetName"`
+	OwnerID      int               `json:"ownerid"`
+	Owner        string            `json:"owner"`
 	Provisioning int               `json:"provisioning"`
-	Sites        []int             `json:"sites"`
+	Sites        []VNetMetaSite    `json:"sites"`
 	State        string            `json:"state"`
 	Tenants      []int             `json:"tenants"`
 	VaMode       bool              `json:"vaMode"`
 	VaNativeVLAN int               `json:"vaNativeVlan"`
 	VaVLANs      string            `json:"vaVlans"`
+}
+
+// VNetMetaSite .
+type VNetMetaSite struct {
+	ID   int    `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+// VNetMetaMember .
+type VNetMetaMember struct {
+	ChildPort      int    `json:"childPort"`
+	LACP           string `json:"lacp"`
+	MemberState    string `json:"member_state"`
+	ParentPort     int    `json:"parentPort"`
+	PortIsUntagged bool   `json:"portIsUntagged"`
+	PortID         int    `json:"port_id"`
+	PortName       string `json:"port_name"`
+	TenantID       int    `json:"tenant_id"`
+	VLANID         int    `json:"vlan_id"`
 }
 
 // VNetMetaGateway .

@@ -60,16 +60,56 @@ spec:
             id:
               type: integer
             members:
-              type: string
+              items:
+                description: VNetMetaMember .
+                properties:
+                  childPort:
+                    type: integer
+                  lacp:
+                    type: string
+                  member_state:
+                    type: string
+                  parentPort:
+                    type: integer
+                  port_id:
+                    type: integer
+                  port_name:
+                    type: string
+                  portIsUntagged:
+                    type: boolean
+                  tenant_id:
+                    type: integer
+                  vlan_id:
+                    type: integer
+                required:
+                - childPort
+                - lacp
+                - member_state
+                - parentPort
+                - portIsUntagged
+                - port_id
+                - port_name
+                - tenant_id
+                - vlan_id
+                type: object
+              type: array
             name:
               type: string
             owner:
+              type: string
+            ownerid:
               type: integer
             provisioning:
               type: integer
             sites:
               items:
-                type: integer
+                description: VNetMetaSite .
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                type: object
               type: array
             state:
               type: string
@@ -83,12 +123,15 @@ spec:
               type: integer
             vaVlans:
               type: string
+            vnetName:
+              type: string
           required:
           - gateways
           - id
           - members
           - name
           - owner
+          - ownerid
           - provisioning
           - sites
           - state
@@ -96,6 +139,7 @@ spec:
           - vaMode
           - vaNativeVlan
           - vaVlans
+          - vnetName
           type: object
         status:
           description: VNetMetaStatus defines the observed state of VNetMeta
