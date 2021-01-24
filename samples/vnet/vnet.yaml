@@ -6,13 +6,12 @@ spec:
   ownerTenant: Admin
   guestTenants: []
   sites:
-    - name: San Francisco
+    - name: Yerevan
       gateways:
         - gateway4: 109.23.0.6/24
-        - gateway4: 109.24.0.6/24
         - gateway6: 2001:db8:acad::fffe/64
       switchPorts:
-        - name: swp5@rlab-leaf1
+        - name: swp5@rlab-spine1
           vlanId: 1050
         - name: swp7@rlab-leaf1
           portIsUntagged: true

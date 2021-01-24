@@ -102,7 +102,7 @@ func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) []k8sv1alpha1.VNetMeta
 	for portName := range hwPorts {
 		if port, yes := NStorage.PortsStorage.FindByName(portName); yes {
 			hwPorts[portName].PortID = port.ID
-			hwPorts[portName].PortName = port.PortNameFull
+			hwPorts[portName].PortName = portName
 			hwPorts[portName].TenantID = port.TenantID
 			hwPorts[portName].MemberState = port.MemberState
 			hwPorts[portName].LACP = "off"

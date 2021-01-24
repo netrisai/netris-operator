@@ -43,7 +43,7 @@ func ignoreDeletionPredicate() predicate.Predicate {
 	}
 }
 
-func makeGatewayMeta(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
+func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
 	addr := ""
 	version := ""
 	if len(gateway.Gateway4) > 0 {

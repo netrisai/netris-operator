@@ -73,17 +73,40 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if metaFound {
+		fmt.Println("META FOUND")
 		if vnet.DeletionTimestamp != nil {
 			fmt.Println("GO TO DELETE")
 			return r.deleteVNet(vnet, vnetMeta)
 		}
-	} else {
-		vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
 
-		err := r.Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{}) // requeue
+		if vnetMeta.Spec.ID == 0 {
+			if _, err := r.createVNet(vnetMeta); err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			vnets, err := Cred.GetVNetsByID(vnetMeta.Spec.ID)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+			if len(vnets) == 0 {
+				return ctrl.Result{}, fmt.Errorf("Vnet '%s' with ID %d not found", vnetMeta.Spec.VnetName, vnetMeta.Spec.ID)
+			}
+			// apiVnet := vnets[0]
+
+		}
+	} else {
+		fmt.Println("META NOT FOUND")
+		if vnet.DeletionTimestamp != nil {
+			fmt.Println("GO TO DELETE")
+			return r.deleteVNet(vnet, nil)
+		}
+
+		vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+		err := r.Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{})
 		if err != nil {
 			return ctrl.Result{}, err
 		}
+
 		vnetMeta, err := r.K8sToVnetMeta(vnet)
 		if err != nil {
 			return ctrl.Result{}, err
@@ -91,6 +114,16 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		if err := r.Create(context.Background(), vnetMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
 			fmt.Println(err)
+		}
+
+		if err := r.Get(context.Background(), vnetMetaNamespaced, vnetMeta); err != nil {
+			if errors.IsNotFound(err) {
+				fmt.Println(vnetMetaNamespaced.String(), "Didn't created")
+				metaFound = false
+			} else {
+				log.Printf("r.Get error: %v\n", err)
+				return ctrl.Result{}, err
+			}
 		}
 
 		if _, err := r.createVNet(vnetMeta); err != nil {
@@ -113,7 +146,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
-	if vnetMeta.Spec.ID > 0 {
+	if vnetMeta != nil && vnetMeta.Spec.ID > 0 {
 		reply, err := Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
 
 		if err != nil {
@@ -130,9 +163,11 @@ func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha
 }
 
 func (r *VNetReconciler) deleteCRs(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
-	_, err := r.deleteVnetMetaCR(vnetMeta)
-	if err != nil {
-		return ctrl.Result{}, err
+	if vnetMeta != nil {
+		_, err := r.deleteVnetMetaCR(vnetMeta)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	return r.deleteVnetCR(vnet)
@@ -223,10 +258,9 @@ func (r *VNetReconciler) K8sToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VNe
 			ports = append(ports, port)
 		}
 		for _, gateway := range site.Gateways {
-			apiGateways = append(apiGateways, makeGatewayMeta(gateway))
+			apiGateways = append(apiGateways, makeGateway(gateway))
 		}
 	}
-
 	prts := getPortsMeta(ports)
 
 	sites := getSites(siteNames)
@@ -281,7 +315,6 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 
 	for _, site := range vnetMeta.Spec.Sites {
 		siteNames = append(siteNames, site.Name)
-
 	}
 	for _, port := range vnetMeta.Spec.Members {
 		ports = append(ports, port)
@@ -291,6 +324,7 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 			Gateway:  gateway.Gateway,
 			GwLength: gateway.GwLength,
 			ID:       gateway.ID,
+			Version:  gateway.Version,
 		})
 	}
 
@@ -324,25 +358,23 @@ func (r *VNetReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result
 	}
 	reply, err := Cred.AddVNet(vnetAdd)
 	if err != nil {
-		fmt.Println(err)
 		return ctrl.Result{}, err
 	}
 	resp, err := api.ParseAPIResponse(reply.Data)
 	if !resp.IsSuccess {
-		fmt.Println(resp.Message)
 		return ctrl.Result{}, fmt.Errorf(resp.Message)
 	}
 
 	idStruct := api.APIVNetAddReply{}
-
 	api.CustomDecode(resp.Data, &idStruct)
+
+	fmt.Printf("VNet Created. ID: %d\n", idStruct.CircuitID)
 
 	vnetMeta.Spec.ID = idStruct.CircuitID
 	vnetMeta.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
 
 	err = r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{}) // requeue
 	if err != nil {
-		fmt.Println(err)
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
