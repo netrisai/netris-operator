@@ -66,19 +66,20 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if errors.IsNotFound(err) {
 			fmt.Println(vnetMetaNamespaced.String(), "Not found")
 			metaFound = false
+			vnetMeta = nil
 		} else {
 			log.Printf("r.Get error: %v\n", err)
 			return ctrl.Result{}, err
 		}
 	}
 
+	if vnet.DeletionTimestamp != nil {
+		fmt.Println("GO TO DELETE")
+		return r.deleteVNet(vnet, vnetMeta)
+	}
+
 	if metaFound {
 		fmt.Println("META FOUND")
-		if vnet.DeletionTimestamp != nil {
-			fmt.Println("GO TO DELETE")
-			return r.deleteVNet(vnet, vnetMeta)
-		}
-
 		if vnetMeta.Spec.ID == 0 {
 			if _, err := r.createVNet(vnetMeta); err != nil {
 				fmt.Println(err)
@@ -96,11 +97,6 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 	} else {
 		fmt.Println("META NOT FOUND")
-		if vnet.DeletionTimestamp != nil {
-			fmt.Println("GO TO DELETE")
-			return r.deleteVNet(vnet, nil)
-		}
-
 		vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
 		err := r.Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{})
 		if err != nil {
