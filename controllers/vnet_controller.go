@@ -79,7 +79,33 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if metaFound {
-		fmt.Println("META FOUND")
+		fmt.Println("K8S: META FOUND")
+		vnetID := vnetMeta.Spec.ID
+
+		newVnetMeta, err := r.VnetToVnetMeta(vnet)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		vnetMeta.Spec = newVnetMeta.DeepCopy().Spec
+		vnetMeta.Spec.ID = vnetID
+
+		err = r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{})
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		time.Sleep(100 * time.Millisecond)
+
+		if err := r.Get(context.Background(), vnetMetaNamespaced, vnetMeta); err != nil {
+			if errors.IsNotFound(err) {
+				fmt.Println(vnetMetaNamespaced.String(), "Didn't updated")
+			} else {
+				log.Printf("r.Get error: %v\n", err)
+				return ctrl.Result{}, err
+			}
+		}
+
 		if vnetMeta.Spec.ID == 0 {
 			if _, err := r.createVNet(vnetMeta); err != nil {
 				fmt.Println(err)
@@ -90,20 +116,29 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				return ctrl.Result{}, err
 			}
 			if len(vnets) == 0 {
-				return ctrl.Result{}, fmt.Errorf("Vnet '%s' with ID %d not found", vnetMeta.Spec.VnetName, vnetMeta.Spec.ID)
+				fmt.Println("API: VNet not found")
+				fmt.Println("API: Going to create VNet")
+				if _, err := r.createVNet(vnetMeta); err != nil {
+					fmt.Println(err)
+				}
+			} else {
+				apiVnet := vnets[0]
+				if ok := compareVNetMetaAPIVnet(vnetMeta, apiVnet); ok {
+					fmt.Println("Nothing Changed")
+				} else {
+					fmt.Println("SOMETHING CHANGED. GO TO UPDATE")
+				}
 			}
-			// apiVnet := vnets[0]
-
 		}
 	} else {
-		fmt.Println("META NOT FOUND")
+		fmt.Println("K8S: META NOT FOUND")
 		vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
 		err := r.Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{})
 		if err != nil {
 			return ctrl.Result{}, err
 		}
 
-		vnetMeta, err := r.K8sToVnetMeta(vnet)
+		vnetMeta, err := r.VnetToVnetMeta(vnet)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -111,11 +146,10 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if err := r.Create(context.Background(), vnetMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
 			fmt.Println(err)
 		}
-
+		time.Sleep(100 * time.Millisecond)
 		if err := r.Get(context.Background(), vnetMetaNamespaced, vnetMeta); err != nil {
 			if errors.IsNotFound(err) {
 				fmt.Println(vnetMetaNamespaced.String(), "Didn't created")
-				metaFound = false
 			} else {
 				log.Printf("r.Get error: %v\n", err)
 				return ctrl.Result{}, err
@@ -139,6 +173,95 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// fmt.Println("GO TO UPDATE")
 	// fmt.Println("Nothing changed")
 	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+}
+
+func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGateway, apiVnetGateways []api.APIVNetGateway) bool {
+	k8sGateways := make(map[string]k8sv1alpha1.VNetMetaGateway)
+	for _, gateway := range vnetMetaGateways {
+		k8sGateways[fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength)] = gateway
+	}
+
+	netrisGateways := make(map[string]api.APIVNetGateway)
+	for _, gateway := range apiVnetGateways {
+		netrisGateways[fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength)] = gateway
+	}
+
+	for address := range k8sGateways {
+		if _, ok := netrisGateways[address]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember, apiVnetMembers []api.APIVNetInfoMember) bool {
+	k8sMembers := make(map[int]k8sv1alpha1.VNetMetaMember)
+	for _, member := range vnetMetaMembers {
+		k8sMembers[member.PortID] = member
+	}
+
+	netrisMembers := make(map[int]api.APIVNetInfoMember)
+	for _, member := range apiVnetMembers {
+		netrisMembers[member.PortID] = member
+	}
+
+	for portID := range k8sMembers {
+		if _, ok := netrisMembers[portID]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func compareVNetMetaAPIVnetSites(vnetMetaSites []k8sv1alpha1.VNetMetaSite, apiVnetSites []int) bool {
+
+	k8sSites := make(map[int]string)
+	for _, site := range vnetMetaSites {
+		k8sSites[site.ID] = ""
+	}
+
+	for _, siteID := range apiVnetSites {
+		if _, ok := k8sSites[siteID]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *api.APIVNetInfo) bool {
+	fmt.Println("Comparing VNetMeta with Netris VNet")
+
+	if ok := compareVNetMetaAPIVnetSites(vnetMeta.Spec.Sites, apiVnet.SitesID); !ok {
+		return false
+	}
+	if ok := compareVNetMetaAPIVnetGateways(vnetMeta.Spec.Gateways, apiVnet.Gateways); !ok {
+		return false
+	}
+	if ok := compareVNetMetaAPIVnetMembers(vnetMeta.Spec.Members, apiVnet.Members); !ok {
+		return false
+	}
+
+	if vnetMeta.Spec.OwnerID != apiVnet.Owner {
+		return false
+	}
+
+	apiVaMode := false
+	if apiVnet.VaMode > 0 {
+		apiVaMode = true
+	}
+
+	if vnetMeta.Spec.VaMode != apiVaMode {
+		return false
+	}
+
+	if vnetMeta.Spec.VaVLANs != apiVnet.VaVlans {
+		return false
+	}
+
+	return true
 }
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
@@ -242,8 +365,8 @@ func (r *VNetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 // 	return &v1alpha1.VNet{}
 // }
 
-// K8sToVnetMeta converts the k8s VNet resource to VNetMeta type and used for add the VNet for Netris API.
-func (r *VNetReconciler) K8sToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VNetMeta, error) {
+// VnetToVnetMeta converts the VNet resource to VNetMeta type and used for add the VNet for Netris API.
+func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VNetMeta, error) {
 	ports := []k8sv1alpha1.VNetSwitchPort{}
 	siteNames := []string{}
 	apiGateways := []k8sv1alpha1.VNetMetaGateway{}
