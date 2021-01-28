@@ -25,20 +25,21 @@ import (
 
 // VNetMetaSpec defines the desired state of VNetMeta
 type VNetMetaSpec struct {
-	Gateways     []VNetMetaGateway `json:"gateways"`
-	ID           int               `json:"id"`
-	Members      []VNetMetaMember  `json:"members"`
-	Name         string            `json:"name"`
-	VnetName     string            `json:"vnetName"`
-	OwnerID      int               `json:"ownerid"`
-	Owner        string            `json:"owner"`
-	Provisioning int               `json:"provisioning"`
-	Sites        []VNetMetaSite    `json:"sites"`
-	State        string            `json:"state"`
-	Tenants      []int             `json:"tenants"`
-	VaMode       bool              `json:"vaMode"`
-	VaNativeVLAN int               `json:"vaNativeVlan"`
-	VaVLANs      string            `json:"vaVlans"`
+	VnetCRGeneration int64             `json:"resourceVersion"`
+	Gateways         []VNetMetaGateway `json:"gateways"`
+	ID               int               `json:"id"`
+	Members          []VNetMetaMember  `json:"members"`
+	Name             string            `json:"name"`
+	VnetName         string            `json:"vnetName"`
+	OwnerID          int               `json:"ownerid"`
+	Owner            string            `json:"owner"`
+	Provisioning     int               `json:"provisioning"`
+	Sites            []VNetMetaSite    `json:"sites"`
+	State            string            `json:"state"`
+	Tenants          []int             `json:"tenants"`
+	VaMode           bool              `json:"vaMode"`
+	VaNativeVLAN     int               `json:"vaNativeVlan"`
+	VaVLANs          string            `json:"vaVlans"`
 }
 
 // VNetMetaSite .

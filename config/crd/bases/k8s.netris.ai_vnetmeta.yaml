@@ -101,6 +101,9 @@ spec:
               type: integer
             provisioning:
               type: integer
+            resourceVersion:
+              format: int64
+              type: integer
             sites:
               items:
                 description: VNetMetaSite .
@@ -133,6 +136,7 @@ spec:
           - owner
           - ownerid
           - provisioning
+          - resourceVersion
           - sites
           - state
           - tenants

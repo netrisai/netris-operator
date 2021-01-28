@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
@@ -47,6 +46,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("VNet", req.NamespacedName)
 	vnet := &k8sv1alpha1.VNet{}
+
 	if err := r.Get(context.Background(), req.NamespacedName, vnet); err != nil {
 		if errors.IsNotFound(err) {
 			fmt.Println(req.NamespacedName.String(), "Not found")
@@ -76,67 +76,33 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if metaFound {
 		fmt.Println("K8S: META FOUND")
-		vnetID := vnetMeta.Spec.ID
 
-		newVnetMeta, err := r.VnetToVnetMeta(vnet)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
-		vnetMeta.Spec = newVnetMeta.DeepCopy().Spec
-		vnetMeta.Spec.ID = vnetID
-
-		err = r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{})
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		if err := r.Get(context.Background(), vnetMetaNamespaced, vnetMeta); err != nil {
-			if errors.IsNotFound(err) {
-				fmt.Println(vnetMetaNamespaced.String(), "Not found after updating")
-			} else {
-				return ctrl.Result{}, err
-			}
-		}
-
-		if vnetMeta.Spec.ID == 0 {
-			if _, err := r.createVNet(vnetMeta); err != nil {
-				fmt.Println(err)
-			}
-		} else {
-			vnets, err := Cred.GetVNetsByID(vnetMeta.Spec.ID)
+		if vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration {
+			fmt.Println("K8S: Generating New Meta")
+			vnetID := vnetMeta.Spec.ID
+			newVnetMeta, err := r.VnetToVnetMeta(vnet)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
-			if len(vnets) == 0 {
-				fmt.Println("API: VNet not found")
-				fmt.Println("API: Going to create VNet")
-				if _, err := r.createVNet(vnetMeta); err != nil {
-					fmt.Println(err)
-				}
-			} else {
-				apiVnet := vnets[0]
-				if ok := compareVNetMetaAPIVnet(vnetMeta, apiVnet); ok {
-					fmt.Println("K8S: Nothing Changed")
-				} else {
-					fmt.Println("K8S: SOMETHING CHANGED. GO TO UPDATE")
-					updateVnet, err := VnetMetaToNetrisUpdate(vnetMeta)
-					if err != nil {
-						fmt.Println(err)
-					}
-					_, err = updateVNet(updateVnet)
-					if err != nil {
-						fmt.Println(err)
-					}
-				}
+			vnetMeta.Spec = newVnetMeta.DeepCopy().Spec
+			vnetMeta.Spec.ID = vnetID
+			vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
+
+			err = r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{})
+			if err != nil {
+				fmt.Println(err)
 			}
 		}
 	} else {
 		fmt.Println("K8S: META NOT FOUND")
-		vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
-		err := r.Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
-		if err != nil {
-			return ctrl.Result{}, err
+		if vnet.GetFinalizers() == nil {
+			vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+			err := r.Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+
+			return ctrl.Result{}, nil
 		}
 
 		vnetMeta, err := r.VnetToVnetMeta(vnet)
@@ -144,13 +110,14 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, err
 		}
 
+		vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
+
 		if err := r.Create(context.Background(), vnetMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
 			fmt.Println(err)
 		}
-
 	}
 
-	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+	return ctrl.Result{}, nil
 }
 
 func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error) {
@@ -176,20 +143,29 @@ func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error) {
 }
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
-	if vnetMeta != nil && vnetMeta.Spec.ID > 0 {
-		reply, err := Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
-
+	if vnetMeta != nil {
+		_, err := r.deleteVnetMetaCR(vnetMeta)
 		if err != nil {
-			fmt.Println(err)
 			return ctrl.Result{}, err
 		}
-		resp, err := api.ParseAPIResponse(reply.Data)
-		if !resp.IsSuccess {
-			fmt.Println(resp.Message)
-			return ctrl.Result{}, fmt.Errorf(resp.Message)
+
+		if vnetMeta.Spec.ID > 0 {
+			reply, err := Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
+
+			if err != nil {
+				fmt.Println(err)
+				return ctrl.Result{}, err
+			}
+			resp, err := api.ParseAPIResponse(reply.Data)
+			if !resp.IsSuccess {
+				if resp.Message != "Invalid circuit ID" {
+					return ctrl.Result{}, fmt.Errorf(resp.Message)
+				}
+			}
 		}
+
 	}
-	return r.deleteCRs(vnet, vnetMeta)
+	return r.deleteVnetCR(vnet)
 }
 
 func (r *VNetReconciler) deleteCRs(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
@@ -219,6 +195,7 @@ func (r *VNetReconciler) deleteVnetMetaCR(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.
 	if err := r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, err
 	}
+
 	if err := r.Delete(context.Background(), vnetMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -232,35 +209,4 @@ func (r *VNetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&k8sv1alpha1.VNet{}).
 		WithEventFilter(ignoreDeletionPredicate()).
 		Complete(r)
-}
-
-func (r *VNetReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
-	vnetAdd, err := VnetMetaToNetris(vnetMeta)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-	reply, err := Cred.AddVNet(vnetAdd)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-	resp, err := api.ParseAPIResponse(reply.Data)
-	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message)
-	}
-
-	idStruct := api.APIVNetAddReply{}
-	api.CustomDecode(resp.Data, &idStruct)
-
-	fmt.Printf("API: VNet Created: ID: %d\n", idStruct.CircuitID)
-
-	vnetMeta.Spec.ID = idStruct.CircuitID
-	vnetMeta.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
-
-	err = r.Patch(context.Background(), vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	fmt.Println("K8S: ID patched to meta")
-	return ctrl.Result{}, nil
 }
