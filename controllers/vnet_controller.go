@@ -101,8 +101,6 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if err != nil {
 				return ctrl.Result{}, err
 			}
-
-			return ctrl.Result{}, nil
 		}
 
 		vnetMeta, err := r.VnetToVnetMeta(vnet)
