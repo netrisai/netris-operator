@@ -9,6 +9,7 @@ require (
 	github.com/netrisai/netrisapi v0.0.0-20210128145759-088151c01d6b
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
+	github.com/r3labs/diff/v2 v2.9.1
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/apimachinery v0.18.6

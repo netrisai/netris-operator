@@ -52,51 +52,37 @@ func init() {
 }
 
 func getPorts(portNames []k8sv1alpha1.VNetMetaMember) *api.APIVNetMembers {
-	hwPorts := make(map[string]*api.APIVNetMember)
-	for _, port := range portNames {
-		vlanID := 1
-		if port.VLANID > 0 {
-			vlanID = port.VLANID
-		}
-		if port.PortIsUntagged {
-			vlanID = 1
-		}
-		hwPorts[port.PortName] = &api.APIVNetMember{
-			VLANID:         vlanID,
-			PortIsUntagged: port.PortIsUntagged,
-		}
-	}
-	for portName := range hwPorts {
-		if port, yes := NStorage.PortsStorage.FindByName(portName); yes {
-			hwPorts[portName].PortID = port.ID
-			hwPorts[portName].PortName = port.PortNameFull
-			hwPorts[portName].TenantID = port.TenantID
-			hwPorts[portName].MemberState = port.MemberState
-			hwPorts[portName].LACP = "off"
-			hwPorts[portName].ParentPort = port.ParentPort
-			// hwPorts[portName].Name = port.SlavePortName
-		}
-	}
 	members := &api.APIVNetMembers{}
-	for _, member := range hwPorts {
-		members.Add(*member)
+	for _, port := range portNames {
+		members.Add(api.APIVNetMember{
+			ChildPort:      port.ChildPort,
+			LACP:           port.LACP,
+			MemberState:    port.MemberState,
+			ParentPort:     port.ParentPort,
+			PortIsUntagged: port.PortIsUntagged,
+			PortID:         port.PortID,
+			PortName:       port.PortName,
+			TenantID:       port.TenantID,
+			VLANID:         port.VLANID,
+		})
 	}
 	return members
 }
 
 func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) []k8sv1alpha1.VNetMetaMember {
 	hwPorts := make(map[string]*api.APIVNetMember)
+	portIsUntagged := false
 	for _, port := range portNames {
 		vlanID := 1
 		if port.VlanID > 0 {
 			vlanID = port.VlanID
 		}
-		if port.PortIsUntagged {
-			vlanID = 1
+		if vlanID == 1 {
+			portIsUntagged = true
 		}
 		hwPorts[port.Name] = &api.APIVNetMember{
 			VLANID:         vlanID,
-			PortIsUntagged: port.PortIsUntagged,
+			PortIsUntagged: portIsUntagged,
 		}
 	}
 	for portName := range hwPorts {

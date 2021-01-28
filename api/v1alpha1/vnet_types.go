@@ -80,9 +80,8 @@ type VNetGateway struct {
 
 // VNetSwitchPort .
 type VNetSwitchPort struct {
-	Name           string `json:"name"`
-	VlanID         int    `json:"vlanId,omitempty"`
-	PortIsUntagged bool   `json:"portIsUntagged,omitempty"`
+	Name   string `json:"name"`
+	VlanID int    `json:"vlanId,omitempty"`
 }
 
 func init() {

@@ -14,5 +14,3 @@ spec:
         - name: swp5@rlab-spine1
           vlanId: 1050
         - name: swp7@rlab-leaf1
-          portIsUntagged: true
-          state: disable

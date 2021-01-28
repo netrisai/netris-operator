@@ -21,6 +21,7 @@ import (
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	api "github.com/netrisai/netrisapi"
+	"github.com/r3labs/diff/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -171,40 +172,75 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate,
 }
 
 func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGateway, apiVnetGateways []api.APIVNetGateway) bool {
-	k8sGateways := make(map[string]k8sv1alpha1.VNetMetaGateway)
-	for _, gateway := range vnetMetaGateways {
-		k8sGateways[fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength)] = gateway
+
+	type gateway struct {
+		Gateway string `diff:"gateway"`
+		Length  int    `diff:"gwLength"`
 	}
 
-	netrisGateways := make(map[string]api.APIVNetGateway)
-	for _, gateway := range apiVnetGateways {
-		netrisGateways[fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength)] = gateway
+	vnetGateways := []gateway{}
+	apiGateways := []gateway{}
+
+	for _, g := range vnetMetaGateways {
+		vnetGateways = append(vnetGateways, gateway{
+			Gateway: g.Gateway,
+			Length:  g.GwLength,
+		})
 	}
 
-	for address := range k8sGateways {
-		if _, ok := netrisGateways[address]; !ok {
-			return false
-		}
+	for _, g := range apiVnetGateways {
+		apiGateways = append(apiGateways, gateway{
+			Gateway: g.Gateway,
+			Length:  g.GwLength,
+		})
+	}
+
+	changelog, err := diff.Diff(vnetGateways, apiGateways)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if len(changelog) > 0 {
+		return false
 	}
 
 	return true
 }
 
 func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember, apiVnetMembers []api.APIVNetInfoMember) bool {
-	k8sMembers := make(map[int]k8sv1alpha1.VNetMetaMember)
-	for _, member := range vnetMetaMembers {
-		k8sMembers[member.PortID] = member
+
+	type member struct {
+		PortID   int `diff:"port_id"`
+		TenantID int `diff:"tenant_id"`
+		VLANID   int `diff:"vlan_id"`
 	}
 
-	netrisMembers := make(map[int]api.APIVNetInfoMember)
-	for _, member := range apiVnetMembers {
-		netrisMembers[member.PortID] = member
+	vnetMembers := []member{}
+	apiMembers := []member{}
+
+	for _, m := range vnetMetaMembers {
+		vnetMembers = append(vnetMembers, member{
+			PortID:   m.PortID,
+			TenantID: m.TenantID,
+			VLANID:   m.VLANID,
+		})
 	}
 
-	for portID := range k8sMembers {
-		if _, ok := netrisMembers[portID]; !ok {
-			return false
-		}
+	for _, m := range apiVnetMembers {
+		apiMembers = append(apiMembers, member{
+			PortID:   m.PortID,
+			TenantID: m.TenantID,
+			VLANID:   m.VlanID,
+		})
+	}
+
+	changelog, err := diff.Diff(vnetMembers, apiMembers)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if len(changelog) > 0 {
+		return false
 	}
 
 	return true

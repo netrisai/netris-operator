@@ -64,8 +64,6 @@ spec:
                       properties:
                         name:
                           type: string
-                        portIsUntagged:
-                          type: boolean
                         vlanId:
                           type: integer
                       required:
