@@ -88,15 +88,11 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 
 // VnetMetaToNetris converts the k8s VNet resource to Netris type and used for add the VNet for Netris API.
 func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
-	ports := []k8sv1alpha1.VNetMetaMember{}
 	siteNames := []string{}
 	apiGateways := []api.APIVNetGateway{}
 
 	for _, site := range vnetMeta.Spec.Sites {
 		siteNames = append(siteNames, site.Name)
-	}
-	for _, port := range vnetMeta.Spec.Members {
-		ports = append(ports, port)
 	}
 	for _, gateway := range vnetMeta.Spec.Gateways {
 		apiGateways = append(apiGateways, api.APIVNetGateway{
@@ -106,8 +102,6 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 			Version:  gateway.Version,
 		})
 	}
-
-	prts := getPorts(ports)
 
 	sites := getSites(siteNames)
 	siteIDs := []int{}
@@ -121,7 +115,7 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 		Owner:        vnetMeta.Spec.OwnerID,
 		Tenants:      []int{}, // AAAAAAA
 		Gateways:     apiGateways,
-		Members:      prts.String(),
+		Members:      k8sMemberToAPIMember(vnetMeta.Spec.Members).String(),
 		VaMode:       false,
 		VaNativeVLAN: 1,
 		VaVLANs:      "",
@@ -132,13 +126,8 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 
 // VnetMetaToNetrisUpdate converts the k8s VNet resource to Netris type and used for update the VNet for Netris API.
 func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate, error) {
-	ports := []k8sv1alpha1.VNetMetaMember{}
-
 	apiGateways := []api.APIVNetGateway{}
 
-	for _, port := range vnetMeta.Spec.Members {
-		ports = append(ports, port)
-	}
 	for _, gateway := range vnetMeta.Spec.Gateways {
 		apiGateways = append(apiGateways, api.APIVNetGateway{
 			Gateway:  gateway.Gateway,
@@ -147,8 +136,6 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate,
 			Version:  gateway.Version,
 		})
 	}
-
-	prts := getPorts(ports)
 
 	siteIDs := []int{}
 	for _, site := range vnetMeta.Spec.Sites {
@@ -162,7 +149,7 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate,
 		Owner:        vnetMeta.Spec.OwnerID,
 		Tenants:      []int{}, // AAAAAAA
 		Gateways:     apiGateways,
-		Members:      prts.String(),
+		Members:      k8sMemberToAPIMember(vnetMeta.Spec.Members).String(),
 		VaMode:       false,
 		VaNativeVLAN: "1",
 		VaVLANs:      "",
@@ -296,4 +283,22 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *api.APIVNet
 	}
 
 	return true
+}
+
+func k8sMemberToAPIMember(portNames []k8sv1alpha1.VNetMetaMember) *api.APIVNetMembers {
+	members := &api.APIVNetMembers{}
+	for _, port := range portNames {
+		members.Add(api.APIVNetMember{
+			ChildPort:      port.ChildPort,
+			LACP:           port.LACP,
+			MemberState:    port.MemberState,
+			ParentPort:     port.ParentPort,
+			PortIsUntagged: port.PortIsUntagged,
+			PortID:         port.PortID,
+			PortName:       port.PortName,
+			TenantID:       port.TenantID,
+			VLANID:         port.VLANID,
+		})
+	}
+	return members
 }

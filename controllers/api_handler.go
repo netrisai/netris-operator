@@ -51,24 +51,6 @@ func init() {
 	go NStorage.DownloadWithInterval()
 }
 
-func getPorts(portNames []k8sv1alpha1.VNetMetaMember) *api.APIVNetMembers {
-	members := &api.APIVNetMembers{}
-	for _, port := range portNames {
-		members.Add(api.APIVNetMember{
-			ChildPort:      port.ChildPort,
-			LACP:           port.LACP,
-			MemberState:    port.MemberState,
-			ParentPort:     port.ParentPort,
-			PortIsUntagged: port.PortIsUntagged,
-			PortID:         port.PortID,
-			PortName:       port.PortName,
-			TenantID:       port.TenantID,
-			VLANID:         port.VLANID,
-		})
-	}
-	return members
-}
-
 func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) []k8sv1alpha1.VNetMetaMember {
 	hwPorts := make(map[string]*api.APIVNetMember)
 	portIsUntagged := false
