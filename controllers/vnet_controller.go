@@ -120,6 +120,14 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					fmt.Println("K8S: Nothing Changed")
 				} else {
 					fmt.Println("K8S: SOMETHING CHANGED. GO TO UPDATE")
+					updateVnet, err := VnetMetaToNetrisUpdate(vnetMeta)
+					if err != nil {
+						fmt.Println(err)
+					}
+					_, err = updateVNet(updateVnet)
+					if err != nil {
+						fmt.Println(err)
+					}
 				}
 			}
 		}
@@ -143,6 +151,28 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+}
+
+func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error) {
+	reply, err := Cred.ValidateVNet(vnet)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	resp, err := api.ParseAPIResponse(reply.Data)
+	if !resp.IsSuccess {
+		return ctrl.Result{}, fmt.Errorf(resp.Message)
+	}
+
+	reply, err = Cred.UpdateVNet(vnet)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	resp, err = api.ParseAPIResponse(reply.Data)
+	if !resp.IsSuccess {
+		return ctrl.Result{}, fmt.Errorf(resp.Message)
+	}
+
+	return ctrl.Result{}, nil
 }
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {

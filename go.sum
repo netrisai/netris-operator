@@ -245,6 +245,16 @@ github.com/netrisai/netrisapi v0.0.0-20210127202113-c4b60bf58ede h1:2JUz6P67+yrz
 github.com/netrisai/netrisapi v0.0.0-20210127202113-c4b60bf58ede/go.mod h1:IqkB+A4amKw4jG8dgAWjcWE0W7rvIbSl4K+E3v332ZM=
 github.com/netrisai/netrisapi v0.0.0-20210127204449-549080364a07 h1:FspTZqG3QfAjQtbI8XX10o3Um4aaOChtppnG3dVlcLM=
 github.com/netrisai/netrisapi v0.0.0-20210127204449-549080364a07/go.mod h1:IqkB+A4amKw4jG8dgAWjcWE0W7rvIbSl4K+E3v332ZM=
+github.com/netrisai/netrisapi v0.0.0-20210128092937-db2dc25f66ed h1:IZN5k0o/LhrYJ0GbaQZFuVRpXUPOfb4xvc8jf0szwZA=
+github.com/netrisai/netrisapi v0.0.0-20210128092937-db2dc25f66ed/go.mod h1:IqkB+A4amKw4jG8dgAWjcWE0W7rvIbSl4K+E3v332ZM=
+github.com/netrisai/netrisapi v0.0.0-20210128093722-6f2c18c0a59b h1:w+1EfqEskYTNES5DWsDblVx5fd2u2oEwde3hpc9HVIQ=
+github.com/netrisai/netrisapi v0.0.0-20210128093722-6f2c18c0a59b/go.mod h1:IqkB+A4amKw4jG8dgAWjcWE0W7rvIbSl4K+E3v332ZM=
+github.com/netrisai/netrisapi v0.0.0-20210128093850-452bac9d19bb h1:D3b25gG7masM51WppmddGvqSP6yzta2EuMOolugh9Cc=
+github.com/netrisai/netrisapi v0.0.0-20210128093850-452bac9d19bb/go.mod h1:IqkB+A4amKw4jG8dgAWjcWE0W7rvIbSl4K+E3v332ZM=
+github.com/netrisai/netrisapi v0.0.0-20210128094240-ea7fbb8c8588 h1:PwgQtY+dMdid4EVw+2EKj5Lpf14TJu0uTM0JO/496fY=
+github.com/netrisai/netrisapi v0.0.0-20210128094240-ea7fbb8c8588/go.mod h1:IqkB+A4amKw4jG8dgAWjcWE0W7rvIbSl4K+E3v332ZM=
+github.com/netrisai/netrisapi v0.0.0-20210128094713-d0e2960a1ace h1:dk14lhkDahx7vAvdoTjcdvwrPZA7dlG6qRYeNs9oo9c=
+github.com/netrisai/netrisapi v0.0.0-20210128094713-d0e2960a1ace/go.mod h1:IqkB+A4amKw4jG8dgAWjcWE0W7rvIbSl4K+E3v332ZM=
 github.com/nxadm/tail v1.4.4 h1:DQuhQpB1tVlglWS2hLQ5OV6B5r8aGxSrPc5Qo6uTN78=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=

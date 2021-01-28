@@ -129,6 +129,47 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 	return vnetAdd, nil
 }
 
+// VnetMetaToNetrisUpdate converts the k8s VNet resource to Netris type and used for update the VNet for Netris API.
+func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate, error) {
+	ports := []k8sv1alpha1.VNetMetaMember{}
+
+	apiGateways := []api.APIVNetGateway{}
+
+	for _, port := range vnetMeta.Spec.Members {
+		ports = append(ports, port)
+	}
+	for _, gateway := range vnetMeta.Spec.Gateways {
+		apiGateways = append(apiGateways, api.APIVNetGateway{
+			Gateway:  gateway.Gateway,
+			GwLength: gateway.GwLength,
+			ID:       gateway.ID,
+			Version:  gateway.Version,
+		})
+	}
+
+	prts := getPorts(ports)
+
+	siteIDs := []int{}
+	for _, site := range vnetMeta.Spec.Sites {
+		siteIDs = append(siteIDs, site.ID)
+	}
+
+	vnetUpdate := &api.APIVNetUpdate{
+		ID:           vnetMeta.Spec.ID,
+		Name:         vnetMeta.Spec.VnetName,
+		Sites:        siteIDs,
+		Owner:        vnetMeta.Spec.OwnerID,
+		Tenants:      []int{}, // AAAAAAA
+		Gateways:     apiGateways,
+		Members:      prts.String(),
+		VaMode:       false,
+		VaNativeVLAN: "1",
+		VaVLANs:      "",
+	}
+
+	return vnetUpdate, nil
+}
+
 func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGateway, apiVnetGateways []api.APIVNetGateway) bool {
 	k8sGateways := make(map[string]k8sv1alpha1.VNetMetaGateway)
 	for _, gateway := range vnetMetaGateways {
@@ -194,6 +235,10 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *api.APIVNet
 		return false
 	}
 	if ok := compareVNetMetaAPIVnetMembers(vnetMeta.Spec.Members, apiVnet.Members); !ok {
+		return false
+	}
+
+	if vnetMeta.Spec.VnetName != apiVnet.Name {
 		return false
 	}
 
