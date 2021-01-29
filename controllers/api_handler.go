@@ -51,25 +51,26 @@ func init() {
 	go NStorage.DownloadWithInterval()
 }
 
-func getPorts(portNames []k8sv1alpha1.VNetSwitchPort) *api.APIVNetMembers {
+func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) []k8sv1alpha1.VNetMetaMember {
 	hwPorts := make(map[string]*api.APIVNetMember)
+	portIsUntagged := false
 	for _, port := range portNames {
 		vlanID := 1
 		if port.VlanID > 0 {
 			vlanID = port.VlanID
 		}
-		if port.PortIsUntagged {
-			vlanID = 1
+		if vlanID == 1 {
+			portIsUntagged = true
 		}
 		hwPorts[port.Name] = &api.APIVNetMember{
 			VLANID:         vlanID,
-			PortIsUntagged: port.PortIsUntagged,
+			PortIsUntagged: portIsUntagged,
 		}
 	}
 	for portName := range hwPorts {
 		if port, yes := NStorage.PortsStorage.FindByName(portName); yes {
 			hwPorts[portName].PortID = port.ID
-			hwPorts[portName].PortName = port.PortNameFull
+			hwPorts[portName].PortName = portName
 			hwPorts[portName].TenantID = port.TenantID
 			hwPorts[portName].MemberState = port.MemberState
 			hwPorts[portName].LACP = "off"
@@ -77,9 +78,19 @@ func getPorts(portNames []k8sv1alpha1.VNetSwitchPort) *api.APIVNetMembers {
 			// hwPorts[portName].Name = port.SlavePortName
 		}
 	}
-	members := &api.APIVNetMembers{}
+	members := []k8sv1alpha1.VNetMetaMember{}
 	for _, member := range hwPorts {
-		members.Add(*member)
+		members = append(members, k8sv1alpha1.VNetMetaMember{
+			ChildPort:      member.ChildPort,
+			LACP:           member.LACP,
+			MemberState:    member.MemberState,
+			ParentPort:     member.ParentPort,
+			PortIsUntagged: member.PortIsUntagged,
+			PortID:         member.PortID,
+			PortName:       member.PortName,
+			TenantID:       member.TenantID,
+			VLANID:         member.VLANID,
+		})
 	}
 	return members
 }
