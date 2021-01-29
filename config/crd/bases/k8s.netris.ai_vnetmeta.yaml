@@ -101,9 +101,6 @@ spec:
               type: integer
             provisioning:
               type: integer
-            resourceVersion:
-              format: int64
-              type: integer
             sites:
               items:
                 description: VNetMetaSite .
@@ -126,6 +123,9 @@ spec:
               type: integer
             vaVlans:
               type: string
+            vnetGeneration:
+              format: int64
+              type: integer
             vnetName:
               type: string
           required:
@@ -136,13 +136,13 @@ spec:
           - owner
           - ownerid
           - provisioning
-          - resourceVersion
           - sites
           - state
           - tenants
           - vaMode
           - vaNativeVlan
           - vaVlans
+          - vnetGeneration
           - vnetName
           type: object
         status:
