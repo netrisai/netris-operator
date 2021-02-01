@@ -180,12 +180,6 @@ func (r *VNetReconciler) deleteVnetCR(vnet *k8sv1alpha1.VNet) (ctrl.Result, erro
 }
 
 func (r *VNetReconciler) deleteVnetMetaCR(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
-	vnetMeta.ObjectMeta.SetFinalizers(nil)
-	vnetMeta.SetFinalizers(nil)
-	if err := r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
-		return ctrl.Result{}, err
-	}
-
 	if err := r.Delete(context.Background(), vnetMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, err
 	}

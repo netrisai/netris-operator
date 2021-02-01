@@ -81,8 +81,6 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 		},
 	}
 
-	vnetMeta.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
-
 	return vnetMeta, nil
 }
 
