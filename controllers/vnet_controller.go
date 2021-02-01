@@ -73,7 +73,12 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if vnet.DeletionTimestamp != nil {
 		logger.Info("Go to delete")
-		return r.deleteVNet(vnet, vnetMeta)
+		_, err := r.deleteVNet(vnet, vnetMeta)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		logger.Info("Vnet deleted")
+		return ctrl.Result{}, nil
 	}
 
 	if metaFound {
@@ -102,6 +107,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if err != nil {
 				return ctrl.Result{}, err
 			}
+			return ctrl.Result{}, nil
 		}
 
 		vnetMeta, err := r.VnetToVnetMeta(vnet)
