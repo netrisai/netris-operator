@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/go-logr/logr"
@@ -45,12 +46,13 @@ type VNetMetaReconciler struct {
 // Reconcile .
 func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("vnetMeta", req.NamespacedName)
+	logger := r.Log.WithValues("name", req.NamespacedName)
+	debugLogger := logger.V(int(zapcore.WarnLevel))
 
 	vnetMeta := &k8sv1alpha1.VNetMeta{}
 	if err := r.Get(context.Background(), req.NamespacedName, vnetMeta); err != nil {
 		if errors.IsNotFound(err) {
-			fmt.Println(req.NamespacedName.String(), "Not found")
+			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
@@ -61,9 +63,9 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if vnetMeta.Spec.ID == 0 {
-		fmt.Println("K8S: ID Not found in meta. Creating VNet")
+		debugLogger.Info("ID Not found in meta. Creating VNet")
 		if _, err := r.createVNet(vnetMeta); err != nil {
-			fmt.Println(err)
+			logger.Error(err, "{createVNet}")
 		}
 	} else {
 		vnets, err := Cred.GetVNetsByID(vnetMeta.Spec.ID)
@@ -71,25 +73,26 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, err
 		}
 		if len(vnets) == 0 {
-			fmt.Println("API: VNet not found")
-			fmt.Println("API: Going to create VNet")
+			debugLogger.Info("VNet not found in Netris")
+			debugLogger.Info("Going to create VNet")
 			if _, err := r.createVNet(vnetMeta); err != nil {
-				fmt.Println(err)
+				logger.Error(err, "{createVNet}")
 			}
 		} else {
 			apiVnet := vnets[0]
-			fmt.Println("K8S: Comparing VnetMeta with Netris Vnet")
+			debugLogger.Info("Comparing VnetMeta with Netris Vnet")
 			if ok := compareVNetMetaAPIVnet(vnetMeta, apiVnet); ok {
-				fmt.Println("K8S: Nothing Changed")
+				debugLogger.Info("Nothing Changed")
 			} else {
-				fmt.Println("K8S: SOMETHING CHANGED. GO TO UPDATE")
+				debugLogger.Info("Something changed")
+				debugLogger.Info("Go to update Vnet in Netris")
 				updateVnet, err := VnetMetaToNetrisUpdate(vnetMeta)
 				if err != nil {
-					fmt.Println(err)
+					logger.Error(err, "{VnetMetaToNetrisUpdate}")
 				}
 				_, err = updateVNet(updateVnet)
 				if err != nil {
-					fmt.Println(err)
+					logger.Error(err, "{updateVNet}")
 				}
 			}
 		}
@@ -106,6 +109,11 @@ func (r *VNetMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
+	debugLogger := r.Log.WithValues(
+		"name", fmt.Sprintf("%s/%s", vnetMeta.Namespace, vnetMeta.Name),
+		"vnetName", vnetMeta.Spec.VnetName,
+	).V(int(zapcore.WarnLevel))
+
 	vnetAdd, err := VnetMetaToNetris(vnetMeta)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -122,7 +130,7 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 	idStruct := api.APIVNetAddReply{}
 	api.CustomDecode(resp.Data, &idStruct)
 
-	fmt.Printf("API: VNet Created: ID: %d\n", idStruct.CircuitID)
+	debugLogger.Info("VNet Created", "id", idStruct.CircuitID)
 
 	vnetMeta.Spec.ID = idStruct.CircuitID
 	vnetMeta.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
@@ -132,6 +140,6 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	fmt.Println("K8S: ID patched to meta")
+	debugLogger.Info("ID patched to meta", "id", idStruct.CircuitID)
 	return ctrl.Result{}, nil
 }

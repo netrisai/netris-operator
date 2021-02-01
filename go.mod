@@ -10,6 +10,7 @@ require (
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	github.com/r3labs/diff/v2 v2.9.1
+	go.uber.org/zap v1.10.0
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/apimachinery v0.18.6

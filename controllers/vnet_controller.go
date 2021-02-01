@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/go-logr/logr"
@@ -44,12 +45,13 @@ type VNetReconciler struct {
 // Reconcile vnet events
 func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("VNet", req.NamespacedName)
+	logger := r.Log.WithValues("name", req.NamespacedName)
+	debugLogger := logger.V(int(zapcore.WarnLevel))
 	vnet := &k8sv1alpha1.VNet{}
 
 	if err := r.Get(context.Background(), req.NamespacedName, vnet); err != nil {
 		if errors.IsNotFound(err) {
-			fmt.Println(req.NamespacedName.String(), "Not found")
+			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
@@ -61,7 +63,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	metaFound := true
 	if err := r.Get(context.Background(), vnetMetaNamespaced, vnetMeta); err != nil {
 		if errors.IsNotFound(err) {
-			fmt.Println(vnetMetaNamespaced.String(), "Not found")
+			debugLogger.Info(err.Error())
 			metaFound = false
 			vnetMeta = nil
 		} else {
@@ -70,15 +72,14 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if vnet.DeletionTimestamp != nil {
-		fmt.Println("K8S: GO TO DELETE")
+		logger.Info("Go to delete")
 		return r.deleteVNet(vnet, vnetMeta)
 	}
 
 	if metaFound {
-		fmt.Println("K8S: META FOUND")
-
+		debugLogger.Info("Meta found")
 		if vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration {
-			fmt.Println("K8S: Generating New Meta")
+			debugLogger.Info("Generating New Meta")
 			vnetID := vnetMeta.Spec.ID
 			newVnetMeta, err := r.VnetToVnetMeta(vnet)
 			if err != nil {
@@ -90,11 +91,11 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			err = r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{})
 			if err != nil {
-				fmt.Println(err)
+				logger.Error(err, "{vnetMeta Update}")
 			}
 		}
 	} else {
-		fmt.Println("K8S: META NOT FOUND")
+		debugLogger.Info("Meta not found")
 		if vnet.GetFinalizers() == nil {
 			vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
 			err := r.Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
@@ -111,7 +112,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
 
 		if err := r.Create(context.Background(), vnetMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
-			fmt.Println(err)
+			logger.Error(err, "{vnetMeta Create}")
 		}
 	}
 
@@ -141,29 +142,20 @@ func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error) {
 }
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
-	if vnetMeta != nil {
-		_, err := r.deleteVnetMetaCR(vnetMeta)
+	if vnetMeta != nil && vnetMeta.Spec.ID > 0 {
+		reply, err := Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
+
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-
-		if vnetMeta.Spec.ID > 0 {
-			reply, err := Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
-
-			if err != nil {
-				fmt.Println(err)
-				return ctrl.Result{}, err
-			}
-			resp, err := api.ParseAPIResponse(reply.Data)
-			if !resp.IsSuccess {
-				if resp.Message != "Invalid circuit ID" {
-					return ctrl.Result{}, fmt.Errorf(resp.Message)
-				}
+		resp, err := api.ParseAPIResponse(reply.Data)
+		if !resp.IsSuccess {
+			if resp.Message != "Invalid circuit ID" {
+				return ctrl.Result{}, fmt.Errorf(resp.Message)
 			}
 		}
-
 	}
-	return r.deleteVnetCR(vnet)
+	return r.deleteCRs(vnet, vnetMeta)
 }
 
 func (r *VNetReconciler) deleteCRs(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
@@ -205,6 +197,6 @@ func (r *VNetReconciler) deleteVnetMetaCR(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.
 func (r *VNetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.VNet{}).
-		WithEventFilter(ignoreDeletionPredicate()).
+		// WithEventFilter(ignoreDeletionPredicate()).
 		Complete(r)
 }

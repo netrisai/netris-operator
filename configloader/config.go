@@ -8,6 +8,7 @@ import (
 
 type config struct {
 	Controller controller `yaml:"controller"`
+	LogDevMode bool       `yaml:"logdevmode" envconfig:"NOPERATOR_DEV_MODE"`
 }
 
 type controller struct {
@@ -17,6 +18,7 @@ type controller struct {
 	Insecure bool   `yaml:"insecure" envconfig:"CONTROLLER_INSECURE"`
 }
 
+// Root .
 var Root *config
 
 func init() {

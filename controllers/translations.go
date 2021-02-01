@@ -182,10 +182,7 @@ func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGatew
 		})
 	}
 
-	changelog, err := diff.Diff(vnetGateways, apiGateways)
-	if err != nil {
-		fmt.Println(err)
-	}
+	changelog, _ := diff.Diff(vnetGateways, apiGateways)
 
 	if len(changelog) > 0 {
 		return false
@@ -221,10 +218,7 @@ func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember,
 		})
 	}
 
-	changelog, err := diff.Diff(vnetMembers, apiMembers)
-	if err != nil {
-		fmt.Println(err)
-	}
+	changelog, _ := diff.Diff(vnetMembers, apiMembers)
 
 	if len(changelog) > 0 {
 		return false

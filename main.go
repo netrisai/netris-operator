@@ -20,6 +20,7 @@ import (
 	"flag"
 	"os"
 
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -28,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/controllers"
 	// +kubebuilder:scaffold:imports
 )
@@ -53,7 +55,11 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	if configloader.Root.LogDevMode {
+		ctrl.SetLogger(zap.New(zap.Level(zapcore.DebugLevel), zap.UseDevMode(false)))
+	} else {
+		ctrl.SetLogger(zap.New(zap.UseDevMode(false), zap.StacktraceLevel(zapcore.DPanicLevel)))
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Namespace:          "",
@@ -70,7 +76,7 @@ func main() {
 
 	if err = (&controllers.VNetReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("VNet"),
+		Log:    ctrl.Log.WithName("VNet"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VNet")
@@ -78,7 +84,7 @@ func main() {
 	}
 	if err = (&controllers.VNetMetaReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("VNetMeta"),
+		Log:    ctrl.Log.WithName("VNetMeta"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VNetMeta")
