@@ -133,7 +133,6 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 	debugLogger.Info("VNet Created", "id", idStruct.CircuitID)
 
 	vnetMeta.Spec.ID = idStruct.CircuitID
-	vnetMeta.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
 
 	err = r.Patch(context.Background(), vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
