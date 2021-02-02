@@ -28,11 +28,11 @@ import (
 )
 
 var (
-	// Cred .
+	// Cred stores the Netris API usepoint.
 	Cred            *api.HTTPCred
 	requeueInterval = time.Duration(10 * time.Second)
 
-	// NStorage .
+	// NStorage is the instance of the Netris API in-memory storage.
 	NStorage = NewStorage()
 )
 
