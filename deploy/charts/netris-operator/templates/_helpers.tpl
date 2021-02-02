@@ -109,9 +109,9 @@ Create netris-opeator controller envs
 {{- end }}
 - name: NOPERATOR_DEV_MODE
 {{- if eq (lower (toString .Values.logLevel )) "debug" }}
-  value: {{ .Values.logLevel | quote }}
+  value: "true"
 {{- else }}
-  value: "info"
+  value: "false"
 {{- end }}
 - name: NOPERATOR_REQUEUE_OPERATOR
   value: {{ .Values.requeueInterval | default 15 | quote }}
