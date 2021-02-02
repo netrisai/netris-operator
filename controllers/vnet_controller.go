@@ -75,7 +75,8 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		logger.Info("Go to delete")
 		_, err := r.deleteVNet(vnet, vnetMeta)
 		if err != nil {
-			return ctrl.Result{}, err
+			logger.Error(fmt.Errorf("{deleteVNet} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
 		logger.Info("Vnet deleted")
 		return ctrl.Result{}, nil
@@ -88,7 +89,8 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			vnetID := vnetMeta.Spec.ID
 			newVnetMeta, err := r.VnetToVnetMeta(vnet)
 			if err != nil {
-				return ctrl.Result{}, err
+				logger.Error(fmt.Errorf("{VnetToVnetMeta} %s", err), "")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
 			}
 			vnetMeta.Spec = newVnetMeta.DeepCopy().Spec
 			vnetMeta.Spec.ID = vnetID
@@ -96,7 +98,8 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			err = r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{})
 			if err != nil {
-				logger.Error(err, "{vnetMeta Update}")
+				logger.Error(fmt.Errorf("{vnetMeta Update} %s", err), "")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
 			}
 		}
 	} else {
@@ -105,20 +108,23 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
 			err := r.Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 			if err != nil {
-				return ctrl.Result{}, err
+				logger.Error(fmt.Errorf("{Patch VNet Finalizer} %s", err), "")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
 			}
 			return ctrl.Result{}, nil
 		}
 
 		vnetMeta, err := r.VnetToVnetMeta(vnet)
 		if err != nil {
-			return ctrl.Result{}, err
+			logger.Error(fmt.Errorf("{VnetToVnetMeta} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
 
 		vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
 
 		if err := r.Create(context.Background(), vnetMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
-			logger.Error(err, "{vnetMeta Create}")
+			logger.Error(fmt.Errorf("{vnetMeta Create} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
 	}
 
@@ -128,20 +134,20 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error) {
 	reply, err := Cred.ValidateVNet(vnet)
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err)
 	}
 	resp, err := api.ParseAPIResponse(reply.Data)
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message))
 	}
 
 	reply, err = Cred.UpdateVNet(vnet)
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err)
 	}
 	resp, err = api.ParseAPIResponse(reply.Data)
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message))
 	}
 
 	return ctrl.Result{}, nil
@@ -152,12 +158,12 @@ func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha
 		reply, err := Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
 
 		if err != nil {
-			return ctrl.Result{}, err
+			return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", err)
 		}
 		resp, err := api.ParseAPIResponse(reply.Data)
 		if !resp.IsSuccess {
 			if resp.Message != "Invalid circuit ID" {
-				return ctrl.Result{}, fmt.Errorf(resp.Message)
+				return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", fmt.Errorf(resp.Message))
 			}
 		}
 	}
@@ -168,7 +174,7 @@ func (r *VNetReconciler) deleteCRs(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1
 	if vnetMeta != nil {
 		_, err := r.deleteVnetMetaCR(vnetMeta)
 		if err != nil {
-			return ctrl.Result{}, err
+			return ctrl.Result{}, fmt.Errorf("{deleteCRs} %s", err)
 		}
 	}
 
@@ -179,7 +185,7 @@ func (r *VNetReconciler) deleteVnetCR(vnet *k8sv1alpha1.VNet) (ctrl.Result, erro
 	vnet.ObjectMeta.SetFinalizers(nil)
 	vnet.SetFinalizers(nil)
 	if err := r.Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("{deleteVnetCR} %s", err)
 	}
 
 	return ctrl.Result{}, nil
@@ -187,7 +193,7 @@ func (r *VNetReconciler) deleteVnetCR(vnet *k8sv1alpha1.VNet) (ctrl.Result, erro
 
 func (r *VNetReconciler) deleteVnetMetaCR(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
 	if err := r.Delete(context.Background(), vnetMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("{deleteVnetMetaCR} %s", err)
 	}
 
 	return ctrl.Result{}, nil

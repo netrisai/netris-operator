@@ -19,6 +19,7 @@ package controllers
 import (
 	"fmt"
 	"log"
+	"time"
 
 	api "github.com/netrisai/netrisapi"
 
@@ -26,13 +27,20 @@ import (
 	"github.com/netrisai/netris-operator/configloader"
 )
 
-// Cred .
-var Cred *api.HTTPCred
+var (
+	// Cred .
+	Cred            *api.HTTPCred
+	requeueInterval = time.Duration(10 * time.Second)
 
-// NStorage .
-var NStorage = NewStorage()
+	// NStorage .
+	NStorage = NewStorage()
+)
 
 func init() {
+	if configloader.Root.RequeueInterval > 0 {
+		requeueInterval = time.Duration(time.Duration(configloader.Root.RequeueInterval) * time.Second)
+	}
+
 	var err error
 	Cred, err = api.NewHTTPCredentials(configloader.Root.Controller.Host, configloader.Root.Controller.Login, configloader.Root.Controller.Password, 10)
 	if err != nil {
@@ -49,6 +57,7 @@ func init() {
 		log.Printf("Storage.Download() error %v", err)
 	}
 	go NStorage.DownloadWithInterval()
+	fmt.Println("Requeue interval", requeueInterval)
 }
 
 func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) []k8sv1alpha1.VNetMetaMember {

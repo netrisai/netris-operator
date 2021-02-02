@@ -7,8 +7,9 @@ import (
 )
 
 type config struct {
-	Controller controller `yaml:"controller"`
-	LogDevMode bool       `yaml:"logdevmode" envconfig:"NOPERATOR_DEV_MODE"`
+	Controller      controller `yaml:"controller"`
+	LogDevMode      bool       `yaml:"logdevmode" envconfig:"NOPERATOR_DEV_MODE"`
+	RequeueInterval int        `yaml:"requeueinterval" envconfig:"NOPERATOR_REQUEUE_OPERATOR"`
 }
 
 type controller struct {

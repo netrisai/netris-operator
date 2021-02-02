@@ -63,21 +63,28 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if vnetMeta.Spec.ID == 0 {
-		debugLogger.Info("ID Not found in meta. Creating VNet")
+		debugLogger.Info("ID Not found in meta")
+		logger.Info("Creating VNet")
 		if _, err := r.createVNet(vnetMeta); err != nil {
-			logger.Error(err, "{createVNet}")
+			logger.Error(fmt.Errorf("{createVNet} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
+		logger.Info("VNet Created")
 	} else {
 		vnets, err := Cred.GetVNetsByID(vnetMeta.Spec.ID)
 		if err != nil {
-			return ctrl.Result{}, err
+			logger.Error(fmt.Errorf("{GetVNetsByID} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
 		if len(vnets) == 0 {
 			debugLogger.Info("VNet not found in Netris")
 			debugLogger.Info("Going to create VNet")
+			logger.Info("Creating VNet")
 			if _, err := r.createVNet(vnetMeta); err != nil {
-				logger.Error(err, "{createVNet}")
+				logger.Error(fmt.Errorf("{createVNet} %s", err), "")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
 			}
+			logger.Info("VNet Created")
 		} else {
 			apiVnet := vnets[0]
 			debugLogger.Info("Comparing VnetMeta with Netris Vnet")
@@ -86,14 +93,18 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			} else {
 				debugLogger.Info("Something changed")
 				debugLogger.Info("Go to update Vnet in Netris")
+				logger.Info("Updating VNet")
 				updateVnet, err := VnetMetaToNetrisUpdate(vnetMeta)
 				if err != nil {
-					logger.Error(err, "{VnetMetaToNetrisUpdate}")
+					logger.Error(fmt.Errorf("{VnetMetaToNetrisUpdate} %s", err), "")
+					return ctrl.Result{RequeueAfter: requeueInterval}, nil
 				}
 				_, err = updateVNet(updateVnet)
 				if err != nil {
-					logger.Error(err, "{updateVNet}")
+					logger.Error(fmt.Errorf("{updateVNet} %s", err), "")
+					return ctrl.Result{RequeueAfter: requeueInterval}, nil
 				}
+				logger.Info("VNet Updated")
 			}
 		}
 	}
