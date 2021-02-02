@@ -106,5 +106,13 @@ Create netris-opeator controller envs
 {{- if or (eq (lower (toString .Values.controller.insecure )) "true") (eq (lower (toString .Values.controller.insecure )) "false")  }}
 - name: CONTROLLER_INSECURE
   value: {{ .Values.controller.insecure | quote }}
-{{- end -}}
+{{- end }}
+- name: NOPERATOR_DEV_MODE
+{{- if eq (lower (toString .Values.logLevel )) "debug" }}
+  value: {{ .Values.logLevel | quote }}
+{{- else }}
+  value: "info"
+{{- end }}
+- name: NOPERATOR_REQUEUE_OPERATOR
+  value: {{ .Values.requeueInterval | default 15 | quote }}
 {{- end -}}
