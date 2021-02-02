@@ -31,6 +31,12 @@ controllerCreds:
     secretName: netris-creds
     key: password
 
+# Set the log level of netris-operator. Possible values 'info' or 'debug'
+logLevel: info
+
+# Set the requeue interval in seconds for the netris-operator.
+requeueInterval: 15
+
 rbac:
   # Specifies whether RBAC resources should be created
   create: true

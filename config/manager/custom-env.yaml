@@ -26,3 +26,7 @@ spec:
                   key: password
             - name: CONTROLLER_INSECURE
               value: "false"
+            - name: NOPERATOR_DEV_MODE
+              value: "false"
+            - name: NOPERATOR_REQUEUE_OPERATOR
+              value: "15"
