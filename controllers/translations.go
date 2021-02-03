@@ -67,14 +67,15 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 		},
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.VNetMetaSpec{
-			Name:     string(vnet.GetUID()),
-			VnetName: vnet.Name,
-			Sites:    sitesList,
-			OwnerID:  tenantID,
-			Tenants:  []int{}, // AAAAAAA
-			Gateways: apiGateways,
-			Members:  prts,
-
+			Name:         string(vnet.GetUID()),
+			VnetName:     vnet.Name,
+			Sites:        sitesList,
+			State:        "active",
+			OwnerID:      tenantID,
+			Tenants:      []int{}, // AAAAAAA
+			Gateways:     apiGateways,
+			Members:      prts,
+			Provisioning: 1,
 			VaMode:       false,
 			VaNativeVLAN: 1,
 			VaVLANs:      "",
@@ -111,12 +112,14 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 		Name:         vnetMeta.Spec.VnetName,
 		Sites:        siteIDs,
 		Owner:        vnetMeta.Spec.OwnerID,
+		State:        "active",
 		Tenants:      []int{}, // AAAAAAA
 		Gateways:     apiGateways,
 		Members:      k8sMemberToAPIMember(vnetMeta.Spec.Members).String(),
 		VaMode:       false,
 		VaNativeVLAN: 1,
 		VaVLANs:      "",
+		Provisioning: 1,
 	}
 
 	return vnetAdd, nil
@@ -144,6 +147,7 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate,
 		ID:           vnetMeta.Spec.ID,
 		Name:         vnetMeta.Spec.VnetName,
 		Sites:        siteIDs,
+		State:        vnetMeta.Spec.State,
 		Owner:        vnetMeta.Spec.OwnerID,
 		Tenants:      []int{}, // AAAAAAA
 		Gateways:     apiGateways,
@@ -151,6 +155,7 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate,
 		VaMode:       false,
 		VaNativeVLAN: "1",
 		VaVLANs:      "",
+		Provisioning: 1,
 	}
 
 	return vnetUpdate, nil

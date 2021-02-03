@@ -94,6 +94,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				debugLogger.Info("Something changed")
 				debugLogger.Info("Go to update Vnet in Netris")
 				logger.Info("Updating VNet")
+				vnetMeta.Spec.State = apiVnet.State
 				updateVnet, err := VnetMetaToNetrisUpdate(vnetMeta)
 				if err != nil {
 					logger.Error(fmt.Errorf("{VnetMetaToNetrisUpdate} %s", err), "")
