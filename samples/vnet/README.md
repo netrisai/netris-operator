@@ -16,9 +16,9 @@ spec:
   sites:                                             # [3]
   - name: yerevan                                    # [4]
     gateways:                                        # [5]
-    - gateway4: 109.23.0.6/24
-    - gateway4: 109.24.0.6/24
-    - gateway6: 2001:db8:acad::fffe/64
+    - 109.23.0.6/24
+    - 109.24.72.6/24
+    - 2001:db8:acad::fffe/64
     switchPorts:                                     # [6]
     - name: swp4@rlab-leaf1                          # [7]
       vlanId: 1050                                   # [8]
@@ -33,7 +33,7 @@ Ref | Attribute                              | Default     | Description
 []  | state                                  | active      | V-Net state. Allowed values: `active` or `disable`. 
 [3] | sites                                  | []          | List of sites. Ports from these sites will be allowed to participate to the V-Net. Multi-site circuits are possible for sites connected through a backbone port.
 [4] | sites[n].name                          | ""          | Site's name.
-[5] | sites[n].gateways                      | []          | List of gateways. Possible keys in the list: `gateway4` or `gateway6`. Selected address will be serving as anycast default gateway for selected subnet. In case of multi-site V-Net, multi-site subnet should be configured under Subnets section.
+[5] | sites[n].gateways                      | []          | List of gateways. Selected address will be serving as anycast default gateway for selected subnet. In case of multi-site V-Net, multi-site subnet should be configured under Subnets section.
 [6] | sites[n].switchPorts                   | []          | List of switchPorts.
 [7] | sites[n].switchPorts[n].name           | ""          | SwitchPorts name.
 [8] | sites[n].switchPorts[n].vlanId         | nil         | VLAN tag for current port. If `vlanid` is not set - means port untagged
