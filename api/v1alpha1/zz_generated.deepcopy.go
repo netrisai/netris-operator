@@ -281,7 +281,7 @@ func (in *VNetSpec) DeepCopyInto(out *VNetSpec) {
 	*out = *in
 	if in.GuestTenants != nil {
 		in, out := &in.GuestTenants, &out.GuestTenants
-		*out = make([]int, len(*in))
+		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
 	if in.Sites != nil {

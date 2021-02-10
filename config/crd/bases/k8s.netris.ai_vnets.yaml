@@ -38,7 +38,7 @@ spec:
           properties:
             guestTenants:
               items:
-                type: integer
+                type: string
               type: array
             ownerTenant:
               type: string
