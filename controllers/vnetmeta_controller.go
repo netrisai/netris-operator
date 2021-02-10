@@ -86,6 +86,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				logger.Info("VNet imported")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
 			}
+			logger.Info("VNet not found for import")
 			debugLogger.Info("Imported yaml mode. VNet not found")
 		}
 
