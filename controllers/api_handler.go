@@ -71,17 +71,26 @@ func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) []k8sv1alpha1.VNetMeta
 		if vlanID == 1 {
 			portIsUntagged = true
 		}
+
+		state := "active"
+		if len(port.State) > 0 {
+			if port.State == "active" || port.State == "disabled" {
+				state = port.State
+			}
+		}
+
 		hwPorts[port.Name] = &api.APIVNetMember{
 			VLANID:         vlanID,
 			PortIsUntagged: portIsUntagged,
+			MemberState:    state,
 		}
+
 	}
 	for portName := range hwPorts {
 		if port, yes := NStorage.PortsStorage.FindByName(portName); yes {
 			hwPorts[portName].PortID = port.ID
 			hwPorts[portName].PortName = portName
 			hwPorts[portName].TenantID = port.TenantID
-			hwPorts[portName].MemberState = port.MemberState
 			hwPorts[portName].LACP = "off"
 			hwPorts[portName].ParentPort = port.ParentPort
 			// hwPorts[portName].Name = port.SlavePortName

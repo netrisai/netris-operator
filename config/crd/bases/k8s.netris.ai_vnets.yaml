@@ -64,6 +64,8 @@ spec:
                       properties:
                         name:
                           type: string
+                        state:
+                          type: string
                         vlanId:
                           type: integer
                       required:

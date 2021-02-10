@@ -205,9 +205,10 @@ func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGatew
 func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember, apiVnetMembers []api.APIVNetInfoMember) bool {
 
 	type member struct {
-		PortID   int `diff:"port_id"`
-		TenantID int `diff:"tenant_id"`
-		VLANID   int `diff:"vlan_id"`
+		PortID   int    `diff:"port_id"`
+		TenantID int    `diff:"tenant_id"`
+		VLANID   int    `diff:"vlan_id"`
+		State    string `diff:"state"`
 	}
 
 	vnetMembers := []member{}
@@ -218,6 +219,7 @@ func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember,
 			PortID:   m.PortID,
 			TenantID: m.TenantID,
 			VLANID:   m.VLANID,
+			State:    m.MemberState,
 		})
 	}
 
@@ -226,6 +228,7 @@ func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember,
 			PortID:   m.PortID,
 			TenantID: m.TenantID,
 			VLANID:   m.VlanID,
+			State:    m.MemberState,
 		})
 	}
 
