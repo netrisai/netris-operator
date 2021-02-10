@@ -60,6 +60,14 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	}
 	tenantID = tenant.ID
 
+	state := "active"
+	if len(vnet.Spec.State) > 0 {
+		if !(vnet.Spec.State == "active" || vnet.Spec.State == "disabled") {
+			return nil, fmt.Errorf("Invalid spec.state field")
+		}
+		state = vnet.Spec.State
+	}
+
 	vnetMeta := &k8sv1alpha1.VNetMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(vnet.GetUID()),
@@ -70,7 +78,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 			Name:         string(vnet.GetUID()),
 			VnetName:     vnet.Name,
 			Sites:        sitesList,
-			State:        "active",
+			State:        state,
 			OwnerID:      tenantID,
 			Tenants:      []int{}, // AAAAAAA
 			Gateways:     apiGateways,
@@ -112,7 +120,7 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 		Name:         vnetMeta.Spec.VnetName,
 		Sites:        siteIDs,
 		Owner:        vnetMeta.Spec.OwnerID,
-		State:        "active",
+		State:        vnetMeta.Spec.State,
 		Tenants:      []int{}, // AAAAAAA
 		Gateways:     apiGateways,
 		Members:      k8sMemberToAPIMember(vnetMeta.Spec.Members).String(),
