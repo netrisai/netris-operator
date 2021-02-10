@@ -25,6 +25,7 @@ import (
 
 // VNetMetaSpec defines the desired state of VNetMeta
 type VNetMetaSpec struct {
+	Imported         bool              `json:"imported"`
 	VnetCRGeneration int64             `json:"vnetGeneration"`
 	Gateways         []VNetMetaGateway `json:"gateways"`
 	ID               int               `json:"id"`

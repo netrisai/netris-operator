@@ -68,6 +68,13 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 		state = vnet.Spec.State
 	}
 
+	imported := false
+	if i, ok := vnet.GetAnnotations()["netris.imported"]; ok {
+		if i == "true" {
+			imported = true
+		}
+	}
+
 	vnetMeta := &k8sv1alpha1.VNetMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(vnet.GetUID()),
@@ -75,6 +82,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 		},
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.VNetMetaSpec{
+			Imported:     imported,
 			Name:         string(vnet.GetUID()),
 			VnetName:     vnet.Name,
 			Sites:        sitesList,

@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"go.uber.org/zap/zapcore"
@@ -64,6 +65,30 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if vnetMeta.Spec.ID == 0 {
 		debugLogger.Info("ID Not found in meta")
+
+		if vnetMeta.Spec.Imported {
+			logger.Info("Importing vnet")
+			debugLogger.Info("Imported yaml mode. Finding VNet by name")
+			if vnet, ok := NStorage.VNetStorage.findByName(vnetMeta.Spec.VnetName); ok {
+				debugLogger.Info("Imported yaml mode. Vnet found")
+				vnetID, err := strconv.Atoi(vnet.ID)
+				if err != nil {
+					debugLogger.Info(err.Error())
+					return ctrl.Result{RequeueAfter: requeueInterval}, nil
+				}
+				vnetMeta.Spec.ID = vnetID
+				err = r.Patch(context.Background(), vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				if err != nil {
+					logger.Error(fmt.Errorf("{patch vnetmeta.Spec.ID} %s", err), "")
+					return ctrl.Result{RequeueAfter: requeueInterval}, nil
+				}
+				debugLogger.Info("Imported yaml mode. ID patched")
+				logger.Info("VNet imported")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			}
+			debugLogger.Info("Imported yaml mode. VNet not found")
+		}
+
 		logger.Info("Creating VNet")
 		if _, err := r.createVNet(vnetMeta); err != nil {
 			logger.Error(fmt.Errorf("{createVNet} %s", err), "")
