@@ -73,9 +73,7 @@ spec:
                       type: object
                     type: array
                 required:
-                - gateways
                 - name
-                - switchPorts
                 type: object
               type: array
             state:
