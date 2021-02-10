@@ -10,8 +10,8 @@ spec:
   sites:
     - name: Yerevan
       gateways:
-        - gateway4: 109.23.0.6/24
-        - gateway6: 2001:db8:acad::fffe/64
+        - 109.23.0.6/24
+        - 2001:db8:acad::fffe/64
       switchPorts:
         - name: swp5@rlab-spine1
           vlanId: 1050

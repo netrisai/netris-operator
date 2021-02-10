@@ -43,22 +43,21 @@ func ignoreDeletionPredicate() predicate.Predicate {
 	}
 }
 
-func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
-	addr := ""
+func makeGateway(gateway string) k8sv1alpha1.VNetMetaGateway {
 	version := ""
-	if len(gateway.Gateway4) > 0 {
-		version = "ipv4"
-		addr = gateway.Gateway4
+	ip, ipNet, err := net.ParseCIDR(gateway)
 
-	} else if len(gateway.Gateway6) > 0 {
-		version = "ipv6"
-		addr = gateway.Gateway6
-	}
-	ip, ipNet, err := net.ParseCIDR(addr)
 	if err != nil {
 		fmt.Println(err)
 		return k8sv1alpha1.VNetMetaGateway{}
 	}
+
+	if len(ip.To4()) == net.IPv4len {
+		version = "ipv4"
+	} else {
+		version = "ipv6"
+	}
+
 	gwLength, _ := ipNet.Mask.Size()
 	apiGateway := k8sv1alpha1.VNetMetaGateway{
 		Gateway:  ip.String(),

@@ -68,14 +68,8 @@ type VNetSpec struct {
 // VNetSite .
 type VNetSite struct {
 	Name        string           `json:"name"`
-	Gateways    []VNetGateway    `json:"gateways,omitempty"`
+	Gateways    []string         `json:"gateways,omitempty"`
 	SwitchPorts []VNetSwitchPort `json:"switchPorts,omitempty"`
-}
-
-// VNetGateway .
-type VNetGateway struct {
-	Gateway4 string `json:"gateway4,omitempty"`
-	Gateway6 string `json:"gateway6,omitempty"`
 }
 
 // VNetSwitchPort .

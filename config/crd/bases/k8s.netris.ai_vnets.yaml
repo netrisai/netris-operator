@@ -48,13 +48,7 @@ spec:
                 properties:
                   gateways:
                     items:
-                      description: VNetGateway .
-                      properties:
-                        gateway4:
-                          type: string
-                        gateway6:
-                          type: string
-                      type: object
+                      type: string
                     type: array
                   name:
                     type: string
