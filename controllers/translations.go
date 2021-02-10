@@ -60,6 +60,16 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	}
 	tenantID = tenant.ID
 
+	guestTenants := []int{}
+	for _, guest := range vnet.Spec.GuestTenants {
+		tenant, ok := NStorage.TenantsStorage.FindByName(guest)
+		if !ok {
+
+			return nil, fmt.Errorf("Guest tenant '%s' not found", guest)
+		}
+		guestTenants = append(guestTenants, tenant.ID)
+	}
+
 	state := "active"
 	if len(vnet.Spec.State) > 0 {
 		if !(vnet.Spec.State == "active" || vnet.Spec.State == "disabled") {
@@ -88,7 +98,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 			Sites:        sitesList,
 			State:        state,
 			OwnerID:      tenantID,
-			Tenants:      []int{}, // AAAAAAA
+			Tenants:      guestTenants,
 			Gateways:     apiGateways,
 			Members:      prts,
 			Provisioning: 1,
@@ -129,7 +139,7 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 		Sites:        siteIDs,
 		Owner:        vnetMeta.Spec.OwnerID,
 		State:        vnetMeta.Spec.State,
-		Tenants:      []int{}, // AAAAAAA
+		Tenants:      vnetMeta.Spec.Tenants,
 		Gateways:     apiGateways,
 		Members:      k8sMemberToAPIMember(vnetMeta.Spec.Members).String(),
 		VaMode:       false,
@@ -165,7 +175,7 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate,
 		Sites:        siteIDs,
 		State:        vnetMeta.Spec.State,
 		Owner:        vnetMeta.Spec.OwnerID,
-		Tenants:      []int{}, // AAAAAAA
+		Tenants:      vnetMeta.Spec.Tenants,
 		Gateways:     apiGateways,
 		Members:      k8sMemberToAPIMember(vnetMeta.Spec.Members).String(),
 		VaMode:       false,
@@ -249,6 +259,16 @@ func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember,
 	return true
 }
 
+func compareVNetMetaAPIVnetTenants(vnetMetaTenants []int, apiVnetTenants []int) bool {
+	changelog, _ := diff.Diff(vnetMetaTenants, apiVnetTenants)
+
+	if len(changelog) > 0 {
+		return false
+	}
+
+	return true
+}
+
 func compareVNetMetaAPIVnetSites(vnetMetaSites []k8sv1alpha1.VNetMetaSite, apiVnetSites []int) bool {
 
 	k8sSites := make(map[int]string)
@@ -282,6 +302,10 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *api.APIVNet
 	}
 
 	if vnetMeta.Spec.OwnerID != apiVnet.Owner {
+		return false
+	}
+
+	if ok := compareVNetMetaAPIVnetTenants(vnetMeta.Spec.Tenants, apiVnet.TenantsID); !ok {
 		return false
 	}
 
