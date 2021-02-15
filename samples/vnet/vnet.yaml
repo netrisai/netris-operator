@@ -2,8 +2,6 @@ apiVersion: k8s.netris.ai/v1alpha1
 kind: VNet
 metadata:
   name: myvnet
-  annotations:
-    netris.imported: "true"
 spec:
   ownerTenant: Admin
   guestTenants: []
