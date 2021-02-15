@@ -59,6 +59,8 @@ spec:
               type: array
             id:
               type: integer
+            imported:
+              type: boolean
             members:
               items:
                 description: VNetMetaMember .
@@ -131,6 +133,7 @@ spec:
           required:
           - gateways
           - id
+          - imported
           - members
           - name
           - owner
