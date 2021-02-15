@@ -128,6 +128,8 @@ helm: generate fmt vet manifests pip-install-reqs
 	scripts/rbac-helm-template.py config/rbac/$${i} | yq -y . >> deploy/charts/netris-operator/templates/rbac.yaml;\
 	done
 	echo "{{- end }}" >> deploy/charts/netris-operator/templates/rbac.yaml
+
+helm-push: helm
 	@{ \
 	set -e ;\
 	HELM_CHART_GEN_TMP_DIR=$$(mktemp -d) ;\
