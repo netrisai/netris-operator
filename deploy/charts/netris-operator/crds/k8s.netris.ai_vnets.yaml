@@ -38,7 +38,7 @@ spec:
           properties:
             guestTenants:
               items:
-                type: integer
+                type: string
               type: array
             ownerTenant:
               type: string
@@ -48,13 +48,7 @@ spec:
                 properties:
                   gateways:
                     items:
-                      description: VNetGateway .
-                      properties:
-                        gateway4:
-                          type: string
-                        gateway6:
-                          type: string
-                      type: object
+                      type: string
                     type: array
                   name:
                     type: string
@@ -64,6 +58,8 @@ spec:
                       properties:
                         name:
                           type: string
+                        state:
+                          type: string
                         vlanId:
                           type: integer
                       required:
@@ -71,9 +67,7 @@ spec:
                       type: object
                     type: array
                 required:
-                - gateways
                 - name
-                - switchPorts
                 type: object
               type: array
             state:
