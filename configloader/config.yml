@@ -1,4 +1,8 @@
 controller:
-  # address: http://example.com                   # overwrite env: CONTROLLER_HOST
+  # host: http://example.com                      # overwrite env: CONTROLLER_HOST
   # login: login                                  # overwrite env: CONTROLLER_LOGIN
   # password: pass                                # overwrite env: CONTROLLER_PASSWORD
+  # insecure: false                               # overwrite env: CONTROLLER_INSECURE
+
+# logdevmode: false                               # overwrite env: NOPERATOR_DEV_MODE
+# requeueinterval: 15                             # overwrite env: NOPERATOR_REQUEUE_OPERATOR

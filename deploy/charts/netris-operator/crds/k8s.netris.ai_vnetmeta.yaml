@@ -1,0 +1,162 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: vnetmeta.k8s.netris.ai
+spec:
+  group: k8s.netris.ai
+  names:
+    kind: VNetMeta
+    listKind: VNetMetaList
+    plural: vnetmeta
+    singular: vnetmeta
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: VNetMeta is the Schema for the vnetmeta API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: VNetMetaSpec defines the desired state of VNetMeta
+          properties:
+            gateways:
+              items:
+                description: VNetMetaGateway .
+                properties:
+                  gateway:
+                    type: string
+                  gwLength:
+                    type: integer
+                  id:
+                    type: integer
+                  nos:
+                    type: string
+                  vaVlanId:
+                    type: integer
+                  version:
+                    type: string
+                required:
+                - gateway
+                - gwLength
+                type: object
+              type: array
+            id:
+              type: integer
+            members:
+              items:
+                description: VNetMetaMember .
+                properties:
+                  childPort:
+                    type: integer
+                  lacp:
+                    type: string
+                  member_state:
+                    type: string
+                  parentPort:
+                    type: integer
+                  port_id:
+                    type: integer
+                  port_name:
+                    type: string
+                  portIsUntagged:
+                    type: boolean
+                  tenant_id:
+                    type: integer
+                  vlan_id:
+                    type: integer
+                required:
+                - childPort
+                - lacp
+                - member_state
+                - parentPort
+                - portIsUntagged
+                - port_id
+                - port_name
+                - tenant_id
+                - vlan_id
+                type: object
+              type: array
+            name:
+              type: string
+            owner:
+              type: string
+            ownerid:
+              type: integer
+            provisioning:
+              type: integer
+            sites:
+              items:
+                description: VNetMetaSite .
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                type: object
+              type: array
+            state:
+              type: string
+            tenants:
+              items:
+                type: integer
+              type: array
+            vaMode:
+              type: boolean
+            vaNativeVlan:
+              type: integer
+            vaVlans:
+              type: string
+            vnetGeneration:
+              format: int64
+              type: integer
+            vnetName:
+              type: string
+          required:
+          - gateways
+          - id
+          - members
+          - name
+          - owner
+          - ownerid
+          - provisioning
+          - sites
+          - state
+          - tenants
+          - vaMode
+          - vaNativeVlan
+          - vaVlans
+          - vnetGeneration
+          - vnetName
+          type: object
+        status:
+          description: VNetMetaStatus defines the observed state of VNetMeta
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

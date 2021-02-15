@@ -1,22 +1,25 @@
 package configloader
 
 import (
-	"errors"
 	"log"
 	"os"
 	"path"
 )
 
 type config struct {
-	Controller controller `yaml:"controller"`
+	Controller      controller `yaml:"controller"`
+	LogDevMode      bool       `yaml:"logdevmode" envconfig:"NOPERATOR_DEV_MODE"`
+	RequeueInterval int        `yaml:"requeueinterval" envconfig:"NOPERATOR_REQUEUE_OPERATOR"`
 }
 
 type controller struct {
-	Host     string `yaml:"address" envconfig:"CONTROLLER_HOST"`
+	Host     string `yaml:"host" envconfig:"CONTROLLER_HOST"`
 	Login    string `yaml:"login" envconfig:"CONTROLLER_LOGIN"`
 	Password string `yaml:"password" envconfig:"CONTROLLER_PASSWORD"`
+	Insecure bool   `yaml:"insecure" envconfig:"CONTROLLER_INSECURE"`
 }
 
+// Root .
 var Root *config
 
 func init() {
@@ -29,12 +32,12 @@ func init() {
 	err = Unmarshal(path.Join(wd, "configloader", "config.yml"), ptr)
 	Root = ptr
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			log.Printf("%s/configloader/config.yml not found. Config not loaded, no panic for tests", wd)
-		} else {
-			panic(err)
-		}
+		log.Fatalf("configloader error: %v", err)
 	} else {
-		log.Printf("%s/configloader/config.yml config loaded", wd)
+		if len(ptr.Controller.Host) == 0 {
+			log.Fatalln("Please set netris controller credentials")
+		} else {
+			log.Printf("connecting to host - %v", ptr.Controller.Host)
+		}
 	}
 }

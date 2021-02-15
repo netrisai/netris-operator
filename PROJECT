@@ -1,10 +1,13 @@
 domain: netris.ai
 layout: go.kubebuilder.io/v2
 projectName: netris-operator
-repo: github.com/netrisx/netris-operator
+repo: github.com/netrisai/netris-operator
 resources:
 - group: k8s
   kind: VNet
+  version: v1alpha1
+- group: k8s
+  kind: VNetMeta
   version: v1alpha1
 version: 3-alpha
 plugins:

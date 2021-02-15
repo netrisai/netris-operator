@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - name: manager
+          env:
+            - name: CONTROLLER_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: netris-creds
+                  key: host
+            - name: CONTROLLER_LOGIN
+              valueFrom:
+                secretKeyRef:
+                  name: netris-creds
+                  key: login
+            - name: CONTROLLER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: netris-creds
+                  key: password
+            - name: CONTROLLER_INSECURE
+              value: "false"
+            - name: NOPERATOR_DEV_MODE
+              value: "false"
+            - name: NOPERATOR_REQUEUE_OPERATOR
+              value: "15"

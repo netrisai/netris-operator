@@ -19,20 +19,17 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"log"
-	"strconv"
-	"time"
 
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/errors"
-
-	"encoding/json"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8sv1alpha1 "github.com/netrisx/netris-operator/api/v1alpha1"
+	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	api "github.com/netrisai/netrisapi"
 )
 
 // VNetReconciler reconciles a VNet object
@@ -42,81 +39,170 @@ type VNetReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// unmarshaledData struct
-var unmarshaledData map[string]interface{}
-
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnets/status,verbs=get;update;patch
 
 // Reconcile vnet events
 func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("vnet", req.NamespacedName)
+	logger := r.Log.WithValues("name", req.NamespacedName)
+	debugLogger := logger.V(int(zapcore.WarnLevel))
+	vnet := &k8sv1alpha1.VNet{}
 
-	reconciledResource := &k8sv1alpha1.VNet{}
-	err := r.Get(context.Background(), req.NamespacedName, reconciledResource)
-	if err != nil {
+	if err := r.Get(context.Background(), req.NamespacedName, vnet); err != nil {
 		if errors.IsNotFound(err) {
-			fmt.Println("GO TO DELETE RESOURSE")
-
-		} else {
-			log.Printf("r.Get 1: %v", err)
+			debugLogger.Info(err.Error())
+			return ctrl.Result{}, nil
 		}
-	} else {
-		fmt.Println("GO TO CREATE/UPDATE RESOURSE")
-		reconciledResourceSpecJSON, err := json.Marshal(reconciledResource.Spec)
-		if err != nil {
-			log.Printf("reconciledResourceSpecJSON error: %v", err)
-		}
-		if reconciledResource.Spec.ID == 0 {
-			fmt.Println("GO TO CREATE")
-			fmt.Println("Create with params: ---", string(reconciledResourceSpecJSON))
-			createVNet, err := AddVNet(cred, reconciledResourceSpecJSON)
-			if err != nil {
-				log.Printf("createVNet error: %v", err)
-			}
-			fmt.Println(string(createVNet.Data))
-			if err := json.Unmarshal(createVNet.Data, &unmarshaledData); err != nil {
-				log.Fatalf("vnetResponseUnmarshal error: %v", err)
-			}
-			isSuccess := unmarshaledData["isSuccess"].(bool)
-			if isSuccess {
-				vnetID := unmarshaledData["data"].(map[string]interface{})
-				fmt.Println("vnetID - ", vnetID["circuitID"])
-				vid, err := strconv.Atoi(fmt.Sprint(vnetID["circuitID"]))
-				if err != nil {
-					fmt.Println("id convert error")
-				}
-				reconciledResource.Spec.ID = vid
-				r.Patch(context.Background(), reconciledResource.DeepCopyObject(), client.Merge, &client.PatchOptions{})
-				if err != nil {
-					log.Printf("r.Patch( error: %v", err)
-				}
-			}
+		return ctrl.Result{}, err
+	}
 
+	vnetMetaNamespaced := req.NamespacedName
+	vnetMetaNamespaced.Name = string(vnet.GetUID())
+	vnetMeta := &k8sv1alpha1.VNetMeta{}
+	metaFound := true
+	if err := r.Get(context.Background(), vnetMetaNamespaced, vnetMeta); err != nil {
+		if errors.IsNotFound(err) {
+			debugLogger.Info(err.Error())
+			metaFound = false
+			vnetMeta = nil
 		} else {
-			fmt.Println("GO TO UPDATE")
+			return ctrl.Result{}, err
 		}
 	}
-	// return ctrl.Result{}, nil
-	return ctrl.Result{RequeueAfter: time.Second * 60}, nil
 
+	if vnet.DeletionTimestamp != nil {
+		logger.Info("Go to delete")
+		_, err := r.deleteVNet(vnet, vnetMeta)
+		if err != nil {
+			logger.Error(fmt.Errorf("{deleteVNet} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+		logger.Info("Vnet deleted")
+		return ctrl.Result{}, nil
+	}
+
+	if metaFound {
+		debugLogger.Info("Meta found")
+		if vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration {
+			debugLogger.Info("Generating New Meta")
+			vnetID := vnetMeta.Spec.ID
+			newVnetMeta, err := r.VnetToVnetMeta(vnet)
+			if err != nil {
+				logger.Error(fmt.Errorf("{VnetToVnetMeta} %s", err), "")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			}
+			vnetMeta.Spec = newVnetMeta.DeepCopy().Spec
+			vnetMeta.Spec.ID = vnetID
+			vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
+
+			err = r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{})
+			if err != nil {
+				logger.Error(fmt.Errorf("{vnetMeta Update} %s", err), "")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			}
+		}
+	} else {
+		debugLogger.Info("Meta not found")
+		if vnet.GetFinalizers() == nil {
+			vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+			err := r.Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			if err != nil {
+				logger.Error(fmt.Errorf("{Patch VNet Finalizer} %s", err), "")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			}
+			return ctrl.Result{}, nil
+		}
+
+		vnetMeta, err := r.VnetToVnetMeta(vnet)
+		if err != nil {
+			logger.Error(fmt.Errorf("{VnetToVnetMeta} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+
+		vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
+
+		if err := r.Create(context.Background(), vnetMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+			logger.Error(fmt.Errorf("{vnetMeta Create} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error) {
+	reply, err := Cred.ValidateVNet(vnet)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err)
+	}
+	resp, err := api.ParseAPIResponse(reply.Data)
+	if !resp.IsSuccess {
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message))
+	}
+
+	reply, err = Cred.UpdateVNet(vnet)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err)
+	}
+	resp, err = api.ParseAPIResponse(reply.Data)
+	if !resp.IsSuccess {
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message))
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
+	if vnetMeta != nil && vnetMeta.Spec.ID > 0 {
+		reply, err := Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
+
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", err)
+		}
+		resp, err := api.ParseAPIResponse(reply.Data)
+		if !resp.IsSuccess {
+			if resp.Message != "Invalid circuit ID" {
+				return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", fmt.Errorf(resp.Message))
+			}
+		}
+	}
+	return r.deleteCRs(vnet, vnetMeta)
+}
+
+func (r *VNetReconciler) deleteCRs(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
+	if vnetMeta != nil {
+		_, err := r.deleteVnetMetaCR(vnetMeta)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("{deleteCRs} %s", err)
+		}
+	}
+
+	return r.deleteVnetCR(vnet)
+}
+
+func (r *VNetReconciler) deleteVnetCR(vnet *k8sv1alpha1.VNet) (ctrl.Result, error) {
+	vnet.ObjectMeta.SetFinalizers(nil)
+	vnet.SetFinalizers(nil)
+	if err := r.Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+		return ctrl.Result{}, fmt.Errorf("{deleteVnetCR} %s", err)
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *VNetReconciler) deleteVnetMetaCR(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
+	if err := r.Delete(context.Background(), vnetMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+		return ctrl.Result{}, fmt.Errorf("{deleteVnetMetaCR} %s", err)
+	}
+
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager Resources
 func (r *VNetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.VNet{}).
+		// WithEventFilter(ignoreDeletionPredicate()).
 		Complete(r)
-}
-
-// AddVNet new
-func AddVNet(cred *HTTPCred, vnet []byte) (reply HTTPReply, err error) {
-	address := cred.URL.String() + conductorAddresses.VNet
-	reply, err = cred.Post(address, vnet)
-	if err != nil {
-		return reply, err
-	}
-
-	return reply, nil
 }

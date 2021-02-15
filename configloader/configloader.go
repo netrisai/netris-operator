@@ -2,9 +2,11 @@ package configloader
 
 import (
 	"errors"
+	"log"
+	"os"
+
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/yaml.v2"
-	"os"
 )
 
 const ymlExt = ".yml"
@@ -14,7 +16,12 @@ func readFile(path string, configPtr interface{}) error {
 	if openErr != nil {
 		return openErr
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			log.Printf("f.Close() error: %v", err)
+		}
+	}()
 
 	decoder := yaml.NewDecoder(f)
 	decErr := decoder.Decode(configPtr)
@@ -34,7 +41,7 @@ func readEnv(configPtr interface{}) error {
 	return nil
 }
 
-// "path" yml file path
+// Unmarshal "path" yml file path
 // "configPtr" pointer to result struct
 func Unmarshal(path string, configPtr interface{}) error {
 	extension := path[len(path)-4:]
@@ -44,7 +51,7 @@ func Unmarshal(path string, configPtr interface{}) error {
 
 	fileErr := readFile(path, configPtr)
 	if fileErr != nil {
-		return fileErr
+		log.Println("config.yml not loaded")
 	}
 
 	envErr := readEnv(configPtr)
