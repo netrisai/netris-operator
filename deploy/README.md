@@ -28,7 +28,8 @@ kubectl -n netris-operator create secret generic netris-creds \
 As an alternative to the YAML manifests referenced above, we also provide an official Helm chart for installing netris-operator.
 ## Prerequisites
 
-- Helm v3 only
+- Kubernetes 1.16+
+- Helm 3.1+
 
 ## Steps
 
