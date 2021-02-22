@@ -1,4 +1,4 @@
-# Netris-Operator Deployment
+# Netris-Operator
 
 Netris-operator runs within your Kubernetes cluster as a deployment resource. It utilizes CustomResourceDefinitions to configure netris cloud resources.
 
