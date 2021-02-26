@@ -8,6 +8,33 @@ metadata:
   creationTimestamp: null
   name: vnets.k8s.netris.ai
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.state
+    name: State
+    type: string
+  - JSONPath: .spec.sites[*].switchPorts[*].name
+    name: Gateways
+    type: string
+  - JSONPath: .spec.sites[*].name
+    name: Sites
+    type: string
+  - JSONPath: .metadata.managedFields[0].time
+    name: Modified
+    priority: 1
+    type: date
+  - JSONPath: .spec.ownerTenant
+    name: Owner
+    type: string
+  - JSONPath: .spec.guestTenants
+    name: Guest Tenants
+    priority: 1
+    type: string
+  - JSONPath: .status.status
+    name: Status
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: k8s.netris.ai
   names:
     kind: VNet
@@ -76,6 +103,19 @@ spec:
           - guestTenants
           - ownerTenant
           - sites
+          type: object
+        status:
+          description: VNetStatus defines the observed state of VNet
+          properties:
+            message:
+              type: string
+            state:
+              type: string
+            status:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
+              type: string
           type: object
       required:
       - spec

@@ -32,12 +32,21 @@ import (
 type VNetStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Status string `json:"status"`
-	Type   string `json:"type"`
+	Status  string `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
+	State   string `json:"state,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+// +kubebuilder:printcolumn:name="Gateways",type=string,JSONPath=`.spec.sites[*].switchPorts[*].name`
+// +kubebuilder:printcolumn:name="Sites",type=string,JSONPath=".spec.sites[*].name"
+// +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.metadata.managedFields[0].time`,priority=1
+// +kubebuilder:printcolumn:name="Owner",type=string,JSONPath=`.spec.ownerTenant`
+// +kubebuilder:printcolumn:name="Guest Tenants",type=string,JSONPath=`.spec.guestTenants`,priority=1
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // VNet is the Schema for the vnets API
 type VNet struct {
@@ -45,7 +54,8 @@ type VNet struct {
 	// Kind              string `json:"kind"`
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              VNetSpec `json:"spec"`
+	Spec              VNetSpec   `json:"spec"`
+	Status            VNetStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true

@@ -131,26 +131,26 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
-func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error) {
+func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
 	reply, err := Cred.ValidateVNet(vnet)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err)
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
 	}
 	resp, err := api.ParseAPIResponse(reply.Data)
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message))
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
 	}
 
 	reply, err = Cred.UpdateVNet(vnet)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err)
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
 	}
 	resp, err = api.ParseAPIResponse(reply.Data)
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message))
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, nil, nil
 }
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
