@@ -86,7 +86,10 @@ type VNetSite struct {
 
 // VNetSwitchPort .
 type VNetSwitchPort struct {
-	Name   string `json:"name"`
+	Name string `json:"name"`
+
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=4094
 	VlanID int    `json:"vlanId,omitempty"`
 	State  string `json:"state,omitempty"`
 }
