@@ -69,7 +69,9 @@ type VNetList struct {
 
 // VNetSpec .
 type VNetSpec struct {
-	Owner        string     `json:"ownerTenant"`
+	Owner string `json:"ownerTenant"`
+
+	// +kubebuilder:validation:Enum=active;disabled
 	State        string     `json:"state,omitempty"`
 	GuestTenants []string   `json:"guestTenants"`
 	Sites        []VNetSite `json:"sites"`

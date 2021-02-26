@@ -88,6 +88,8 @@ spec:
                         state:
                           type: string
                         vlanId:
+                          maximum: 4094
+                          minimum: 1
                           type: integer
                       required:
                       - name
@@ -98,6 +100,9 @@ spec:
                 type: object
               type: array
             state:
+              enum:
+              - active
+              - disabled
               type: string
           required:
           - guestTenants
