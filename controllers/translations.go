@@ -322,6 +322,10 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *api.APIVNet
 		return false
 	}
 
+	if vnetMeta.Spec.State != apiVnet.State {
+		return false
+	}
+
 	return true
 }
 
