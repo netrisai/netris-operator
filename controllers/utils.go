@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
@@ -83,4 +84,9 @@ func getVNet(id int) (vnet *api.APIVNet, err error) {
 	}
 
 	return vnet, fmt.Errorf("VNet not found in Netris")
+}
+
+func toJSON(s interface{}) string {
+	js, _ := json.Marshal(s)
+	return string(js)
 }
