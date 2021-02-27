@@ -100,6 +100,7 @@ func (v *VNetGateway) String() string {
 
 // VNetSwitchPort .
 type VNetSwitchPort struct {
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$`
 	Name string `json:"name"`
 
 	// +kubebuilder:validation:Minimum=2
