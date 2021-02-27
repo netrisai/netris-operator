@@ -91,7 +91,7 @@ spec:
                           type: string
                         vlanId:
                           maximum: 4094
-                          minimum: 1
+                          minimum: 2
                           type: integer
                       required:
                       - name

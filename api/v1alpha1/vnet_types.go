@@ -102,7 +102,7 @@ func (v *VNetGateway) String() string {
 type VNetSwitchPort struct {
 	Name string `json:"name"`
 
-	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Minimum=2
 	// +kubebuilder:validation:Maximum=4094
 	VlanID int    `json:"vlanId,omitempty"`
 	State  string `json:"state,omitempty"`
