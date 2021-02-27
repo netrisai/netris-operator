@@ -242,7 +242,7 @@ func (in *VNetSite) DeepCopyInto(out *VNetSite) {
 	*out = *in
 	if in.Gateways != nil {
 		in, out := &in.Gateways, &out.Gateways
-		*out = make([]string, len(*in))
+		*out = make([]VNetGateway, len(*in))
 		copy(*out, *in)
 	}
 	if in.SwitchPorts != nil {

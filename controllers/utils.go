@@ -44,9 +44,9 @@ func ignoreDeletionPredicate() predicate.Predicate {
 	}
 }
 
-func makeGateway(gateway string) k8sv1alpha1.VNetMetaGateway {
+func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
 	version := ""
-	ip, ipNet, err := net.ParseCIDR(gateway)
+	ip, ipNet, err := net.ParseCIDR(gateway.String())
 
 	if err != nil {
 		fmt.Println(err)
