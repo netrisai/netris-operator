@@ -29,7 +29,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/netrisai/netris-operator/api/v1alpha1"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	api "github.com/netrisai/netrisapi"
 )
@@ -49,6 +48,12 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
+
+	u := uniReconciler{
+		Client:      r.Client,
+		Logger:      logger,
+		DebugLogger: debugLogger,
+	}
 
 	vnetMeta := &k8sv1alpha1.VNetMeta{}
 	vnetCR := &k8sv1alpha1.VNet{}
@@ -99,7 +104,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				err = r.Patch(context.Background(), vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch vnetmeta.Spec.ID} %s", err), "")
-					return r.updateVNetStatus(vnetCR, "Failure", err.Error())
+					return u.updateVNetStatus(vnetCR, "Failure", err.Error())
 				}
 				debugLogger.Info("Imported yaml mode. ID patched")
 				logger.Info("VNet imported")
@@ -112,14 +117,14 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		logger.Info("Creating VNet")
 		if _, err, errMsg := r.createVNet(vnetMeta); err != nil {
 			logger.Error(fmt.Errorf("{createVNet} %s", err), "")
-			return r.updateVNetStatus(vnetCR, "Netris Failure", errMsg.Error())
+			return u.updateVNetStatus(vnetCR, "Netris Failure", errMsg.Error())
 		}
 		logger.Info("VNet Created")
 	} else {
 		vnets, err := Cred.GetVNetsByID(vnetMeta.Spec.ID)
 		if err != nil {
 			logger.Error(fmt.Errorf("{GetVNetsByID} %s", err), "")
-			return r.updateVNetStatus(vnetCR, "Netris Failure", err.Error())
+			return u.updateVNetStatus(vnetCR, "Netris Failure", err.Error())
 		}
 		if len(vnets) == 0 {
 			debugLogger.Info("VNet not found in Netris")
@@ -127,7 +132,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			logger.Info("Creating VNet")
 			if _, err, errMsg := r.createVNet(vnetMeta); err != nil {
 				logger.Error(fmt.Errorf("{createVNet} %s", err), "")
-				return r.updateVNetStatus(vnetCR, "Netris Failure", errMsg.Error())
+				return u.updateVNetStatus(vnetCR, "Netris Failure", errMsg.Error())
 			}
 			logger.Info("VNet Created")
 		} else {
@@ -148,19 +153,19 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				updateVnet, err := VnetMetaToNetrisUpdate(vnetMeta)
 				if err != nil {
 					logger.Error(fmt.Errorf("{VnetMetaToNetrisUpdate} %s", err), "")
-					return r.updateVNetStatus(vnetCR, "Failure", err.Error())
+					return u.updateVNetStatus(vnetCR, "Failure", err.Error())
 				}
 				_, err, errMsg := updateVNet(updateVnet)
 				if err != nil {
 					logger.Error(fmt.Errorf("{updateVNet} %s", err), "")
-					return r.updateVNetStatus(vnetCR, "Netris Error", errMsg.Error())
+					return u.updateVNetStatus(vnetCR, "Netris Error", errMsg.Error())
 				}
 				logger.Info("VNet Updated")
 			}
 		}
 	}
 
-	return r.updateVNetStatus(vnetCR, provisionState, "Success")
+	return u.updateVNetStatus(vnetCR, provisionState, "Success")
 	// return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
@@ -169,27 +174,6 @@ func (r *VNetMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.VNetMeta{}).
 		Complete(r)
-}
-
-func (r *VNetMetaReconciler) updateVNetStatus(vnet *k8sv1alpha1.VNet, status, message string) (ctrl.Result, error) {
-	logger := r.Log.WithValues("name", vnet.UID)
-	debugLogger := logger.V(int(zapcore.WarnLevel))
-
-	debugLogger.Info("Updating Status", "status", status, "message", message)
-	state := "active"
-	if len(vnet.Spec.State) > 0 {
-		state = vnet.Spec.State
-	}
-	vnet.Status = v1alpha1.VNetStatus{
-		Status:  status,
-		Message: message,
-		State:   state,
-	}
-	err := r.Status().Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{})
-	if err != nil {
-		logger.Error(fmt.Errorf("{r.Status().Update} %s", err), "")
-	}
-	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
 func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error, error) {

@@ -49,6 +49,12 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	vnet := &k8sv1alpha1.VNet{}
 
+	u := uniReconciler{
+		Client:      r.Client,
+		Logger:      logger,
+		DebugLogger: debugLogger,
+	}
+
 	if err := r.Get(context.Background(), req.NamespacedName, vnet); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
@@ -76,7 +82,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		_, err := r.deleteVNet(vnet, vnetMeta)
 		if err != nil {
 			logger.Error(fmt.Errorf("{deleteVNet} %s", err), "")
-			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			return u.patchVNetStatus(vnet, "Netris Failure", err.Error())
 		}
 		logger.Info("Vnet deleted")
 		return ctrl.Result{}, nil
@@ -90,7 +96,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			newVnetMeta, err := r.VnetToVnetMeta(vnet)
 			if err != nil {
 				logger.Error(fmt.Errorf("{VnetToVnetMeta} %s", err), "")
-				return ctrl.Result{RequeueAfter: requeueInterval}, nil
+				return u.patchVNetStatus(vnet, "Failure", err.Error())
 			}
 			vnetMeta.Spec = newVnetMeta.DeepCopy().Spec
 			vnetMeta.Spec.ID = vnetID
@@ -117,7 +123,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		vnetMeta, err := r.VnetToVnetMeta(vnet)
 		if err != nil {
 			logger.Error(fmt.Errorf("{VnetToVnetMeta} %s", err), "")
-			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			return u.patchVNetStatus(vnet, "Failure", err.Error())
 		}
 
 		vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
