@@ -134,7 +134,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
 func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
