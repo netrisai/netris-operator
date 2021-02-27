@@ -40,7 +40,10 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 			apiGateways = append(apiGateways, makeGateway(gateway))
 		}
 	}
-	prts := getPortsMeta(ports)
+	prts, err := getPortsMeta(ports)
+	if err != nil {
+		return nil, err
+	}
 
 	sites := getSites(siteNames)
 	sitesList := []k8sv1alpha1.VNetMetaSite{}
