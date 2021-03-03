@@ -12,10 +12,10 @@ spec:
   - JSONPath: .status.state
     name: State
     type: string
-  - JSONPath: .spec.sites[*].switchPorts[*].name
+  - JSONPath: .status.gateways
     name: Gateways
     type: string
-  - JSONPath: .spec.sites[*].name
+  - JSONPath: .status.sites
     name: Sites
     type: string
   - JSONPath: .metadata.managedFields[0].time
@@ -115,7 +115,11 @@ spec:
         status:
           description: VNetStatus defines the observed state of VNet
           properties:
+            gateways:
+              type: string
             message:
+              type: string
+            sites:
               type: string
             state:
               type: string

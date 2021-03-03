@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,16 +34,18 @@ import (
 type VNetStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Status  string `json:"status,omitempty"`
-	Message string `json:"message,omitempty"`
-	State   string `json:"state,omitempty"`
+	Status   string `json:"status,omitempty"`
+	Message  string `json:"message,omitempty"`
+	State    string `json:"state,omitempty"`
+	Gateways string `json:"gateways,omitempty"`
+	Sites    string `json:"sites,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
-// +kubebuilder:printcolumn:name="Gateways",type=string,JSONPath=`.spec.sites[*].switchPorts[*].name`
-// +kubebuilder:printcolumn:name="Sites",type=string,JSONPath=".spec.sites[*].name"
+// +kubebuilder:printcolumn:name="Gateways",type=string,JSONPath=`.status.gateways`
+// +kubebuilder:printcolumn:name="Sites",type=string,JSONPath=".status.sites"
 // +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.metadata.managedFields[0].time`,priority=1
 // +kubebuilder:printcolumn:name="Owner",type=string,JSONPath=`.spec.ownerTenant`
 // +kubebuilder:printcolumn:name="Guest Tenants",type=string,JSONPath=`.spec.guestTenants`,priority=1
@@ -111,4 +115,28 @@ type VNetSwitchPort struct {
 
 func init() {
 	SchemeBuilder.Register(&VNet{}, &VNetList{})
+}
+
+// GatewaysString returns stringified gateways list
+func (vnet *VNet) GatewaysString() string {
+	str := ""
+	strArr := []string{}
+	for _, site := range vnet.Spec.Sites {
+		for _, gateway := range site.Gateways {
+			strArr = append(strArr, gateway.String())
+		}
+	}
+	str = strings.Join(strArr, ", ")
+	return str
+}
+
+// SitesString returns stringified site names list
+func (vnet *VNet) SitesString() string {
+	str := ""
+	strArr := []string{}
+	for _, site := range vnet.Spec.Sites {
+		strArr = append(strArr, site.Name)
+	}
+	str = strings.Join(strArr, ", ")
+	return str
 }

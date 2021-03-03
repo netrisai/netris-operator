@@ -54,9 +54,11 @@ func (u *uniReconciler) updateVNetStatus(vnet *k8sv1alpha1.VNet, status, message
 		state = vnet.Spec.State
 	}
 	vnet.Status = v1alpha1.VNetStatus{
-		Status:  status,
-		Message: message,
-		State:   state,
+		Status:   status,
+		Message:  message,
+		State:    state,
+		Gateways: vnet.GatewaysString(),
+		Sites:    vnet.SitesString(),
 	}
 	err := u.Status().Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{})
 	if err != nil {
