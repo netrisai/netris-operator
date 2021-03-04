@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,12 +34,23 @@ import (
 type VNetStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Status string `json:"status"`
-	Type   string `json:"type"`
+	Status   string `json:"status,omitempty"`
+	Message  string `json:"message,omitempty"`
+	State    string `json:"state,omitempty"`
+	Gateways string `json:"gateways,omitempty"`
+	Sites    string `json:"sites,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+// +kubebuilder:printcolumn:name="Gateways",type=string,JSONPath=`.status.gateways`
+// +kubebuilder:printcolumn:name="Sites",type=string,JSONPath=".status.sites"
+// +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.metadata.managedFields[0].time`,priority=1
+// +kubebuilder:printcolumn:name="Owner",type=string,JSONPath=`.spec.ownerTenant`
+// +kubebuilder:printcolumn:name="Guest Tenants",type=string,JSONPath=`.spec.guestTenants`,priority=1
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // VNet is the Schema for the vnets API
 type VNet struct {
@@ -45,7 +58,8 @@ type VNet struct {
 	// Kind              string `json:"kind"`
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              VNetSpec `json:"spec"`
+	Spec              VNetSpec   `json:"spec"`
+	Status            VNetStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -59,26 +73,70 @@ type VNetList struct {
 
 // VNetSpec .
 type VNetSpec struct {
-	Owner        string     `json:"ownerTenant"`
-	State        string     `json:"state,omitempty"`
+	Owner string `json:"ownerTenant"`
+
+	// +kubebuilder:validation:Enum=active;disabled
+	State string `json:"state,omitempty"`
+
 	GuestTenants []string   `json:"guestTenants"`
 	Sites        []VNetSite `json:"sites"`
 }
 
 // VNetSite .
 type VNetSite struct {
-	Name        string           `json:"name"`
-	Gateways    []string         `json:"gateways,omitempty"`
+	Name string `json:"name"`
+
+	Gateways    []VNetGateway    `json:"gateways,omitempty"`
 	SwitchPorts []VNetSwitchPort `json:"switchPorts,omitempty"`
+}
+
+// +kubebuilder:validation:Pattern=`(^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([0-9]|[12]\d|3[0-2]))?$)|(^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?(\/([1-9]|[1-5][0-9]|6[0-4]))?$)`
+
+// VNetGateway .
+type VNetGateway string
+
+func (v *VNetGateway) String() string {
+	if v == nil {
+		return ""
+	}
+	return string(*v)
 }
 
 // VNetSwitchPort .
 type VNetSwitchPort struct {
-	Name   string `json:"name"`
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$`
+	Name string `json:"name"`
+
+	// +kubebuilder:validation:Minimum=2
+	// +kubebuilder:validation:Maximum=4094
 	VlanID int    `json:"vlanId,omitempty"`
 	State  string `json:"state,omitempty"`
 }
 
 func init() {
 	SchemeBuilder.Register(&VNet{}, &VNetList{})
+}
+
+// GatewaysString returns stringified gateways list
+func (vnet *VNet) GatewaysString() string {
+	str := ""
+	strArr := []string{}
+	for _, site := range vnet.Spec.Sites {
+		for _, gateway := range site.Gateways {
+			strArr = append(strArr, gateway.String())
+		}
+	}
+	str = strings.Join(strArr, ", ")
+	return str
+}
+
+// SitesString returns stringified site names list
+func (vnet *VNet) SitesString() string {
+	str := ""
+	strArr := []string{}
+	for _, site := range vnet.Spec.Sites {
+		strArr = append(strArr, site.Name)
+	}
+	str = strings.Join(strArr, ", ")
+	return str
 }

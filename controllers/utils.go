@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
@@ -43,9 +44,9 @@ func ignoreDeletionPredicate() predicate.Predicate {
 	}
 }
 
-func makeGateway(gateway string) k8sv1alpha1.VNetMetaGateway {
+func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
 	version := ""
-	ip, ipNet, err := net.ParseCIDR(gateway)
+	ip, ipNet, err := net.ParseCIDR(gateway.String())
 
 	if err != nil {
 		fmt.Println(err)
@@ -83,4 +84,9 @@ func getVNet(id int) (vnet *api.APIVNet, err error) {
 	}
 
 	return vnet, fmt.Errorf("VNet not found in Netris")
+}
+
+func toJSON(s interface{}) string {
+	js, _ := json.Marshal(s)
+	return string(js)
 }

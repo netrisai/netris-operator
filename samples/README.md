@@ -10,7 +10,7 @@ Register the Netris [CRDs](https://github.com/netrisai/netris-operator/tree/dev/
 apiVersion: k8s.netris.ai/v1alpha1
 kind: VNet
 metadata:
-  name: myVnet
+  name: my-vnet
 spec:
   ownerTenant: admin                                 # [1]
   guestTenants: []                                   # [2]
@@ -54,8 +54,8 @@ spec:
   softgate: softgate1                                # [2] Ignoring when terminateOnSwitch == true
   neighborAs: 23456                                  # [3]
   transport:                                         # [4]
-    type: vnet                                       # [5] optional
-    name: myvnet                                     # [6]   
+    type: port                                       # [5] optional
+    name: swp5@rlab-spine1                           # [6]   
     vlanId: 4                                        # [7] optional. Ignoring when transport.type == vnet
   localIP: 172.16.0.1/30                             # [8]
   remoteIP: 172.16.0.2/30                            # [9]

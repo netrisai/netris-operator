@@ -49,6 +49,12 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	vnet := &k8sv1alpha1.VNet{}
 
+	u := uniReconciler{
+		Client:      r.Client,
+		Logger:      logger,
+		DebugLogger: debugLogger,
+	}
+
 	if err := r.Get(context.Background(), req.NamespacedName, vnet); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
@@ -76,7 +82,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		_, err := r.deleteVNet(vnet, vnetMeta)
 		if err != nil {
 			logger.Error(fmt.Errorf("{deleteVNet} %s", err), "")
-			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			return u.patchVNetStatus(vnet, "Netris Failure", err.Error())
 		}
 		logger.Info("Vnet deleted")
 		return ctrl.Result{}, nil
@@ -90,7 +96,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			newVnetMeta, err := r.VnetToVnetMeta(vnet)
 			if err != nil {
 				logger.Error(fmt.Errorf("{VnetToVnetMeta} %s", err), "")
-				return ctrl.Result{RequeueAfter: requeueInterval}, nil
+				return u.patchVNetStatus(vnet, "Failure", err.Error())
 			}
 			vnetMeta.Spec = newVnetMeta.DeepCopy().Spec
 			vnetMeta.Spec.ID = vnetID
@@ -117,7 +123,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		vnetMeta, err := r.VnetToVnetMeta(vnet)
 		if err != nil {
 			logger.Error(fmt.Errorf("{VnetToVnetMeta} %s", err), "")
-			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			return u.patchVNetStatus(vnet, "Failure", err.Error())
 		}
 
 		vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
@@ -128,29 +134,29 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
-func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error) {
+func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
 	reply, err := Cred.ValidateVNet(vnet)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err)
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
 	}
 	resp, err := api.ParseAPIResponse(reply.Data)
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message))
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
 	}
 
 	reply, err = Cred.UpdateVNet(vnet)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err)
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
 	}
 	resp, err = api.ParseAPIResponse(reply.Data)
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message))
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, nil, nil
 }
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {

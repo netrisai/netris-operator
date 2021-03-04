@@ -60,7 +60,8 @@ func init() {
 	fmt.Println("Requeue interval", requeueInterval)
 }
 
-func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) []k8sv1alpha1.VNetMetaMember {
+func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([]k8sv1alpha1.VNetMetaMember, error) {
+	members := []k8sv1alpha1.VNetMetaMember{}
 	hwPorts := make(map[string]*api.APIVNetMember)
 	portIsUntagged := false
 	for _, port := range portNames {
@@ -94,9 +95,11 @@ func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) []k8sv1alpha1.VNetMeta
 			hwPorts[portName].LACP = "off"
 			hwPorts[portName].ParentPort = port.ParentPort
 			// hwPorts[portName].Name = port.SlavePortName
+		} else {
+			return members, fmt.Errorf("port '%s' not found", portName)
 		}
 	}
-	members := []k8sv1alpha1.VNetMetaMember{}
+
 	for _, member := range hwPorts {
 		members = append(members, k8sv1alpha1.VNetMetaMember{
 			ChildPort:      member.ChildPort,
@@ -110,7 +113,7 @@ func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) []k8sv1alpha1.VNetMeta
 			VLANID:         member.VLANID,
 		})
 	}
-	return members
+	return members, nil
 }
 
 func getSites(names []string) map[string]int {

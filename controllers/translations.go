@@ -40,7 +40,10 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 			apiGateways = append(apiGateways, makeGateway(gateway))
 		}
 	}
-	prts := getPortsMeta(ports)
+	prts, err := getPortsMeta(ports)
+	if err != nil {
+		return nil, err
+	}
 
 	sites := getSites(siteNames)
 	sitesList := []k8sv1alpha1.VNetMetaSite{}
@@ -134,6 +137,11 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 		siteIDs = append(siteIDs, id)
 	}
 
+	provisioning := 1
+	if vnetMeta.Spec.State == "disabled" {
+		provisioning = 0
+	}
+
 	vnetAdd := &api.APIVNetAdd{
 		Name:         vnetMeta.Spec.VnetName,
 		Sites:        siteIDs,
@@ -145,7 +153,7 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 		VaMode:       false,
 		VaNativeVLAN: 1,
 		VaVLANs:      "",
-		Provisioning: 1,
+		Provisioning: provisioning,
 	}
 
 	return vnetAdd, nil
@@ -169,6 +177,11 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate,
 		siteIDs = append(siteIDs, site.ID)
 	}
 
+	provisioning := 1
+	if vnetMeta.Spec.State == "disabled" {
+		provisioning = 0
+	}
+
 	vnetUpdate := &api.APIVNetUpdate{
 		ID:           vnetMeta.Spec.ID,
 		Name:         vnetMeta.Spec.VnetName,
@@ -181,7 +194,7 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate,
 		VaMode:       false,
 		VaNativeVLAN: "1",
 		VaVLANs:      "",
-		Provisioning: 1,
+		Provisioning: provisioning,
 	}
 
 	return vnetUpdate, nil
@@ -319,6 +332,10 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *api.APIVNet
 	}
 
 	if vnetMeta.Spec.VaVLANs != apiVnet.VaVlans {
+		return false
+	}
+
+	if vnetMeta.Spec.State != apiVnet.State {
 		return false
 	}
 
