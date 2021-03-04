@@ -1,14 +1,14 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: EBGP
 metadata:
-  name: myEbgp
+  name: my-ebgp
 spec:
   site: Default               
   softgate: softgate1         
   neighborAs: 23456           
   transport:                  
-    type: vnet                
-    name: myvnet              
+    type: port                
+    name: swp5@rlab-spine1               
     vlanId: 4                 
   localIP: 172.16.0.1/30      
   remoteIP: 172.16.0.2/30     

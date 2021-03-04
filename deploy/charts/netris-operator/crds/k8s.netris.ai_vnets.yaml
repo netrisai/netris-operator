@@ -8,6 +8,33 @@ metadata:
   creationTimestamp: null
   name: vnets.k8s.netris.ai
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.state
+    name: State
+    type: string
+  - JSONPath: .status.gateways
+    name: Gateways
+    type: string
+  - JSONPath: .status.sites
+    name: Sites
+    type: string
+  - JSONPath: .metadata.managedFields[0].time
+    name: Modified
+    priority: 1
+    type: date
+  - JSONPath: .spec.ownerTenant
+    name: Owner
+    type: string
+  - JSONPath: .spec.guestTenants
+    name: Guest Tenants
+    priority: 1
+    type: string
+  - JSONPath: .status.status
+    name: Status
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: k8s.netris.ai
   names:
     kind: VNet
@@ -48,6 +75,8 @@ spec:
                 properties:
                   gateways:
                     items:
+                      description: VNetGateway .
+                      pattern: (^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([0-9]|[12]\d|3[0-2]))?$)|(^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?(\/([1-9]|[1-5][0-9]|6[0-4]))?$)
                       type: string
                     type: array
                   name:
@@ -57,10 +86,13 @@ spec:
                       description: VNetSwitchPort .
                       properties:
                         name:
+                          pattern: ^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$
                           type: string
                         state:
                           type: string
                         vlanId:
+                          maximum: 4094
+                          minimum: 2
                           type: integer
                       required:
                       - name
@@ -71,11 +103,31 @@ spec:
                 type: object
               type: array
             state:
+              enum:
+              - active
+              - disabled
               type: string
           required:
           - guestTenants
           - ownerTenant
           - sites
+          type: object
+        status:
+          description: VNetStatus defines the observed state of VNet
+          properties:
+            gateways:
+              type: string
+            message:
+              type: string
+            sites:
+              type: string
+            state:
+              type: string
+            status:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
+              type: string
           type: object
       required:
       - spec
