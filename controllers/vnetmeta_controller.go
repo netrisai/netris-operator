@@ -83,7 +83,6 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if vnetMeta.Spec.ID == 0 {
 		debugLogger.Info("ID Not found in meta")
-
 		if vnetMeta.Spec.Imported {
 			logger.Info("Importing vnet")
 			debugLogger.Info("Imported yaml mode. Finding VNet by name")
@@ -93,12 +92,6 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				if err != nil {
 					debugLogger.Info(err.Error())
 					return ctrl.Result{RequeueAfter: requeueInterval}, nil
-				}
-				if vnet.Provisioning == 0 {
-					provisionState = "Active"
-				}
-				if vnet.State == "disabled" {
-					provisionState = "Disabled"
 				}
 				vnetMeta.Spec.ID = vnetID
 				err = r.Patch(context.Background(), vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
@@ -166,7 +159,6 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	return u.updateVNetStatus(vnetCR, provisionState, "Success")
-	// return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
 // SetupWithManager .
@@ -196,7 +188,10 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 	}
 
 	idStruct := api.APIVNetAddReply{}
-	api.CustomDecode(resp.Data, &idStruct)
+	err = api.CustomDecode(resp.Data, &idStruct)
+	if err != nil {
+		return ctrl.Result{}, err, err
+	}
 
 	debugLogger.Info("VNet Created", "id", idStruct.CircuitID)
 

@@ -17,32 +17,11 @@ limitations under the License.
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
-	"strconv"
-
-	api "github.com/netrisai/netrisapi"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
-
-func ignoreDeletionPredicate() predicate.Predicate {
-	return predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			fmt.Println("UPDATE EVENT")
-			// Ignore updates to CR status in which case metadata.Generation does not change
-			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
-		},
-		DeleteFunc: func(e event.DeleteEvent) bool {
-			fmt.Println("DELETE EVENT")
-			// Evaluates to false if the object has been confirmed deleted.
-			return true
-		},
-	}
-}
 
 func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
 	version := ""
@@ -66,27 +45,4 @@ func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
 		Version:  version,
 	}
 	return apiGateway
-}
-
-func getVNet(id int) (vnet *api.APIVNet, err error) {
-	vnets, err := Cred.GetVNets()
-	if err != nil {
-		return vnet, err
-	}
-	for _, v := range vnets {
-		vid, err := strconv.Atoi(v.ID)
-		if err != nil {
-			return vnet, err
-		}
-		if vid == id {
-			return v, nil
-		}
-	}
-
-	return vnet, fmt.Errorf("VNet not found in Netris")
-}
-
-func toJSON(s interface{}) string {
-	js, _ := json.Marshal(s)
-	return string(js)
 }
