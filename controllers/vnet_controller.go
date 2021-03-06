@@ -82,7 +82,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		_, err := r.deleteVNet(vnet, vnetMeta)
 		if err != nil {
 			logger.Error(fmt.Errorf("{deleteVNet} %s", err), "")
-			return u.patchVNetStatus(vnet, "Netris Failure", err.Error())
+			return u.patchVNetStatus(vnet, "Failure", err.Error())
 		}
 		logger.Info("Vnet deleted")
 		return ctrl.Result{}, nil
