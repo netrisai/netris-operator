@@ -128,16 +128,3 @@ func getSites(names []string) map[string]int {
 	}
 	return siteList
 }
-
-func getTenantID(name string) int {
-	tenants, err := Cred.GetTenants()
-	if err != nil {
-		fmt.Println(err)
-	}
-	for _, tenant := range tenants {
-		if tenant.Name == name {
-			return tenant.ID
-		}
-	}
-	return 0
-}

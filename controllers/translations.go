@@ -33,9 +33,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 
 	for _, site := range vnet.Spec.Sites {
 		siteNames = append(siteNames, site.Name)
-		for _, port := range site.SwitchPorts {
-			ports = append(ports, port)
-		}
+		ports = append(ports, site.SwitchPorts...)
 		for _, gateway := range site.Gateways {
 			apiGateways = append(apiGateways, makeGateway(gateway))
 		}
@@ -226,11 +224,7 @@ func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGatew
 
 	changelog, _ := diff.Diff(vnetGateways, apiGateways)
 
-	if len(changelog) > 0 {
-		return false
-	}
-
-	return true
+	return len(changelog) <= 0
 }
 
 func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember, apiVnetMembers []api.APIVNetInfoMember) bool {
@@ -264,22 +258,12 @@ func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember,
 	}
 
 	changelog, _ := diff.Diff(vnetMembers, apiMembers)
-
-	if len(changelog) > 0 {
-		return false
-	}
-
-	return true
+	return len(changelog) <= 0
 }
 
 func compareVNetMetaAPIVnetTenants(vnetMetaTenants []int, apiVnetTenants []int) bool {
 	changelog, _ := diff.Diff(vnetMetaTenants, apiVnetTenants)
-
-	if len(changelog) > 0 {
-		return false
-	}
-
-	return true
+	return len(changelog) <= 0
 }
 
 func compareVNetMetaAPIVnetSites(vnetMetaSites []k8sv1alpha1.VNetMetaSite, apiVnetSites []int) bool {

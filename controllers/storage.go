@@ -52,23 +52,29 @@ func NewStorage() *Storage {
 func (s *Storage) Download() error {
 	s.Lock()
 	defer s.Unlock()
-	err := s.PortsStorage.Download()
-	err = s.SitesStorage.Download()
-	err = s.TenantsStorage.Download()
-	err = s.VNetStorage.Download()
-	return err
+	if err := s.PortsStorage.Download(); err != nil {
+		return err
+	}
+	if err := s.SitesStorage.Download(); err != nil {
+		return err
+	}
+	if err := s.TenantsStorage.Download(); err != nil {
+		return err
+	}
+	if err := s.VNetStorage.Download(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // DownloadWithInterval .
 func (s *Storage) DownloadWithInterval() {
 	ticker := time.NewTicker(10 * time.Second)
 	for {
-		select {
-		case <-ticker.C:
-			err := s.Download()
-			if err != nil {
-				fmt.Println(err)
-			}
+		<-ticker.C
+		err := s.Download()
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 }

@@ -82,7 +82,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		_, err := r.deleteVNet(vnet, vnetMeta)
 		if err != nil {
 			logger.Error(fmt.Errorf("{deleteVNet} %s", err), "")
-			return u.patchVNetStatus(vnet, "Netris Failure", err.Error())
+			return u.patchVNetStatus(vnet, "Failure", err.Error())
 		}
 		logger.Info("Vnet deleted")
 		return ctrl.Result{}, nil
@@ -143,6 +143,9 @@ func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
 		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
 	}
 	resp, err := api.ParseAPIResponse(reply.Data)
+	if err != nil {
+		return ctrl.Result{}, err, err
+	}
 	if !resp.IsSuccess {
 		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
 	}
@@ -152,6 +155,9 @@ func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
 		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
 	}
 	resp, err = api.ParseAPIResponse(reply.Data)
+	if err != nil {
+		return ctrl.Result{}, err, err
+	}
 	if !resp.IsSuccess {
 		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
 	}
@@ -167,6 +173,9 @@ func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha
 			return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", err)
 		}
 		resp, err := api.ParseAPIResponse(reply.Data)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 		if !resp.IsSuccess {
 			if resp.Message != "Invalid circuit ID" {
 				return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", fmt.Errorf(resp.Message))
