@@ -1,5 +1,5 @@
 # Note
-Register the Netris [CRDs](https://github.com/netrisai/netris-operator/tree/dev/deploy) in the Kubernetes cluster before creating objects.
+Register the Netris [CRDs](https://github.com/netrisai/netris-operator/tree/master/deploy) in the Kubernetes cluster before creating objects.
 
 
 # Kind: VNet
@@ -48,7 +48,7 @@ Ref | Attribute                              | Default     | Description
 apiVersion: k8s.netris.ai/v1alpha1
 kind: EBGP
 metadata:
-  name: myEbgp
+  name: my-ebgp
 spec:
   site: Default                                      # [1]
   softgate: softgate1                                # [2] Ignoring when terminateOnSwitch == true
@@ -105,7 +105,7 @@ Ref | Attribute                              | Default     | Description
 [15]| multihop.updateSource                  | ""          | -
 [16]| multihop.hops                          | 0           | -
 [17]| bgpPassword                            | ""          | BGP session password
-[18]| allowAsIn                              | 0           | [todo] ---
+[18]| allowAsIn                              | 0           | Optionally allow number of occurrences of the own AS number in received prefix AS-path.
 [19]| defaultOriginate                       | false       | Originate default route to current neighbor.
 [20]| prefixInboundMax                       | 0           | BGP session will be terminated if neighbor advertises more prefixes than defined.
 [21]| inboundRouteMap                        | ""          | Reference to route-map resource.
