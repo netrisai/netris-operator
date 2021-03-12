@@ -6,7 +6,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/netrisai/netrisapi v0.0.0-20210312144551-1678f172e12d
+	github.com/netrisai/netrisapi v0.0.0-20210312165146-813f9e75960b
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	github.com/r3labs/diff/v2 v2.9.1
