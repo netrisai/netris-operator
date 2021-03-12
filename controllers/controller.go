@@ -18,13 +18,11 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/netrisai/netris-operator/api/v1alpha1"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 )
 
@@ -37,32 +35,19 @@ type uniReconciler struct {
 func (u *uniReconciler) patchVNetStatus(vnet *k8sv1alpha1.VNet, status, message string) (ctrl.Result, error) {
 
 	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
-	vnet.Status.Status = status
-	vnet.Status.Message = message
-	err := u.Status().Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
-	if err != nil {
-		u.Logger.Error(fmt.Errorf("{r.Status().Patch} %s", err), "")
-	}
-	return ctrl.Result{RequeueAfter: requeueInterval}, nil
-}
-
-func (u *uniReconciler) updateVNetStatus(vnet *k8sv1alpha1.VNet, status, message string) (ctrl.Result, error) {
-
-	u.DebugLogger.Info("Updating Status", "status", status, "message", message)
 	state := "active"
 	if len(vnet.Spec.State) > 0 {
 		state = vnet.Spec.State
 	}
-	vnet.Status = v1alpha1.VNetStatus{
-		Status:   status,
-		Message:  message,
-		State:    state,
-		Gateways: vnet.GatewaysString(),
-		Sites:    vnet.SitesString(),
-	}
-	err := u.Status().Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{})
+	vnet.Status.Status = status
+	vnet.Status.Message = message
+	vnet.Status.State = state
+	vnet.Status.Gateways = vnet.GatewaysString()
+	vnet.Status.Sites = vnet.SitesString()
+
+	err := u.Status().Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 	if err != nil {
-		u.Logger.Error(fmt.Errorf("{r.Status().Update} %s", err), "")
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }

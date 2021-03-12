@@ -20,9 +20,11 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -94,10 +96,11 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					return ctrl.Result{RequeueAfter: requeueInterval}, nil
 				}
 				vnetMeta.Spec.ID = vnetID
+				vnetCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(vnet.ModifiedDate/1000), 0))
 				err = r.Patch(context.Background(), vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch vnetmeta.Spec.ID} %s", err), "")
-					return u.updateVNetStatus(vnetCR, "Failure", err.Error())
+					return u.patchVNetStatus(vnetCR, "Failure", err.Error())
 				}
 				debugLogger.Info("Imported yaml mode. ID patched")
 				logger.Info("VNet imported")
@@ -110,14 +113,14 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		logger.Info("Creating VNet")
 		if _, err, errMsg := r.createVNet(vnetMeta); err != nil {
 			logger.Error(fmt.Errorf("{createVNet} %s", err), "")
-			return u.updateVNetStatus(vnetCR, "Failure", errMsg.Error())
+			return u.patchVNetStatus(vnetCR, "Failure", errMsg.Error())
 		}
 		logger.Info("VNet Created")
 	} else {
 		vnets, err := Cred.GetVNetsByID(vnetMeta.Spec.ID)
 		if err != nil {
 			logger.Error(fmt.Errorf("{GetVNetsByID} %s", err), "")
-			return u.updateVNetStatus(vnetCR, "Failure", err.Error())
+			return u.patchVNetStatus(vnetCR, "Failure", err.Error())
 		}
 		if len(vnets) == 0 {
 			debugLogger.Info("VNet not found in Netris")
@@ -125,7 +128,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			logger.Info("Creating VNet")
 			if _, err, errMsg := r.createVNet(vnetMeta); err != nil {
 				logger.Error(fmt.Errorf("{createVNet} %s", err), "")
-				return u.updateVNetStatus(vnetCR, "Failure", errMsg.Error())
+				return u.patchVNetStatus(vnetCR, "Failure", errMsg.Error())
 			}
 			logger.Info("VNet Created")
 		} else {
@@ -136,6 +139,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if apiVnet.State == "disabled" {
 				provisionState = "Disabled"
 			}
+			vnetCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiVnet.ModifiedDate/1000), 0))
 			debugLogger.Info("Comparing VnetMeta with Netris Vnet")
 			if ok := compareVNetMetaAPIVnet(vnetMeta, apiVnet); ok {
 				debugLogger.Info("Nothing Changed")
@@ -146,19 +150,18 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				updateVnet, err := VnetMetaToNetrisUpdate(vnetMeta)
 				if err != nil {
 					logger.Error(fmt.Errorf("{VnetMetaToNetrisUpdate} %s", err), "")
-					return u.updateVNetStatus(vnetCR, "Failure", err.Error())
+					return u.patchVNetStatus(vnetCR, "Failure", err.Error())
 				}
 				_, err, errMsg := updateVNet(updateVnet)
 				if err != nil {
 					logger.Error(fmt.Errorf("{updateVNet} %s", err), "")
-					return u.updateVNetStatus(vnetCR, "Failure", errMsg.Error())
+					return u.patchVNetStatus(vnetCR, "Failure", errMsg.Error())
 				}
 				logger.Info("VNet Updated")
 			}
 		}
 	}
-
-	return u.updateVNetStatus(vnetCR, provisionState, "Success")
+	return u.patchVNetStatus(vnetCR, provisionState, "Success")
 }
 
 // SetupWithManager .
@@ -183,8 +186,11 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 		return ctrl.Result{}, err, err
 	}
 	resp, err := api.ParseAPIResponse(reply.Data)
+	if err != nil {
+		return ctrl.Result{}, err, err
+	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message), err
+		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
 	}
 
 	idStruct := api.APIVNetAddReply{}

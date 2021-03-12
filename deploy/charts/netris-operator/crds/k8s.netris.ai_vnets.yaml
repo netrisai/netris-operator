@@ -18,7 +18,7 @@ spec:
   - JSONPath: .status.sites
     name: Sites
     type: string
-  - JSONPath: .metadata.managedFields[0].time
+  - JSONPath: .status.modified
     name: Modified
     priority: 1
     type: date
@@ -118,6 +118,9 @@ spec:
             gateways:
               type: string
             message:
+              type: string
+            modified:
+              format: date-time
               type: string
             sites:
               type: string

@@ -88,6 +88,13 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
+	for _, s := range vnet.Spec.Sites {
+		if dup, found := findGatewayDuplicates(s.Gateways); found {
+			errMsg := fmt.Sprintf("Found duplicate value '%s' in '%s' site gateways", dup, s.Name)
+			return u.patchVNetStatus(vnet, "Failure", errMsg)
+		}
+	}
+
 	if metaFound {
 		debugLogger.Info("Meta found")
 		if vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration {

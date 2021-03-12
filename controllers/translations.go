@@ -343,3 +343,15 @@ func k8sMemberToAPIMember(portNames []k8sv1alpha1.VNetMetaMember) *api.APIVNetMe
 	}
 	return members
 }
+
+func findGatewayDuplicates(items []k8sv1alpha1.VNetGateway) (string, bool) {
+	tmpMap := make(map[string]int)
+	for _, s := range items {
+		str := s.String()
+		tmpMap[str] += 1
+		if tmpMap[str] > 1 {
+			return str, true
+		}
+	}
+	return "", false
+}
