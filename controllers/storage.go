@@ -36,6 +36,7 @@ type Storage struct {
 	*SitesStorage
 	*TenantsStorage
 	*VNetStorage
+	*EBGPStorage
 }
 
 // NewStorage .
@@ -45,6 +46,7 @@ func NewStorage() *Storage {
 		SitesStorage:   NewSitesStorage(),
 		TenantsStorage: NewTenantsStorage(),
 		VNetStorage:    NewVNetStorage(),
+		EBGPStorage:    NewEBGPStoragee(),
 	}
 }
 
@@ -62,6 +64,9 @@ func (s *Storage) Download() error {
 		return err
 	}
 	if err := s.VNetStorage.Download(); err != nil {
+		return err
+	}
+	if err := s.EBGPStorage.Download(); err != nil {
 		return err
 	}
 	return nil
@@ -355,6 +360,69 @@ func (p *VNetStorage) download() error {
 
 // Download .
 func (p *VNetStorage) Download() error {
+	p.Lock()
+	defer p.Unlock()
+	return p.download()
+}
+
+/********************************************************************************
+	EBGP Storage
+*********************************************************************************/
+
+// EBGPStorage .
+type EBGPStorage struct {
+	sync.Mutex
+	EBGPs []*api.APIEBGP
+}
+
+// NewEBGPStorage .
+func NewEBGPStoragee() *EBGPStorage {
+	return &EBGPStorage{}
+}
+
+func (p *EBGPStorage) storeAll(items []*api.APIEBGP) {
+	p.EBGPs = items
+}
+
+// GetAll .
+func (p *EBGPStorage) GetAll() []*api.APIEBGP {
+	p.Lock()
+	defer p.Unlock()
+	return p.getAll()
+}
+
+func (p *EBGPStorage) getAll() []*api.APIEBGP {
+	return p.EBGPs
+}
+
+// FindByID .
+func (p *EBGPStorage) FindByID(id int) (*api.APIEBGP, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByID(id)
+}
+
+func (p *EBGPStorage) findByID(id int) (*api.APIEBGP, bool) {
+	for _, item := range p.EBGPs {
+		if item.ID == id {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// Download .
+func (p *EBGPStorage) download() error {
+	items, err := Cred.GetEBGPs()
+	if err != nil {
+		return err
+	}
+	p.storeAll(items)
+	return nil
+}
+
+// Download .
+func (p *EBGPStorage) Download() error {
 	p.Lock()
 	defer p.Unlock()
 	return p.download()
