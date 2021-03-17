@@ -65,7 +65,6 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	for _, guest := range vnet.Spec.GuestTenants {
 		tenant, ok := NStorage.TenantsStorage.FindByName(guest)
 		if !ok {
-
 			return nil, fmt.Errorf("Guest tenant '%s' not found", guest)
 		}
 		guestTenants = append(guestTenants, tenant.ID)
@@ -199,7 +198,6 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate,
 }
 
 func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGateway, apiVnetGateways []api.APIVNetGateway) bool {
-
 	type gateway struct {
 		Gateway string `diff:"gateway"`
 		Length  int    `diff:"gwLength"`
@@ -228,7 +226,6 @@ func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGatew
 }
 
 func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember, apiVnetMembers []api.APIVNetInfoMember) bool {
-
 	type member struct {
 		PortID   int    `diff:"port_id"`
 		TenantID int    `diff:"tenant_id"`
@@ -267,7 +264,6 @@ func compareVNetMetaAPIVnetTenants(vnetMetaTenants []int, apiVnetTenants []int) 
 }
 
 func compareVNetMetaAPIVnetSites(vnetMetaSites []k8sv1alpha1.VNetMetaSite, apiVnetSites []int) bool {
-
 	k8sSites := make(map[int]string)
 	for _, site := range vnetMetaSites {
 		k8sSites[site.ID] = ""
@@ -283,7 +279,6 @@ func compareVNetMetaAPIVnetSites(vnetMetaSites []k8sv1alpha1.VNetMetaSite, apiVn
 }
 
 func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *api.APIVNetInfo) bool {
-
 	if ok := compareVNetMetaAPIVnetSites(vnetMeta.Spec.Sites, apiVnet.SitesID); !ok {
 		return false
 	}

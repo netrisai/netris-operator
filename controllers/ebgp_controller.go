@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"go.uber.org/zap/zapcore"
@@ -27,6 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	api "github.com/netrisai/netrisapi"
 )
 
 // EBGPReconciler reconciles a EBGP object
@@ -45,7 +47,7 @@ func (r *EBGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	ebgp := &k8sv1alpha1.EBGP{}
 
-	_ = uniReconciler{
+	u := uniReconciler{
 		Client:      r.Client,
 		Logger:      logger,
 		DebugLogger: debugLogger,
@@ -76,13 +78,105 @@ func (r *EBGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if ebgp.DeletionTimestamp != nil {
 		logger.Info("Go to delete")
-		// Delete Logic
+		_, err := r.deleteEBGP(ebgp, ebgpMeta)
+		if err != nil {
+			logger.Error(fmt.Errorf("{deleteEBGP} %s", err), "")
+			return u.patchEBGPStatus(ebgp, "Failure", err.Error())
+		}
 		logger.Info("EBGP deleted")
 		return ctrl.Result{}, nil
 	}
 
 	if metaFound {
+		debugLogger.Info("Meta found")
+		if ebgp.GetGeneration() != ebgpMeta.Spec.EBGPCRGeneration {
+			debugLogger.Info("Generating New Meta")
+			ebgpID := ebgpMeta.Spec.ID
+			newVnetMeta, err := r.EBGPToEBGPMeta(ebgp)
+			if err != nil {
+				logger.Error(fmt.Errorf("{EBGPToEBGPMeta} %s", err), "")
+				return u.patchEBGPStatus(ebgp, "Failure", err.Error())
+			}
+			ebgpMeta.Spec = newVnetMeta.DeepCopy().Spec
+			ebgpMeta.Spec.ID = ebgpID
+			ebgpMeta.Spec.EBGPCRGeneration = ebgp.GetGeneration()
+
+			err = r.Update(context.Background(), ebgpMeta.DeepCopyObject(), &client.UpdateOptions{})
+			if err != nil {
+				logger.Error(fmt.Errorf("{ebgpMeta Update} %s", err), "")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			}
+		}
 	} else {
+		debugLogger.Info("Meta not found")
+		if ebgp.GetFinalizers() == nil {
+			ebgp.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+			err := r.Patch(context.Background(), ebgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			if err != nil {
+				logger.Error(fmt.Errorf("{Patch EBGP Finalizer} %s", err), "")
+				return ctrl.Result{RequeueAfter: requeueInterval}, nil
+			}
+			return ctrl.Result{}, nil
+		}
+
+		ebgpMeta, err := r.EBGPToEBGPMeta(ebgp)
+		if err != nil {
+			logger.Error(fmt.Errorf("{EBGPToEBGPMeta} %s", err), "")
+			return u.patchEBGPStatus(ebgp, "Failure", err.Error())
+		}
+
+		ebgpMeta.Spec.EBGPCRGeneration = ebgp.GetGeneration()
+
+		if err := r.Create(context.Background(), ebgpMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+			logger.Error(fmt.Errorf("{ebgpMeta Create} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+	}
+
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (r *EBGPReconciler) deleteEBGP(ebgp *k8sv1alpha1.EBGP, ebgpMeta *k8sv1alpha1.EBGPMeta) (ctrl.Result, error) {
+	if ebgpMeta != nil && ebgpMeta.Spec.ID > 0 {
+		reply, err := Cred.DeleteEBGP(ebgpMeta.Spec.ID)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("{deleteEBGP} %s", err)
+		}
+		resp, err := api.ParseAPIResponse(reply.Data)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		if !resp.IsSuccess {
+			return ctrl.Result{}, fmt.Errorf("{deleteEBGP} %s", fmt.Errorf(resp.Message))
+		}
+	}
+	return r.deleteCRs(ebgp, ebgpMeta)
+}
+
+func (r *EBGPReconciler) deleteCRs(ebgp *k8sv1alpha1.EBGP, ebgpMeta *k8sv1alpha1.EBGPMeta) (ctrl.Result, error) {
+	if ebgpMeta != nil {
+		_, err := r.deleteEBGPMetaCR(ebgpMeta)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("{deleteCRs} %s", err)
+		}
+	}
+
+	return r.deleteEBGPCR(ebgp)
+}
+
+func (r *EBGPReconciler) deleteEBGPCR(ebgp *k8sv1alpha1.EBGP) (ctrl.Result, error) {
+	ebgp.ObjectMeta.SetFinalizers(nil)
+	ebgp.SetFinalizers(nil)
+	if err := r.Update(context.Background(), ebgp.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+		return ctrl.Result{}, fmt.Errorf("{deleteEBGPCR} %s", err)
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *EBGPReconciler) deleteEBGPMetaCR(ebgpMeta *k8sv1alpha1.EBGPMeta) (ctrl.Result, error) {
+	if err := r.Delete(context.Background(), ebgpMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+		return ctrl.Result{}, fmt.Errorf("{deleteEBGPMetaCR} %s", err)
 	}
 
 	return ctrl.Result{}, nil

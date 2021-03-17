@@ -33,7 +33,6 @@ type uniReconciler struct {
 }
 
 func (u *uniReconciler) patchVNetStatus(vnet *k8sv1alpha1.VNet, status, message string) (ctrl.Result, error) {
-
 	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
 	state := "active"
 	if len(vnet.Spec.State) > 0 {
@@ -46,6 +45,19 @@ func (u *uniReconciler) patchVNetStatus(vnet *k8sv1alpha1.VNet, status, message 
 	vnet.Status.Sites = vnet.SitesString()
 
 	err := u.Status().Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchEBGPStatus(ebgp *k8sv1alpha1.EBGP, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	ebgp.Status.Status = status
+	ebgp.Status.Message = message
+
+	err := u.Status().Patch(context.Background(), ebgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}

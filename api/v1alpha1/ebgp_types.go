@@ -23,6 +23,15 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// EBGPStatus defines the observed state of EBGP
+type EBGPStatus struct {
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
+	Status  string `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
 // EBGPSpec defines the desired state of EBGP
 type EBGPSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -76,12 +85,6 @@ type EBGPTransport struct {
 	// +kubebuilder:validation:Pattern=`(^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$)`
 	Name   string `json:"name"`
 	VlanID int    `json:"vlanId,omitempty"`
-}
-
-// EBGPStatus defines the observed state of EBGP
-type EBGPStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
