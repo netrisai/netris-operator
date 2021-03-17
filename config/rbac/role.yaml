@@ -9,6 +9,26 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
+  - ebgpmeta
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - ebgpmeta/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
   - ebgps
   verbs:
   - create

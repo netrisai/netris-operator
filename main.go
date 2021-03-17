@@ -99,6 +99,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "EBGP")
 		os.Exit(1)
 	}
+	if err = (&controllers.EBGPMetaReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("EBGPMeta"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "EBGPMeta")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
