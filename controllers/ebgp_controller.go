@@ -20,6 +20,8 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	"go.uber.org/zap/zapcore"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,9 +41,49 @@ type EBGPReconciler struct {
 
 func (r *EBGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("ebgp", req.NamespacedName)
+	logger := r.Log.WithValues("name", req.NamespacedName)
+	debugLogger := logger.V(int(zapcore.WarnLevel))
+	ebgp := &k8sv1alpha1.EBGP{}
 
-	// your logic here
+	_ = uniReconciler{
+		Client:      r.Client,
+		Logger:      logger,
+		DebugLogger: debugLogger,
+	}
+
+	if err := r.Get(context.Background(), req.NamespacedName, ebgp); err != nil {
+		if errors.IsNotFound(err) {
+			debugLogger.Info(err.Error())
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, err
+	}
+
+	ebgpMetaNamespaced := req.NamespacedName
+	ebgpMetaNamespaced.Name = string(ebgp.GetUID())
+	ebgpMeta := &k8sv1alpha1.EBGPMeta{}
+	metaFound := true
+
+	if err := r.Get(context.Background(), ebgpMetaNamespaced, ebgpMeta); err != nil {
+		if errors.IsNotFound(err) {
+			debugLogger.Info(err.Error())
+			metaFound = false
+			ebgpMeta = nil
+		} else {
+			return ctrl.Result{}, err
+		}
+	}
+
+	if ebgp.DeletionTimestamp != nil {
+		logger.Info("Go to delete")
+		// Delete Logic
+		logger.Info("EBGP deleted")
+		return ctrl.Result{}, nil
+	}
+
+	if metaFound {
+	} else {
+	}
 
 	return ctrl.Result{}, nil
 }
