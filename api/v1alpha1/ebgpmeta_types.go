@@ -27,9 +27,10 @@ import (
 type EBGPMetaSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Imported         bool  `json:"imported"`
-	EBGPCRGeneration int64 `json:"ebgpGeneration"`
-	ID               int   `json:"id"`
+	Imported         bool   `json:"imported"`
+	EBGPCRGeneration int64  `json:"ebgpGeneration"`
+	ID               int    `json:"id"`
+	EBGPName         string `json:"ebgpName"`
 
 	AllowasIn          int    `json:"allowas_in"`
 	BgpPassword        string `json:"bgp_password"`
@@ -43,7 +44,7 @@ type EBGPMetaSpec struct {
 	Multihop           int    `json:"multihop"`
 	Name               string `json:"name"`
 	NeighborAddress    string `json:"neighbor_address"`
-	NeighborAs         string `json:"neighbor_as"`
+	NeighborAs         int    `json:"neighbor_as"`
 	NfvID              int    `json:"nfv_id"`
 	NfvPortID          int    `json:"nfv_port_id"`
 	Originate          string `json:"originate"`
