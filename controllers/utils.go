@@ -1,5 +1,5 @@
 /*
-Copyright 2020.
+Copyright 2021. Netris, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import (
 func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
 	version := ""
 	ip, ipNet, err := net.ParseCIDR(gateway.String())
-
 	if err != nil {
 		fmt.Println(err)
 		return k8sv1alpha1.VNetMetaGateway{}
