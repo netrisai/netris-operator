@@ -49,9 +49,9 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 		state = "enabled"
 	}
 
-	if !ebgp.Spec.TerminateOnSwitch {
-		// softgate = ebgp.Spec.Softgate
-	}
+	// if !ebgp.Spec.TerminateOnSwitch {
+	// softgate = ebgp.Spec.Softgate
+	// }
 
 	imported := false
 	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok {
