@@ -7,6 +7,7 @@ resources:
 - bases/k8s.netris.ai_ebgps.yaml
 - bases/k8s.netris.ai_ebgpmeta.yaml
 - bases/k8s.netris.ai_l4lbs.yaml
+- bases/k8s.netris.ai_l4lbmeta.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -17,6 +18,7 @@ patchesStrategicMerge:
 #- patches/webhook_in_ebgps.yaml
 #- patches/webhook_in_ebgpmeta.yaml
 #- patches/webhook_in_l4lbs.yaml
+#- patches/webhook_in_l4lbmeta.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
@@ -26,6 +28,7 @@ patchesStrategicMerge:
 #- patches/cainjection_in_ebgps.yaml
 #- patches/cainjection_in_ebgpmeta.yaml
 #- patches/cainjection_in_l4lbs.yaml
+#- patches/cainjection_in_l4lbmeta.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

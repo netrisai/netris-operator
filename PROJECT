@@ -18,6 +18,9 @@ resources:
 - group: k8s
   kind: L4LB
   version: v1alpha1
+- group: k8s
+  kind: L4LBMeta
+  version: v1alpha1
 version: 3-alpha
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}
