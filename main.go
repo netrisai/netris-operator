@@ -107,6 +107,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "EBGPMeta")
 		os.Exit(1)
 	}
+	if err = (&controllers.L4LBReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("L4LB"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "L4LB")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

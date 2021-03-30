@@ -1,0 +1,110 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: l4lbs.k8s.netris.ai
+spec:
+  group: k8s.netris.ai
+  names:
+    kind: L4LB
+    listKind: L4LBList
+    plural: l4lbs
+    singular: l4lb
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: L4LB is the Schema for the l4lbs API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: L4LBSpec defines the desired state of L4LB
+          properties:
+            backend:
+              items:
+                description: L4LBBackend .
+                pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-4])$
+                type: string
+              type: array
+            check:
+              description: L4LBCheck .
+              properties:
+                requestPath:
+                  type: string
+                timeout:
+                  type: integer
+                type:
+                  enum:
+                  - tcp
+                  - http
+                  type: string
+              type: object
+            frontend:
+              description: L4LBFrontend .
+              properties:
+                ip:
+                  pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+                  type: string
+                port:
+                  maximum: 65534
+                  minimum: 0
+                  type: integer
+                subnet:
+                  pattern: ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([0-9]|[12]\d|3[0-2]))$
+                  type: string
+              required:
+              - port
+              type: object
+            ownerTenant:
+              type: string
+            protocol:
+              enum:
+              - tcp
+              - udp
+              type: string
+            site:
+              type: string
+            state:
+              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                Important: Run "make" to regenerate code after modifying this file'
+              enum:
+              - active
+              - disabled
+              type: string
+          required:
+          - backend
+          - frontend
+          - ownerTenant
+          - site
+          type: object
+        status:
+          description: L4LBStatus defines the observed state of L4LB
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

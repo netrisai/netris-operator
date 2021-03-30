@@ -49,6 +49,26 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
+  - l4lbs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - l4lbs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
   - vnetmeta
   verbs:
   - create
