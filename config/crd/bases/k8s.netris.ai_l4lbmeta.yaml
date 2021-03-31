@@ -40,7 +40,7 @@ spec:
               type: boolean
             backendIps:
               items:
-                description: L4LBMetaLBBackend .
+                description: L4LBMetaBackend .
                 properties:
                   ip:
                     type: string
@@ -55,7 +55,31 @@ spec:
                 type: object
               type: array
             healthCheck:
-              type: string
+              description: L4LBMetaHealthCheck .
+              properties:
+                HTTP:
+                  description: L4LBMetaHealthCheckHTTP .
+                  properties:
+                    requestPath:
+                      type: string
+                    timeOut:
+                      type: string
+                  required:
+                  - requestPath
+                  - timeOut
+                  type: object
+                TCP:
+                  description: L4LBMetaHealthCheckTCP .
+                  properties:
+                    requestPath:
+                      type: string
+                    timeOut:
+                      type: string
+                  required:
+                  - requestPath
+                  - timeOut
+                  type: object
+              type: object
             id:
               type: integer
             imported:
@@ -75,16 +99,12 @@ spec:
               type: integer
             protocol:
               type: string
-            requestPath:
-              type: string
             siteId:
               type: integer
             status:
               type: string
             tenantId:
               type: integer
-            timeOut:
-              type: string
           required:
           - automatic
           - backendIps
@@ -98,11 +118,9 @@ spec:
           - l4lbName
           - port
           - protocol
-          - requestPath
           - siteId
           - status
           - tenantId
-          - timeOut
           type: object
         status:
           description: L4LBMetaStatus defines the observed state of L4LBMeta

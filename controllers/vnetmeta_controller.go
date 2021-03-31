@@ -48,7 +48,6 @@ type VNetMetaReconciler struct {
 // Reconcile .
 func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	vnetMeta := &k8sv1alpha1.VNetMeta{}

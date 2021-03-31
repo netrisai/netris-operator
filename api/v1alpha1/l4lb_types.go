@@ -70,8 +70,9 @@ type L4LBFrontend struct {
 type L4LBStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Status  string `json:"status,omitempty"`
-	Message string `json:"message,omitempty"`
+	Status       string      `json:"status,omitempty"`
+	Message      string      `json:"message,omitempty"`
+	ModifiedDate metav1.Time `json:"modified,omitempty"`
 }
 
 // +kubebuilder:object:root=true

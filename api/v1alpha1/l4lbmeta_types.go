@@ -46,15 +46,31 @@ type L4LBMetaSpec struct {
 
 	Status string `json:"status"`
 
-	HealthCheck string `json:"healthCheck"`
-	Timeout     string `json:"timeOut"`
-	RequestPath string `json:"requestPath"`
+	HealthCheck L4LBMetaHealthCheck `json:"healthCheck"`
 
-	Backend []L4LBMetaLBBackend `json:"backendIps"`
+	Backend []L4LBMetaBackend `json:"backendIps"`
 }
 
-// L4LBMetaLBBackend .
-type L4LBMetaLBBackend struct {
+// L4LBMetaHealthCheckTCP .
+type L4LBMetaHealthCheckTCP struct {
+	Timeout     string `json:"timeOut"`
+	RequestPath string `json:"requestPath"`
+}
+
+// L4LBMetaHealthCheckHTTP .
+type L4LBMetaHealthCheckHTTP struct {
+	Timeout     string `json:"timeOut"`
+	RequestPath string `json:"requestPath"`
+}
+
+// L4LBMetaHealthCheck .
+type L4LBMetaHealthCheck struct {
+	TCP  *L4LBMetaHealthCheckTCP  `json:"TCP,omitempty"`
+	HTTP *L4LBMetaHealthCheckHTTP `json:"HTTP,omitempty"`
+}
+
+// L4LBMetaBackend .
+type L4LBMetaBackend struct {
 	IP          string `json:"ip"`
 	Port        int    `json:"port"`
 	Maintenance bool   `json:"maintenance"`

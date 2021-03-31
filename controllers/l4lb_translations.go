@@ -18,18 +18,23 @@ package controllers
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	api "github.com/netrisai/netrisapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // VnetToVnetMeta converts the VNet resource to VNetMeta type and used for add the VNet for Netris API.
 func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4LBMeta, error) {
+	bReg := regexp.MustCompile(`^(?P<ip>(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])):(?P<port>([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-4]))$`)
+
 	tenantID := 0
 	siteID := 0
 	var state string
 	var timeout string
-	path := l4lb.Spec.Check.RequestPath
 
 	if site, ok := NStorage.SitesStorage.FindByName(l4lb.Spec.Site); ok {
 		siteID = site.ID
@@ -45,12 +50,21 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		state = "enable"
 	}
 
-	if l4lb.Spec.Check.Timeout == 0 {
-		timeout = string(rune(l4lb.Spec.Check.Timeout))
+	healthCheck := k8sv1alpha1.L4LBMetaHealthCheck{}
+
+	if l4lb.Spec.Check.Timeout != 0 {
+		timeout = strconv.Itoa(l4lb.Spec.Check.Timeout)
 	}
 
 	if l4lb.Spec.Check.Type == "tcp" {
-		path = ""
+		healthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
+			Timeout: timeout,
+		}
+	} else {
+		healthCheck.HTTP = &k8sv1alpha1.L4LBMetaHealthCheckHTTP{
+			Timeout:     timeout,
+			RequestPath: l4lb.Spec.Check.RequestPath,
+		}
 	}
 
 	imported := false
@@ -60,6 +74,21 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		}
 	}
 
+	l4lbMetaBackends := []k8sv1alpha1.L4LBMetaBackend{}
+
+	for _, backend := range l4lb.Spec.Backend {
+		valueMatch := bReg.FindStringSubmatch(string(backend))
+		result := regParser(valueMatch, bReg.SubexpNames())
+		port, err := strconv.Atoi(result["port"])
+		if err != nil {
+			fmt.Println(err)
+		}
+		l4lbMetaBackends = append(l4lbMetaBackends, k8sv1alpha1.L4LBMetaBackend{
+			IP:   result["ip"],
+			Port: port,
+		})
+	}
+
 	l4lbMeta := &k8sv1alpha1.L4LBMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(l4lb.GetUID()),
@@ -67,20 +96,136 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		},
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.L4LBMetaSpec{
-			Imported: imported,
-			L4LBName: l4lb.Name,
-			SiteID:   siteID,
-			Tenant:   tenantID,
-			Status:   state,
-			Protocol: l4lb.Spec.Protocol,
-			Port:     l4lb.Spec.Frontend.Port,
-			IP:       l4lb.Spec.Frontend.IP,
-			// Backend: , ?
-			// HealthCheck: , ?
-			Timeout:     timeout,
-			RequestPath: path,
+			Imported:    imported,
+			L4LBName:    l4lb.Name,
+			SiteID:      siteID,
+			Tenant:      tenantID,
+			Status:      state,
+			Protocol:    strings.ToUpper(l4lb.Spec.Protocol),
+			Port:        l4lb.Spec.Frontend.Port,
+			IP:          l4lb.Spec.Frontend.IP,
+			Backend:     l4lbMetaBackends,
+			HealthCheck: healthCheck,
 		},
 	}
 
 	return l4lbMeta, nil
+}
+
+func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoadBalancer) bool {
+	if l4lbMeta.Spec.L4LBName != apiL4LB.Name {
+		return false
+	}
+	if l4lbMeta.Spec.IP != apiL4LB.IP {
+		return false
+	}
+	if l4lbMeta.Spec.Port != apiL4LB.Port {
+		return false
+	}
+	if l4lbMeta.Spec.Protocol != apiL4LB.Protocol {
+		return false
+	}
+	if l4lbMeta.Spec.SiteID != apiL4LB.SiteID {
+		return false
+	}
+	if l4lbMeta.Spec.Status != apiL4LB.Status {
+		return false
+	}
+
+	return true
+}
+
+// L4LBetaToNetris converts the k8s L4LB resource to Netris type and used for add the L4LB for Netris API.
+func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, error) {
+	automatic := false
+
+	if l4lbMeta.Spec.IP == "" {
+		automatic = true
+	}
+
+	healthCheck := "TCP"
+	requestPath := ""
+	timeOut := ""
+
+	if l4lbMeta.Spec.HealthCheck.HTTP != nil {
+		healthCheck = "HTTP"
+		requestPath = l4lbMeta.Spec.HealthCheck.HTTP.RequestPath
+		timeOut = l4lbMeta.Spec.HealthCheck.HTTP.Timeout
+	} else if l4lbMeta.Spec.HealthCheck.TCP != nil {
+		requestPath = l4lbMeta.Spec.HealthCheck.TCP.RequestPath
+		timeOut = l4lbMeta.Spec.HealthCheck.TCP.Timeout
+	}
+	lbBackends := []api.LBBackend{}
+
+	for _, backend := range l4lbMeta.Spec.Backend {
+		lbBackends = append(lbBackends, api.LBBackend{
+			IP:   backend.IP,
+			Port: backend.Port,
+		})
+	}
+
+	l4lbAdd := &api.APILoadBalancerAdd{
+		Name:        l4lbMeta.Spec.L4LBName,
+		Tenant:      l4lbMeta.Spec.Tenant,
+		SiteID:      l4lbMeta.Spec.SiteID,
+		Automatic:   automatic,
+		Protocol:    l4lbMeta.Spec.Protocol,
+		IP:          l4lbMeta.Spec.IP,
+		Port:        l4lbMeta.Spec.Port,
+		Status:      l4lbMeta.Spec.Status,
+		HealthCheck: healthCheck,
+		RequestPath: requestPath,
+		Timeout:     timeOut,
+		Backend:     lbBackends,
+	}
+
+	return l4lbAdd, nil
+}
+
+// L4LBMetaToNetrisUpdate converts the k8s L4LB resource to Netris type and used for update the L4LB for Netris API.
+func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadBalancer, error) {
+	automatic := false
+
+	if l4lbMeta.Spec.IP == "" {
+		automatic = true
+	}
+
+	healthCheck := "TCP"
+	requestPath := ""
+	timeOut := ""
+
+	if l4lbMeta.Spec.HealthCheck.HTTP != nil {
+		healthCheck = "HTTP"
+		requestPath = l4lbMeta.Spec.HealthCheck.HTTP.RequestPath
+		timeOut = l4lbMeta.Spec.HealthCheck.HTTP.Timeout
+	} else if l4lbMeta.Spec.HealthCheck.TCP != nil {
+		requestPath = l4lbMeta.Spec.HealthCheck.TCP.RequestPath
+		timeOut = l4lbMeta.Spec.HealthCheck.TCP.Timeout
+	}
+	lbBackends := []api.APILBBackend{}
+
+	for _, backend := range l4lbMeta.Spec.Backend {
+		lbBackends = append(lbBackends, api.APILBBackend{
+			IP:   backend.IP,
+			Port: strconv.Itoa(backend.Port),
+		})
+	}
+
+	l4lbUpdate := &api.APIUpdateLoadBalancer{
+		ID:          l4lbMeta.Spec.ID,
+		Name:        l4lbMeta.Spec.L4LBName,
+		TenantID:    l4lbMeta.Spec.Tenant,
+		SiteID:      l4lbMeta.Spec.SiteID,
+		Automatic:   automatic,
+		Protocol:    l4lbMeta.Spec.Protocol,
+		IP:          l4lbMeta.Spec.IP,
+		Port:        l4lbMeta.Spec.Port,
+		Status:      l4lbMeta.Spec.Status,
+		HealthCheck: healthCheck,
+		RequestPath: requestPath,
+		Timeout:     timeOut,
+		BackendIPs:  lbBackends,
+	}
+
+	return l4lbUpdate, nil
 }

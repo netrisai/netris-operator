@@ -37,6 +37,7 @@ type Storage struct {
 	*TenantsStorage
 	*VNetStorage
 	*EBGPStorage
+	*L4LBStorage
 }
 
 // NewStorage .
@@ -47,6 +48,7 @@ func NewStorage() *Storage {
 		TenantsStorage: NewTenantsStorage(),
 		VNetStorage:    NewVNetStorage(),
 		EBGPStorage:    NewEBGPStoragee(),
+		L4LBStorage:    NewL4LBStorage(),
 	}
 }
 
@@ -67,6 +69,9 @@ func (s *Storage) Download() error {
 		return err
 	}
 	if err := s.EBGPStorage.Download(); err != nil {
+		return err
+	}
+	if err := s.L4LBStorage.Download(); err != nil {
 		return err
 	}
 	return nil
@@ -423,6 +428,85 @@ func (p *EBGPStorage) download() error {
 
 // Download .
 func (p *EBGPStorage) Download() error {
+	p.Lock()
+	defer p.Unlock()
+	return p.download()
+}
+
+/********************************************************************************
+	L4LB Storage
+*********************************************************************************/
+
+// L4LBStorage .
+type L4LBStorage struct {
+	sync.Mutex
+	L4LBs []*api.APILoadBalancer
+}
+
+// NewVNetStorage .
+func NewL4LBStorage() *L4LBStorage {
+	return &L4LBStorage{}
+}
+
+// GetAll .
+func (p *L4LBStorage) GetAll() []*api.APILoadBalancer {
+	p.Lock()
+	defer p.Unlock()
+	return p.getAll()
+}
+
+func (p *L4LBStorage) getAll() []*api.APILoadBalancer {
+	return p.L4LBs
+}
+
+func (p *L4LBStorage) storeAll(items []*api.APILoadBalancer) {
+	p.L4LBs = items
+}
+
+// FindByName .
+func (p *L4LBStorage) FindByName(name string) (*api.APILoadBalancer, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByName(name)
+}
+
+func (p *L4LBStorage) findByName(name string) (*api.APILoadBalancer, bool) {
+	for _, item := range p.L4LBs {
+		if item.Name == name {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// FindByID .
+func (p *L4LBStorage) FindByID(id int) (*api.APILoadBalancer, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByID(id)
+}
+
+func (p *L4LBStorage) findByID(id int) (*api.APILoadBalancer, bool) {
+	for _, item := range p.L4LBs {
+		if item.ID == id {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// Download .
+func (p *L4LBStorage) download() error {
+	items, err := Cred.GetLoadBalancers()
+	if err != nil {
+		return err
+	}
+	p.storeAll(items)
+	return nil
+}
+
+// Download .
+func (p *L4LBStorage) Download() error {
 	p.Lock()
 	defer p.Unlock()
 	return p.download()
