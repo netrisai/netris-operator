@@ -67,7 +67,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		DebugLogger: debugLogger,
 	}
 
-	provisionState := "Provisioning"
+	provisionState := "Active"
 
 	l4lbNN := req.NamespacedName
 	l4lbNN.Name = l4lbMeta.Spec.L4LBName
@@ -170,22 +170,22 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
 	}
 
-	idStruct := api.APILoadBalancerAddResponse{}
-	err = api.CustomDecode(resp.Data, &idStruct)
+	var id int
+	err = api.CustomDecode(resp.Data, &id)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
 
-	debugLogger.Info("L4LB Created", "id", idStruct.ID)
+	debugLogger.Info("L4LB Created", "id", id)
 
-	l4lbMeta.Spec.ID = idStruct.ID
+	l4lbMeta.Spec.ID = id
 
 	err = r.Patch(context.Background(), l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
 
-	debugLogger.Info("ID patched to meta", "id", idStruct.ID)
+	debugLogger.Info("ID patched to meta", "id", id)
 	return ctrl.Result{}, nil, nil
 }
 

@@ -4,16 +4,14 @@ metadata:
   name: my-l4lb
 spec:
   ownerTenant: Admin
-  site: Default
+  site: Yerevan
   state: active
   protocol: tcp
   frontend:
     port: 31434
-    ip: 109.23.0.6
-    subnet: 109.23.0.0/24
+    ip: 10.200.0.56
   backend:
-    - 172.16.0.100:443
-    - 172.16.0.101:443
+    - 10.200.0.58:443
   check:
     type: http
     timeout: 3000

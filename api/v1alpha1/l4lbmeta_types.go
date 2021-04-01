@@ -33,10 +33,11 @@ type L4LBMetaSpec struct {
 	ID               int    `json:"id"`
 	L4LBName         string `json:"l4lbName"`
 
-	Tenant    int  `json:"tenantId"`
-	SiteID    int  `json:"siteId"`
-	Automatic bool `json:"automatic"`
-	Internal  int  `json:"internal"`
+	Tenant    int    `json:"tenantId"`
+	SiteID    int    `json:"siteId"`
+	SiteName  string `json:"siteName"`
+	Automatic bool   `json:"automatic"`
+	Internal  int    `json:"internal"`
 
 	KubenetInfoString string `json:"kubenet_info"`
 

@@ -38,6 +38,8 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 
 	if site, ok := NStorage.SitesStorage.FindByName(l4lb.Spec.Site); ok {
 		siteID = site.ID
+	} else {
+		return nil, fmt.Errorf("'%s' site not found", l4lb.Spec.Site)
 	}
 
 	tenant, ok := NStorage.TenantsStorage.FindByName(l4lb.Spec.OwnerTenant)
@@ -81,7 +83,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		result := regParser(valueMatch, bReg.SubexpNames())
 		port, err := strconv.Atoi(result["port"])
 		if err != nil {
-			fmt.Println(err)
+			return nil, err
 		}
 		l4lbMetaBackends = append(l4lbMetaBackends, k8sv1alpha1.L4LBMetaBackend{
 			IP:   result["ip"],
@@ -99,6 +101,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 			Imported:    imported,
 			L4LBName:    l4lb.Name,
 			SiteID:      siteID,
+			SiteName:    l4lb.Spec.Site,
 			Tenant:      tenantID,
 			Status:      state,
 			Protocol:    strings.ToUpper(l4lb.Spec.Protocol),
@@ -216,6 +219,7 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadB
 		Name:        l4lbMeta.Spec.L4LBName,
 		TenantID:    l4lbMeta.Spec.Tenant,
 		SiteID:      l4lbMeta.Spec.SiteID,
+		SiteName:    l4lbMeta.Spec.SiteName,
 		Automatic:   automatic,
 		Protocol:    l4lbMeta.Spec.Protocol,
 		IP:          l4lbMeta.Spec.IP,

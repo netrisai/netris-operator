@@ -8,6 +8,26 @@ metadata:
   creationTimestamp: null
   name: l4lbs.k8s.netris.ai
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.status
+    name: State
+    type: string
+  - JSONPath: .spec.site
+    name: Site
+    type: string
+  - JSONPath: .status.modified
+    name: Modified
+    priority: 1
+    type: date
+  - JSONPath: .spec.ownerTenant
+    name: Owner
+    type: string
+  - JSONPath: .status.status
+    name: Status
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: k8s.netris.ai
   names:
     kind: L4LB

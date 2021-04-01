@@ -101,6 +101,8 @@ spec:
               type: string
             siteId:
               type: integer
+            siteName:
+              type: string
             status:
               type: string
             tenantId:
@@ -119,6 +121,7 @@ spec:
           - port
           - protocol
           - siteId
+          - siteName
           - status
           - tenantId
           type: object

@@ -100,9 +100,9 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				logger.Error(fmt.Errorf("{L4LBToL4LBMeta} %s", err), "")
 				return u.patchL4LBStatus(l4lb, "Failure", err.Error())
 			}
-			newL4LBMeta.Spec = newL4LBMeta.DeepCopy().Spec
-			newL4LBMeta.Spec.ID = l4lbID
-			newL4LBMeta.Spec.L4LBCRGeneration = l4lb.GetGeneration()
+			l4lbMeta.Spec = newL4LBMeta.DeepCopy().Spec
+			l4lbMeta.Spec.ID = l4lbID
+			l4lbMeta.Spec.L4LBCRGeneration = l4lb.GetGeneration()
 
 			err = r.Update(context.Background(), l4lbMeta.DeepCopyObject(), &client.UpdateOptions{})
 			if err != nil {
