@@ -24,6 +24,7 @@ import (
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	api "github.com/netrisai/netrisapi"
+	"github.com/r3labs/diff/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -123,6 +124,33 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	return l4lbMeta, nil
 }
 
+func compareL4LBMetaAPIL4LBBackend(l4lbMetaBackends []k8sv1alpha1.L4LBMetaBackend, apiL4LBBackends []api.APILBBackend) bool {
+	type member struct {
+		Port string `diff:"port"`
+		IP   string `diff:"ip"`
+	}
+
+	l4lbBackends := []member{}
+	apiBackends := []member{}
+
+	for _, m := range l4lbMetaBackends {
+		l4lbBackends = append(l4lbBackends, member{
+			Port: strconv.Itoa(m.Port),
+			IP:   m.IP,
+		})
+	}
+
+	for _, m := range apiL4LBBackends {
+		apiBackends = append(apiBackends, member{
+			Port: m.Port,
+			IP:   m.IP,
+		})
+	}
+
+	changelog, _ := diff.Diff(l4lbBackends, apiBackends)
+	return len(changelog) <= 0
+}
+
 func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoadBalancer) bool {
 	if l4lbMeta.Spec.L4LBName != apiL4LB.Name {
 		return false
@@ -143,6 +171,9 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoad
 		return false
 	}
 	if l4lbMeta.Spec.Status != apiL4LB.Status {
+		return false
+	}
+	if ok := compareL4LBMetaAPIL4LBBackend(l4lbMeta.Spec.Backend, apiL4LB.BackendIPs); !ok {
 		return false
 	}
 

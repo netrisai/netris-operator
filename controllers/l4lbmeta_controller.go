@@ -144,7 +144,6 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				logger.Info("L4LB Updated")
 			}
 			provisionState = apiL4LB.Label.Text
-			fmt.Println("AAAA", apiL4LB.Label)
 		}
 	}
 	return u.patchL4LBStatus(l4lbCR, provisionState, "Successfully reconciled")
