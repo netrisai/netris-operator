@@ -9,7 +9,7 @@ metadata:
   name: l4lbs.k8s.netris.ai
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.status
+  - JSONPath: .status.state
     name: State
     type: string
   - JSONPath: .spec.site
@@ -107,7 +107,7 @@ spec:
                 Important: Run "make" to regenerate code after modifying this file'
               enum:
               - active
-              - disabled
+              - disable
               type: string
           required:
           - backend
@@ -122,6 +122,8 @@ spec:
               type: string
             modified:
               format: date-time
+              type: string
+            state:
               type: string
             status:
               type: string

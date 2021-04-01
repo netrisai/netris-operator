@@ -67,7 +67,13 @@ func (u *uniReconciler) patchEBGPStatus(ebgp *k8sv1alpha1.EBGP, status, message 
 func (u *uniReconciler) patchL4LBStatus(l4lb *k8sv1alpha1.L4LB, status, message string) (ctrl.Result, error) {
 	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
 
+	state := "active"
+	if len(l4lb.Spec.State) > 0 {
+		state = l4lb.Spec.State
+	}
+
 	l4lb.Status.Status = status
+	l4lb.Status.State = state
 	l4lb.Status.Message = message
 
 	err := u.Status().Patch(context.Background(), l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})

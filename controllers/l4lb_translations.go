@@ -50,6 +50,8 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 
 	if l4lb.Spec.State == "" || l4lb.Spec.State == "active" {
 		state = "enable"
+	} else {
+		state = l4lb.Spec.State
 	}
 
 	healthCheck := k8sv1alpha1.L4LBMetaHealthCheck{}
@@ -135,6 +137,9 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoad
 		return false
 	}
 	if l4lbMeta.Spec.SiteID != apiL4LB.SiteID {
+		return false
+	}
+	if l4lbMeta.Spec.Tenant != apiL4LB.TenantID {
 		return false
 	}
 	if l4lbMeta.Spec.Status != apiL4LB.Status {

@@ -27,7 +27,7 @@ import (
 type L4LBSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	// +kubebuilder:validation:Enum=active;disabled
+	// +kubebuilder:validation:Enum=active;disable
 	State string `json:"state,omitempty"`
 
 	Check       L4LBCheck `json:"check,omitempty"`
@@ -72,13 +72,14 @@ type L4LBStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed sta
 	// Important: Run "make" to regenerate code after modifying this file
 
 	Status       string      `json:"status,omitempty"`
+	State        string      `json:"state,omitempty"`
 	Message      string      `json:"message,omitempty"`
 	ModifiedDate metav1.Time `json:"modified,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.status`
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Site",type=string,JSONPath=".spec.site"
 // +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.status.modified`,priority=1
 // +kubebuilder:printcolumn:name="Owner",type=string,JSONPath=`.spec.ownerTenant`
