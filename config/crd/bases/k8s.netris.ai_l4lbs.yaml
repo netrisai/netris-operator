@@ -91,8 +91,6 @@ spec:
               required:
               - port
               type: object
-            internal:
-              type: boolean
             ownerTenant:
               type: string
             protocol:

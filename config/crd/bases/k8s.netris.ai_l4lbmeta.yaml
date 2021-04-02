@@ -84,8 +84,6 @@ spec:
               type: integer
             imported:
               type: boolean
-            internal:
-              type: integer
             ip:
               type: string
             kubenet_info:
@@ -113,7 +111,6 @@ spec:
           - healthCheck
           - id
           - imported
-          - internal
           - ip
           - kubenet_info
           - l4lbGeneration
