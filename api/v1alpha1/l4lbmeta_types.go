@@ -46,7 +46,7 @@ type L4LBMetaSpec struct {
 
 	Status string `json:"status"`
 
-	HealthCheck L4LBMetaHealthCheck `json:"healthCheck"`
+	HealthCheck *L4LBMetaHealthCheck `json:"healthCheck"`
 
 	Backend []L4LBMetaBackend `json:"backendIps"`
 }

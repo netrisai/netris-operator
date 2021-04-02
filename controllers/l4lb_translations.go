@@ -56,31 +56,37 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		state = l4lb.Spec.State
 	}
 
-	healthCheck := k8sv1alpha1.L4LBMetaHealthCheck{}
-
-	if l4lb.Spec.Check.Timeout == 0 {
-		timeout = "2000"
-	} else {
-		timeout = strconv.Itoa(l4lb.Spec.Check.Timeout)
-	}
-
-	if l4lb.Spec.Check.Type == "tcp" {
-		healthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
-			Timeout: timeout,
-		}
-	} else if l4lb.Spec.Check.Type == "http" {
-		healthCheck.HTTP = &k8sv1alpha1.L4LBMetaHealthCheckHTTP{
-			Timeout:     timeout,
-			RequestPath: l4lb.Spec.Check.RequestPath,
-		}
-	} else {
-		healthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
-			Timeout: timeout,
-		}
-	}
+	healthCheck := &k8sv1alpha1.L4LBMetaHealthCheck{}
 
 	if l4lb.Spec.Protocol != "" {
 		proto = l4lb.Spec.Protocol
+	}
+
+	if proto == "tcp" {
+		if l4lb.Spec.Check.Timeout == 0 {
+			timeout = "2000"
+		} else {
+			timeout = strconv.Itoa(l4lb.Spec.Check.Timeout)
+		}
+
+		if l4lb.Spec.Check.Type == "tcp" {
+			healthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
+				Timeout: timeout,
+			}
+		} else if l4lb.Spec.Check.Type == "http" {
+			healthCheck.HTTP = &k8sv1alpha1.L4LBMetaHealthCheckHTTP{
+				Timeout:     timeout,
+				RequestPath: l4lb.Spec.Check.RequestPath,
+			}
+		} else {
+			healthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
+				Timeout: timeout,
+			}
+		}
+	}
+
+	if proto == "udp" {
+		healthCheck = nil
 	}
 
 	imported := false
@@ -193,7 +199,7 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 		automatic = true
 	}
 
-	healthCheck := "TCP"
+	healthCheck := ""
 	requestPath := ""
 	timeOut := ""
 
@@ -202,6 +208,7 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 		requestPath = l4lbMeta.Spec.HealthCheck.HTTP.RequestPath
 		timeOut = l4lbMeta.Spec.HealthCheck.HTTP.Timeout
 	} else if l4lbMeta.Spec.HealthCheck.TCP != nil {
+		healthCheck = "TCP"
 		requestPath = l4lbMeta.Spec.HealthCheck.TCP.RequestPath
 		timeOut = l4lbMeta.Spec.HealthCheck.TCP.Timeout
 	}
@@ -223,10 +230,13 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 		IP:          l4lbMeta.Spec.IP,
 		Port:        l4lbMeta.Spec.Port,
 		Status:      l4lbMeta.Spec.Status,
-		HealthCheck: healthCheck,
 		RequestPath: requestPath,
 		Timeout:     timeOut,
 		Backend:     lbBackends,
+	}
+
+	if healthCheck != "" {
+		l4lbAdd.HealthCheck = healthCheck
 	}
 
 	return l4lbAdd, nil
@@ -240,7 +250,7 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadB
 		automatic = true
 	}
 
-	healthCheck := "TCP"
+	healthCheck := ""
 	requestPath := ""
 	timeOut := ""
 
@@ -249,6 +259,7 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadB
 		requestPath = l4lbMeta.Spec.HealthCheck.HTTP.RequestPath
 		timeOut = l4lbMeta.Spec.HealthCheck.HTTP.Timeout
 	} else if l4lbMeta.Spec.HealthCheck.TCP != nil {
+		healthCheck = "TCP"
 		requestPath = l4lbMeta.Spec.HealthCheck.TCP.RequestPath
 		timeOut = l4lbMeta.Spec.HealthCheck.TCP.Timeout
 	}
@@ -272,10 +283,13 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadB
 		IP:          l4lbMeta.Spec.IP,
 		Port:        l4lbMeta.Spec.Port,
 		Status:      l4lbMeta.Spec.Status,
-		HealthCheck: healthCheck,
 		RequestPath: requestPath,
 		Timeout:     timeOut,
 		BackendIPs:  lbBackends,
+	}
+
+	if healthCheck != "" {
+		l4lbUpdate.HealthCheck = healthCheck
 	}
 
 	return l4lbUpdate, nil
