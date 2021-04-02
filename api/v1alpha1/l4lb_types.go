@@ -39,7 +39,6 @@ type L4LBSpec struct {
 
 	Frontend L4LBFrontend  `json:"frontend"`
 	Backend  []L4LBBackend `json:"backend"`
-	Internal bool          `json:"internal,omitempty"`
 }
 
 // L4LBCheck .

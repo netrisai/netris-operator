@@ -37,7 +37,6 @@ type L4LBMetaSpec struct {
 	SiteID    int    `json:"siteId"`
 	SiteName  string `json:"siteName"`
 	Automatic bool   `json:"automatic"`
-	Internal  int    `json:"internal"`
 
 	KubenetInfoString string `json:"kubenet_info"`
 

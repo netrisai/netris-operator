@@ -72,11 +72,6 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		}
 	}
 
-	internal := 0
-	if l4lb.Spec.Internal {
-		internal = 1
-	}
-
 	imported := false
 	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok {
 		if i == "true" {
@@ -112,7 +107,6 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 			SiteName:    l4lb.Spec.Site,
 			Tenant:      tenantID,
 			Status:      state,
-			Internal:    internal,
 			Protocol:    strings.ToUpper(l4lb.Spec.Protocol),
 			Port:        l4lb.Spec.Frontend.Port,
 			IP:          l4lb.Spec.Frontend.IP,
@@ -215,7 +209,6 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 		SiteID:      l4lbMeta.Spec.SiteID,
 		Automatic:   automatic,
 		Protocol:    l4lbMeta.Spec.Protocol,
-		Internal:    l4lbMeta.Spec.Internal,
 		IP:          l4lbMeta.Spec.IP,
 		Port:        l4lbMeta.Spec.Port,
 		Status:      l4lbMeta.Spec.Status,
