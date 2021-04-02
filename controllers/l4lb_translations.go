@@ -36,6 +36,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	siteID := 0
 	var state string
 	var timeout string
+	proto := "tcp"
 
 	if site, ok := NStorage.SitesStorage.FindByName(l4lb.Spec.Site); ok {
 		siteID = site.ID
@@ -78,6 +79,10 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		}
 	}
 
+	if l4lb.Spec.Protocol != "" {
+		proto = l4lb.Spec.Protocol
+	}
+
 	imported := false
 	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok {
 		if i == "true" {
@@ -113,7 +118,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 			SiteName:    l4lb.Spec.Site,
 			Tenant:      tenantID,
 			Status:      state,
-			Protocol:    strings.ToUpper(l4lb.Spec.Protocol),
+			Protocol:    strings.ToUpper(proto),
 			Port:        l4lb.Spec.Frontend.Port,
 			IP:          l4lb.Spec.Frontend.IP,
 			Backend:     l4lbMetaBackends,
