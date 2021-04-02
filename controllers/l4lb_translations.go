@@ -57,7 +57,9 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 
 	healthCheck := k8sv1alpha1.L4LBMetaHealthCheck{}
 
-	if l4lb.Spec.Check.Timeout != 0 {
+	if l4lb.Spec.Check.Timeout == 0 {
+		timeout = "2000"
+	} else {
 		timeout = strconv.Itoa(l4lb.Spec.Check.Timeout)
 	}
 
@@ -65,10 +67,14 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		healthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
 			Timeout: timeout,
 		}
-	} else {
+	} else if l4lb.Spec.Check.Type == "http" {
 		healthCheck.HTTP = &k8sv1alpha1.L4LBMetaHealthCheckHTTP{
 			Timeout:     timeout,
 			RequestPath: l4lb.Spec.Check.RequestPath,
+		}
+	} else {
+		healthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
+			Timeout: timeout,
 		}
 	}
 
