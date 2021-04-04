@@ -61,9 +61,6 @@ type L4LBFrontend struct {
 
 	// +kubebuilder:validation:Pattern=`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`
 	IP string `json:"ip,omitempty"`
-
-	// +kubebuilder:validation:Pattern=`^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([0-9]|[12]\d|3[0-2]))$`
-	Subnet string `json:"subnet,omitempty"`
 }
 
 // L4LBStatus defines the observed state of L4LB
