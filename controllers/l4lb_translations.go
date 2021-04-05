@@ -111,6 +111,11 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		})
 	}
 
+	automatic := false
+	if l4lb.Spec.Frontend.IP == "" {
+		automatic = true
+	}
+
 	l4lbMeta := &k8sv1alpha1.L4LBMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(l4lb.GetUID()),
@@ -124,6 +129,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 			SiteName:    l4lb.Spec.Site,
 			Tenant:      tenantID,
 			Status:      state,
+			Automatic:   automatic,
 			Protocol:    strings.ToUpper(proto),
 			Port:        l4lb.Spec.Frontend.Port,
 			IP:          l4lb.Spec.Frontend.IP,
@@ -193,12 +199,6 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoad
 
 // L4LBetaToNetris converts the k8s L4LB resource to Netris type and used for add the L4LB for Netris API.
 func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, error) {
-	automatic := false
-
-	if l4lbMeta.Spec.IP == "" {
-		automatic = true
-	}
-
 	healthCheck := ""
 	requestPath := ""
 	timeOut := ""
@@ -225,7 +225,7 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 		Name:        l4lbMeta.Spec.L4LBName,
 		Tenant:      l4lbMeta.Spec.Tenant,
 		SiteID:      l4lbMeta.Spec.SiteID,
-		Automatic:   automatic,
+		Automatic:   l4lbMeta.Spec.Automatic,
 		Protocol:    l4lbMeta.Spec.Protocol,
 		IP:          l4lbMeta.Spec.IP,
 		Port:        l4lbMeta.Spec.Port,
@@ -244,12 +244,6 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 
 // L4LBMetaToNetrisUpdate converts the k8s L4LB resource to Netris type and used for update the L4LB for Netris API.
 func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadBalancer, error) {
-	automatic := false
-
-	if l4lbMeta.Spec.IP == "" {
-		automatic = true
-	}
-
 	healthCheck := ""
 	requestPath := ""
 	timeOut := ""
@@ -278,7 +272,7 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadB
 		TenantID:    l4lbMeta.Spec.Tenant,
 		SiteID:      l4lbMeta.Spec.SiteID,
 		SiteName:    l4lbMeta.Spec.SiteName,
-		Automatic:   automatic,
+		Automatic:   l4lbMeta.Spec.Automatic,
 		Protocol:    l4lbMeta.Spec.Protocol,
 		IP:          l4lbMeta.Spec.IP,
 		Port:        l4lbMeta.Spec.Port,

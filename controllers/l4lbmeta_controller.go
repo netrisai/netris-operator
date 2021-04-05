@@ -91,6 +91,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if l4lb, ok := NStorage.L4LBStorage.findByName(l4lbMeta.Spec.L4LBName); ok {
 				debugLogger.Info("Imported yaml mode. L4LB found")
 				l4lbMeta.Spec.ID = l4lb.ID
+				l4lbMeta.Spec.IP = l4lb.IP
 				l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(l4lb.ModifiedDate/1000), 0))
 				err := r.Patch(context.Background(), l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
@@ -144,8 +145,11 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				logger.Info("L4LB Updated")
 			}
 			provisionState = apiL4LB.Label.Text
+			l4lbMeta.Spec.IP = apiL4LB.IP
 		}
 	}
+	l4lbCR.Status.Port = fmt.Sprintf("%d/%s", l4lbMeta.Spec.Port, l4lbMeta.Spec.Protocol)
+	l4lbCR.Status.IP = l4lbMeta.Spec.IP
 	return u.patchL4LBStatus(l4lbCR, provisionState, "Successfully reconciled")
 }
 
@@ -172,14 +176,23 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	}
 
 	var id int
-	err = api.CustomDecode(resp.Data, &id)
-	if err != nil {
-		return ctrl.Result{}, err, err
+	idStruct := api.APILoadBalancerAddResponse{}
+	if l4lbMeta.Spec.IP == "" {
+		err = api.CustomDecode(resp.Data, &idStruct)
+		if err != nil {
+			return ctrl.Result{}, err, err
+		}
+		l4lbMeta.Spec.ID = idStruct.ID
+		l4lbMeta.Spec.IP = idStruct.IP
+	} else {
+		err = api.CustomDecode(resp.Data, &id)
+		if err != nil {
+			return ctrl.Result{}, err, err
+		}
+		l4lbMeta.Spec.ID = id
 	}
 
 	debugLogger.Info("L4LB Created", "id", id)
-
-	l4lbMeta.Spec.ID = id
 
 	err = r.Patch(context.Background(), l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {

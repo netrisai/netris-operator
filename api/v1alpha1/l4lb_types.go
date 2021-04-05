@@ -71,15 +71,19 @@ type L4LBStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed sta
 	State        string      `json:"state,omitempty"`
 	Message      string      `json:"message,omitempty"`
 	ModifiedDate metav1.Time `json:"modified,omitempty"`
+	IP           string      `json:"ip,omitempty"`
+	Port         string      `json:"port,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+// +kubebuilder:printcolumn:name="Frontend",type=string,JSONPath=".status.ip"
+// +kubebuilder:printcolumn:name="Port",type=string,JSONPath=".status.port"
 // +kubebuilder:printcolumn:name="Site",type=string,JSONPath=".spec.site"
-// +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.status.modified`,priority=1
-// +kubebuilder:printcolumn:name="Owner",type=string,JSONPath=`.spec.ownerTenant`
+// +kubebuilder:printcolumn:name="Tenant",type=string,JSONPath=`.spec.ownerTenant`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
+// +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.status.modified`,priority=1
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // L4LB is the Schema for the l4lbs API
