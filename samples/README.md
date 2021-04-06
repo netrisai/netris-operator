@@ -139,8 +139,6 @@ spec:
     type: http                                       # [10] optional
     timeout: 3000                                    # [11] optional
     requestPath: /                                   # [12] optional. Ignoring when check.type == tcp
-  internal: false/                                 # [13] optional.
-
 ```
 
 Ref | Attribute                              | Default                | Description
@@ -157,7 +155,6 @@ Ref | Attribute                              | Default                | Descript
 [10]| check.type                             | tcp                    | Probe type. Possible values: `tcp` or `http`
 [11]| check.timeout                          | 2000                   | Probe timeout
 [12]| check.requestPath                      | /                      | Http probe path. Ignoring when check.type == tcp
-[13]| internal                      | false                      | Netris internal field which is not allow to edit LB from Netris UI
 
 
 # Annotations

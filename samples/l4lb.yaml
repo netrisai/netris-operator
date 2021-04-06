@@ -16,4 +16,3 @@ spec:
     type: http
     timeout: 3000
     requestPath: /
-  internal: false

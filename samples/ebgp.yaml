@@ -3,33 +3,33 @@ kind: EBGP
 metadata:
   name: my-ebgp
 spec:
-  site: Default               
-  softgate: softgate1         
-  neighborAs: 23456           
-  transport:                  
-    type: port                
-    name: swp5@rlab-spine1               
-    vlanId: 4                 
-  localIP: 172.16.0.1/30      
-  remoteIP: 172.16.0.2/30     
-  description: someDesc       
-  state: enabled              
-  terminateOnSwitch: false    
-  multihop:                   
-    neighborAddress: 8.8.8.8  
+  site: Default
+  softgate: softgate1
+  neighborAs: 23456
+  transport:
+    type: port
+    name: swp5@rlab-spine1
+    vlanId: 4
+  localIP: 172.16.0.1/30
+  remoteIP: 172.16.0.2/30
+  description: someDesc
+  state: enabled
+  terminateOnSwitch: false
+  multihop:
+    neighborAddress: 8.8.8.8
     updateSource: 10.254.97.33
-    hops: 5                   
-  bgpPassword: somestrongpass 
-  allowAsIn: 5                
-  defaultOriginate: false     
-  prefixInboundMax: 10000     
-  inboundRouteMap: my-in-rm   
-  outboundRouteMap: my-out-rm 
+    hops: 5
+  bgpPassword: somestrongpass
+  allowAsIn: 5
+  defaultOriginate: false
+  prefixInboundMax: 10000
+  inboundRouteMap: my-in-rm
+  outboundRouteMap: my-out-rm
   localPreference: 100
-  weight: 0           
-  prependInbound: 2   
-  prependOutbound: 1  
-  prefixListInbound:  
+  weight: 0
+  prependInbound: 2
+  prependOutbound: 1
+  prefixListInbound:
     - deny 127.0.0.0/8 le 32
     - permit 0.0.0.0/0 le 24
   prefixListOutbound:
