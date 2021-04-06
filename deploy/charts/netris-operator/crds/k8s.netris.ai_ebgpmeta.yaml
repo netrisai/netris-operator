@@ -1,0 +1,178 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: ebgpmeta.k8s.netris.ai
+spec:
+  group: k8s.netris.ai
+  names:
+    kind: EBGPMeta
+    listKind: EBGPMetaList
+    plural: ebgpmeta
+    singular: ebgpmeta
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: EBGPMeta is the Schema for the ebgpmeta API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: EBGPMetaSpec defines the desired state of EBGPMeta
+          properties:
+            allowas_in:
+              type: integer
+            bgp_password:
+              type: string
+            community:
+              type: string
+            description:
+              type: string
+            ebgpGeneration:
+              format: int64
+              type: integer
+            ebgpName:
+              type: string
+            id:
+              type: integer
+            imported:
+              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                Important: Run "make" to regenerate code after modifying this file'
+              type: boolean
+            inboundRouteMap:
+              type: integer
+            internal:
+              type: string
+            ip_version:
+              type: string
+            local_ip:
+              type: string
+            local_preference:
+              type: integer
+            multihop:
+              type: integer
+            name:
+              type: string
+            neighbor_address:
+              type: string
+            neighbor_as:
+              type: integer
+            nfv_id:
+              type: integer
+            nfv_port_id:
+              type: integer
+            originate:
+              type: string
+            outboundRouteMap:
+              type: integer
+            prefix_length:
+              type: integer
+            prefix_limit:
+              type: integer
+            prefix_list_inbound:
+              type: string
+            prefix_list_outbound:
+              type: string
+            prepend_inbound:
+              type: integer
+            prepend_outbound:
+              type: integer
+            rcircuit_id:
+              type: integer
+            remote_ip:
+              type: string
+            site_id:
+              type: integer
+            status:
+              type: string
+            switch_id:
+              type: integer
+            switch_name:
+              type: string
+            switch_port_id:
+              type: integer
+            term_switch_id:
+              type: integer
+            term_switch_name:
+              type: string
+            terminate_on_switch:
+              type: string
+            update_source:
+              type: string
+            vlan:
+              type: integer
+            weight:
+              type: integer
+          required:
+          - allowas_in
+          - bgp_password
+          - community
+          - description
+          - ebgpGeneration
+          - ebgpName
+          - id
+          - imported
+          - inboundRouteMap
+          - internal
+          - ip_version
+          - local_ip
+          - local_preference
+          - multihop
+          - name
+          - neighbor_address
+          - neighbor_as
+          - nfv_id
+          - nfv_port_id
+          - originate
+          - outboundRouteMap
+          - prefix_length
+          - prefix_limit
+          - prefix_list_inbound
+          - prefix_list_outbound
+          - prepend_inbound
+          - prepend_outbound
+          - rcircuit_id
+          - remote_ip
+          - site_id
+          - status
+          - switch_id
+          - switch_name
+          - switch_port_id
+          - term_switch_id
+          - term_switch_name
+          - terminate_on_switch
+          - update_source
+          - vlan
+          - weight
+          type: object
+        status:
+          description: EBGPMetaStatus defines the observed state of EBGPMeta
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
