@@ -1,5 +1,5 @@
 /*
-Copyright 2020.
+Copyright 2021. Netris, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,14 +48,7 @@ type VNetMetaReconciler struct {
 // Reconcile .
 func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	logger := r.Log.WithValues("name", req.NamespacedName)
-	debugLogger := logger.V(int(zapcore.WarnLevel))
-
-	u := uniReconciler{
-		Client:      r.Client,
-		Logger:      logger,
-		DebugLogger: debugLogger,
-	}
+	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	vnetMeta := &k8sv1alpha1.VNetMeta{}
 	vnetCR := &k8sv1alpha1.VNet{}
@@ -65,6 +58,15 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
+	}
+
+	logger := r.Log.WithValues("name", fmt.Sprintf("%s/%s", req.NamespacedName.Namespace, vnetMeta.Spec.VnetName))
+	debugLogger = logger.V(int(zapcore.WarnLevel))
+
+	u := uniReconciler{
+		Client:      r.Client,
+		Logger:      logger,
+		DebugLogger: debugLogger,
 	}
 
 	provisionState := "Provisioning"
@@ -173,7 +175,7 @@ func (r *VNetMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error, error) {
 	debugLogger := r.Log.WithValues(
-		"name", fmt.Sprintf("%s/%s", vnetMeta.Namespace, vnetMeta.Name),
+		"name", fmt.Sprintf("%s/%s", vnetMeta.Namespace, vnetMeta.Spec.VnetName),
 		"vnetName", vnetMeta.Spec.VnetName,
 	).V(int(zapcore.WarnLevel))
 

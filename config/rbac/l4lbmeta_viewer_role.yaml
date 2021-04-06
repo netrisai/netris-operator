@@ -1,0 +1,20 @@
+# permissions for end users to view l4lbmeta.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: l4lbmeta-viewer-role
+rules:
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - l4lbmeta
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - l4lbmeta/status
+  verbs:
+  - get

@@ -1,0 +1,18 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: L4LB
+metadata:
+  name: my-l4lb
+spec:
+  ownerTenant: Admin
+  site: Yerevan
+  state: active
+  protocol: tcp
+  frontend:
+    port: 31434
+    ip: 10.200.0.56
+  backend:
+    - 10.200.0.58:443
+  check:
+    type: http
+    timeout: 3000
+    requestPath: /

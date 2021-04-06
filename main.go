@@ -1,5 +1,5 @@
 /*
-Copyright 2020.
+Copyright 2021. Netris, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -91,6 +91,38 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.EBGPReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("EBGP"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "EBGP")
+		os.Exit(1)
+	}
+	if err = (&controllers.EBGPMetaReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("EBGPMeta"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "EBGPMeta")
+		os.Exit(1)
+	}
+	if err = (&controllers.L4LBReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("L4LB"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "L4LB")
+		os.Exit(1)
+	}
+	if err = (&controllers.L4LBMetaReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("L4LBMeta"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "L4LBMeta")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

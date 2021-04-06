@@ -1,0 +1,20 @@
+# permissions for end users to view ebgps.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ebgp-viewer-role
+rules:
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - ebgps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - ebgps/status
+  verbs:
+  - get

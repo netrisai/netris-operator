@@ -1,5 +1,5 @@
 /*
-Copyright 2020.
+Copyright 2021. Netris, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -73,8 +73,7 @@ type VNetMetaGateway struct {
 }
 
 // VNetMetaStatus defines the observed state of VNetMeta
-type VNetMetaStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+type VNetMetaStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 

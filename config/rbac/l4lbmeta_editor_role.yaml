@@ -1,0 +1,24 @@
+# permissions for end users to edit l4lbmeta.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: l4lbmeta-editor-role
+rules:
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - l4lbmeta
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - l4lbmeta/status
+  verbs:
+  - get
