@@ -194,6 +194,22 @@ func (p *SitesStorage) findByName(name string) (*api.APISite, bool) {
 	return nil, false
 }
 
+// FindByID .
+func (p *SitesStorage) FindByID(id int) (*api.APISite, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByID(id)
+}
+
+func (p *SitesStorage) findByID(id int) (*api.APISite, bool) {
+	for _, site := range p.Sites {
+		if site.ID == id {
+			return site, true
+		}
+	}
+	return nil, false
+}
+
 // Download .
 func (p *SitesStorage) download() error {
 	items, err := Cred.GetSites()

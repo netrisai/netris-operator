@@ -31,6 +31,7 @@ import (
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/controllers"
+	"github.com/netrisai/netris-operator/lbwatcher"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -124,6 +125,8 @@ func main() {
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
+
+	go lbwatcher.Start(mgr)
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
