@@ -248,10 +248,6 @@ func compareLoadBalancers(LBs []k8sv1alpha1.L4LB, serviceLBs []*k8sv1alpha1.L4LB
 
 				lbIngressMap[serviceLB.GetAnnotations()["serviceuid"]][lb.Status.IP] = 1
 
-				if serviceLB.Spec.Frontend.IP != "" {
-					lbIngressMap[serviceLB.GetAnnotations()["serviceuid"]] = map[string]int{}
-				}
-
 				if serviceLB.Spec.Frontend.IP != "" && serviceLB.Spec.Frontend.IP != lb.Spec.Frontend.IP {
 					lb.Spec.Frontend.IP = serviceLB.Spec.Frontend.IP
 					update = true
