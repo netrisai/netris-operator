@@ -126,7 +126,12 @@ func main() {
 	}
 	// +kubebuilder:scaffold:builder
 
-	go lbwatcher.Start(mgr)
+	watcherLogLevel := "info"
+	if configloader.Root.LogDevMode {
+		watcherLogLevel = "debug"
+	}
+
+	go lbwatcher.Start(mgr, lbwatcher.Options{LogLevel: watcherLogLevel})
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

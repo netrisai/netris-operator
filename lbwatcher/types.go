@@ -35,3 +35,7 @@ type lbBackend struct {
 	Port        int    `json:"port"`
 	Maintenance bool   `json:"maintenance"`
 }
+
+type Options struct {
+	LogLevel string
+}

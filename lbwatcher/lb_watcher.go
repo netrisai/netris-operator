@@ -25,18 +25,26 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-logr/logr"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/controllers"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap/zapcore"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-var logger = logrus.New()
+var (
+	logger      logr.Logger
+	debugLogger logr.InfoLogger
+)
+
+func init() {
+}
 
 func getClientset() (*kubernetes.Clientset, error) {
 	return kubernetes.NewForConfig(ctrl.GetConfigOrDie())
@@ -45,13 +53,22 @@ func getClientset() (*kubernetes.Clientset, error) {
 func start(mgr manager.Manager) {
 	clientset, err := getClientset()
 	if err != nil {
-		logger.Error(err)
+		logger.Error(err, "")
 	}
 	cl := mgr.GetClient()
 	loadBalancerProcess(clientset, cl)
 }
 
-func Start(mgr manager.Manager) {
+func Start(mgr manager.Manager, options Options) {
+	if options.LogLevel == "debug" {
+		logger = zap.New(zap.Level(zapcore.DebugLevel), zap.UseDevMode(false))
+	} else {
+		logger = zap.New(zap.UseDevMode(false), zap.StacktraceLevel(zapcore.DPanicLevel))
+	}
+
+	logger = ctrl.Log.WithName("LBWatcher")
+	debugLogger = logger.V(int(zapcore.WarnLevel))
+
 	ticker := time.NewTicker(10 * time.Second)
 	start(mgr)
 	for {
@@ -71,21 +88,21 @@ func filterL4LBs(LBs []k8sv1alpha1.L4LB) []k8sv1alpha1.L4LB {
 }
 
 func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client) {
-	logger.Debug("Generating load balancers from k8s...")
+	debugLogger.Info("Generating load balancers from k8s...")
 	var errors []error = nil
 	lbTimeout := "2000"
 	serviceLBs, err := generateLoadBalancers(clientset, lbTimeout)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(err, "")
 	}
 
 	l4lbs, err := getL4LBs(cl)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(err, "")
 	}
 
 	if l4lbs == nil {
-		logger.Error("CRD Not found")
+		logger.Error(fmt.Errorf("CRD Not found"), "")
 		return
 	}
 
@@ -101,13 +118,13 @@ func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client) {
 	lbsToCreate, lbsToUpdate, lbsToDelete, ingressIPsMap := compareLoadBalancers(filteerdL4LBs, serviceLBs)
 
 	js, _ := json.Marshal(lbsToCreate)
-	logger.Debugf("Load balancers for create: %s\n", js)
+	debugLogger.Info("Load balancers for create", "List", string(js))
 	js, _ = json.Marshal(lbsToUpdate)
-	logger.Debugf("Load balancers for update: %s\n", js)
+	debugLogger.Info("Load balancers for update", "List", string(js))
 	js, _ = json.Marshal(lbsToDelete)
-	logger.Debugf("Load balancers for delete: %s\n", js)
+	debugLogger.Info("Load balancers for delete", "List", string(js))
 	js, _ = json.Marshal(ingressIPsMap)
-	logger.Debugf("Ingress addresses for k8s: %s\n", js)
+	debugLogger.Info("Ingress addresses for k8s", "List", string(js))
 
 	lbsByUID := make(map[string][]*k8sv1alpha1.L4LB)
 	for _, lb := range lbsToCreate {
@@ -138,7 +155,7 @@ func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client) {
 	}
 
 	for _, err := range errors {
-		logger.Error(err)
+		logger.Error(err, "")
 	}
 }
 
@@ -325,7 +342,7 @@ func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([
 		return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)
 	}
 
-	logger.Debug("Getting k8s pods...")
+	debugLogger.Info("Getting k8s pods...")
 	podList, err := getPods(clientset, "")
 	if err != nil {
 		return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)

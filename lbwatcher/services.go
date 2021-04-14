@@ -67,7 +67,7 @@ func assignIngress(clientset *kubernetes.Clientset, ips []string, namespace stri
 
 func eventRecorder(kubeClient *kubernetes.Clientset) (record.EventRecorder, watch.Interface, record.EventBroadcaster) {
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(logger.Debugf)
+	// eventBroadcaster.StartLogging(logger.Debugf)
 	w := eventBroadcaster.StartRecordingToSink(
 		&typedcorev1.EventSinkImpl{
 			Interface: kubeClient.CoreV1().Events(""),
