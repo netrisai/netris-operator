@@ -88,7 +88,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	vnetMeta := &k8sv1alpha1.VNetMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(vnet.GetUID()),
-			Namespace: "default",
+			Namespace: vnet.GetNamespace(),
 		},
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.VNetMetaSpec{

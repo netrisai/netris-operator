@@ -63,7 +63,7 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 	ebgpMeta = &k8sv1alpha1.EBGPMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(ebgp.GetUID()),
-			Namespace: "default",
+			Namespace: ebgp.GetNamespace(),
 		},
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.EBGPMetaSpec{

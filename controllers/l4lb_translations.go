@@ -119,7 +119,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	l4lbMeta := &k8sv1alpha1.L4LBMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(l4lb.GetUID()),
-			Namespace: "default",
+			Namespace: l4lb.GetNamespace(),
 		},
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.L4LBMetaSpec{
