@@ -40,10 +40,10 @@ type L4LBReconciler struct {
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbs/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core,resources=service,verbs=get;list;watch
-// +kubebuilder:rbac:groups=core,resources=service/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core,resources=pod,verbs=get;list;watch
-// +kubebuilder:rbac:groups=core,resources=node,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core,resources=services/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch
 
 func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

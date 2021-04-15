@@ -9,7 +9,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - node
+  - nodes
   verbs:
   - get
   - list
@@ -17,7 +17,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - pod
+  - pods
   verbs:
   - get
   - list
@@ -25,7 +25,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - service
+  - services
   verbs:
   - get
   - list
@@ -33,7 +33,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - service/status
+  - services/status
   verbs:
   - get
   - patch
