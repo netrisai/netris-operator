@@ -160,6 +160,7 @@ Ref | Attribute                              | Default                | Descript
 > Annotation keys and values can only be strings. Other types, such as boolean or numeric values must be quoted, i.e. "true", "false", "100".
 
 
-Name                                   | Type             | Description
--------------------------------------- | ---------------- | ----------------
-`resource.k8s.netris.ai/import`        |"true" or "false" | Allow importing existing resources.
+Name                                   | Default      |Values              | Description
+-------------------------------------- | ------------ | ------------------ | ----------------
+`resource.k8s.netris.ai/import`        | "false"      |"true" or "false"   | Allow importing existing resources. 
+`resource.k8s.netris.ai/reclaimPolicy` | "delete"     |"retain" or "delete"| Resources reclaim policy.
