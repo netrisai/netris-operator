@@ -79,8 +79,12 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	}
 
 	imported := false
+	reclaim := false
 	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
 		imported = true
+	}
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
 	}
 
 	vnetMeta := &k8sv1alpha1.VNetMeta{
@@ -91,6 +95,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.VNetMetaSpec{
 			Imported:     imported,
+			Reclaim:      reclaim,
 			Name:         string(vnet.GetUID()),
 			VnetName:     vnet.Name,
 			Sites:        sitesList,
