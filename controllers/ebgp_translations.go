@@ -54,8 +54,12 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 	// }
 
 	imported := false
+	reclaim := false
 	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
 		imported = true
+	}
+	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
 	}
 
 	ebgpMeta = &k8sv1alpha1.EBGPMeta{
@@ -66,6 +70,7 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.EBGPMetaSpec{
 			Imported: imported,
+			Reclaim:  reclaim,
 			Name:     string(ebgp.GetUID()),
 			EBGPName: ebgp.Name,
 			// Softgate: softgate, ?
