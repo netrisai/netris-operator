@@ -30,7 +30,7 @@ spec:
   - JSONPath: .status.modified
     name: Modified
     priority: 1
-    type: date
+    type: string
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
@@ -125,7 +125,6 @@ spec:
             message:
               type: string
             modified:
-              format: date-time
               type: string
             port:
               type: string
