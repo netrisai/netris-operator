@@ -54,10 +54,8 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 	// }
 
 	imported := false
-	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok {
-		if i == "true" {
-			imported = true
-		}
+	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
 	}
 
 	ebgpMeta = &k8sv1alpha1.EBGPMeta{

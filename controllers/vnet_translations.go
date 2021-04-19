@@ -79,10 +79,8 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	}
 
 	imported := false
-	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok {
-		if i == "true" {
-			imported = true
-		}
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
 	}
 
 	vnetMeta := &k8sv1alpha1.VNetMeta{

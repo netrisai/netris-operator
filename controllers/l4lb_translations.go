@@ -83,10 +83,8 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 
 	imported := false
 	reclaim := false
-	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok {
-		if i == "true" {
-			imported = true
-		}
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
 	}
 	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
 		reclaim = true
