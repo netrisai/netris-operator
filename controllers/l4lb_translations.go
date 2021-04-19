@@ -221,13 +221,18 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 		})
 	}
 
+	ip := ""
+	if !l4lbMeta.Spec.Automatic {
+		ip = l4lbMeta.Spec.IP
+	}
+
 	l4lbAdd := &api.APILoadBalancerAdd{
 		Name:        l4lbMeta.Spec.L4LBName,
 		Tenant:      l4lbMeta.Spec.Tenant,
 		SiteID:      l4lbMeta.Spec.SiteID,
 		Automatic:   l4lbMeta.Spec.Automatic,
 		Protocol:    l4lbMeta.Spec.Protocol,
-		IP:          l4lbMeta.Spec.IP,
+		IP:          ip,
 		Port:        l4lbMeta.Spec.Port,
 		Status:      l4lbMeta.Spec.Status,
 		RequestPath: requestPath,
