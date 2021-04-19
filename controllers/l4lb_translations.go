@@ -85,10 +85,6 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		}
 	}
 
-	if proto == "udp" {
-		healthCheck = nil
-	}
-
 	imported := false
 	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok {
 		if i == "true" {
