@@ -348,3 +348,15 @@ func findGatewayDuplicates(items []k8sv1alpha1.VNetGateway) (string, bool) {
 	}
 	return "", false
 }
+
+func vnetCompareFieldsForNewMeta(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) bool {
+	imported := false
+	reclaim := false
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
+	}
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
+	}
+	return vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration || imported != vnetMeta.Spec.Imported || reclaim != vnetMeta.Spec.Reclaim
+}

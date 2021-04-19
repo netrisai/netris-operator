@@ -97,11 +97,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if metaFound {
 		debugLogger.Info("Meta found")
-		imported := false
-		if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
-			imported = true
-		}
-		if vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration || imported != vnetMeta.Spec.Imported {
+		if vnetCompareFieldsForNewMeta(vnet, vnetMeta) {
 			debugLogger.Info("Generating New Meta")
 			vnetID := vnetMeta.Spec.ID
 			newVnetMeta, err := r.VnetToVnetMeta(vnet)
@@ -177,7 +173,7 @@ func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
 }
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
-	if vnetMeta != nil && vnetMeta.Spec.ID > 0 {
+	if vnetMeta != nil && vnetMeta.Spec.ID > 0 && !vnetMeta.Spec.Reclaim {
 		reply, err := Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", err)
