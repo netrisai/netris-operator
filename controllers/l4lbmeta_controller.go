@@ -177,20 +177,21 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 
 	var id int
 	idStruct := api.APILoadBalancerAddResponse{}
-	if l4lbMeta.Spec.IP == "" {
+	if l4lbMeta.Spec.Automatic {
 		err = api.CustomDecode(resp.Data, &idStruct)
 		if err != nil {
 			return ctrl.Result{}, err, err
 		}
-		l4lbMeta.Spec.ID = idStruct.ID
+		id = idStruct.ID
 		l4lbMeta.Spec.IP = idStruct.IP
 	} else {
 		err = api.CustomDecode(resp.Data, &id)
 		if err != nil {
 			return ctrl.Result{}, err, err
 		}
-		l4lbMeta.Spec.ID = id
 	}
+
+	l4lbMeta.Spec.ID = id
 
 	debugLogger.Info("L4LB Created", "id", id)
 
