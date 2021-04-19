@@ -318,3 +318,15 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadB
 
 	return l4lbUpdate, nil
 }
+
+func l4lbCompareFieldsForNewMeta(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1.L4LBMeta) bool {
+	imported := false
+	reclaim := false
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
+	}
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
+	}
+	return l4lb.GetGeneration() != l4lbMeta.Spec.L4LBCRGeneration || imported != l4lbMeta.Spec.Imported || reclaim != l4lbMeta.Spec.Reclaim
+}
