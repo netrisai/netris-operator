@@ -89,11 +89,7 @@ func (r *EBGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if metaFound {
 		debugLogger.Info("Meta found")
-		imported := false
-		if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
-			imported = true
-		}
-		if ebgp.GetGeneration() != ebgpMeta.Spec.EBGPCRGeneration || imported != ebgpMeta.Spec.Imported {
+		if ebgpCompareFieldsForNewMeta(ebgp, ebgpMeta) {
 			debugLogger.Info("Generating New Meta")
 			ebgpID := ebgpMeta.Spec.ID
 			newVnetMeta, err := r.EBGPToEBGPMeta(ebgp)
@@ -141,7 +137,7 @@ func (r *EBGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 
 func (r *EBGPReconciler) deleteEBGP(ebgp *k8sv1alpha1.EBGP, ebgpMeta *k8sv1alpha1.EBGPMeta) (ctrl.Result, error) {
-	if ebgpMeta != nil && ebgpMeta.Spec.ID > 0 {
+	if ebgpMeta != nil && ebgpMeta.Spec.ID > 0 && !ebgpMeta.Spec.Reclaim {
 		reply, err := Cred.DeleteEBGP(ebgpMeta.Spec.ID)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteEBGP} %s", err)

@@ -96,3 +96,15 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 
 	return ebgpMeta, nil
 }
+
+func ebgpCompareFieldsForNewMeta(ebgp *k8sv1alpha1.EBGP, ebgpMeta *k8sv1alpha1.EBGPMeta) bool {
+	imported := false
+	reclaim := false
+	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
+	}
+	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
+	}
+	return ebgp.GetGeneration() != ebgpMeta.Spec.EBGPCRGeneration || imported != ebgpMeta.Spec.Imported || reclaim != ebgpMeta.Spec.Reclaim
+}

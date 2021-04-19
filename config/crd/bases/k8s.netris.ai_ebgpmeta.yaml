@@ -95,6 +95,8 @@ spec:
               type: integer
             rcircuit_id:
               type: integer
+            reclaimPolicy:
+              type: boolean
             remote_ip:
               type: string
             site_id:
@@ -148,6 +150,7 @@ spec:
           - prepend_inbound
           - prepend_outbound
           - rcircuit_id
+          - reclaimPolicy
           - remote_ip
           - site_id
           - status
