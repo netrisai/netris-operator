@@ -79,6 +79,7 @@ spec:
                   enum:
                   - tcp
                   - http
+                  - none
                   type: string
               type: object
             frontend:

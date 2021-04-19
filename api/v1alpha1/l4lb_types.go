@@ -43,7 +43,7 @@ type L4LBSpec struct {
 
 // L4LBCheck .
 type L4LBCheck struct {
-	// +kubebuilder:validation:Enum=tcp;http
+	// +kubebuilder:validation:Enum=tcp;http;none
 	Type        string `json:"type,omitempty"`
 	Timeout     int    `json:"timeout,omitempty"`
 	RequestPath string `json:"requestPath,omitempty"`
