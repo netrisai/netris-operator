@@ -21,7 +21,7 @@ spec:
   - JSONPath: .status.modified
     name: Modified
     priority: 1
-    type: date
+    type: string
   - JSONPath: .spec.ownerTenant
     name: Owner
     type: string
@@ -120,7 +120,6 @@ spec:
             message:
               type: string
             modified:
-              format: date-time
               type: string
             sites:
               type: string

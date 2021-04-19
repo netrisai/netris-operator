@@ -20,11 +20,9 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -98,7 +96,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					return ctrl.Result{RequeueAfter: requeueInterval}, nil
 				}
 				vnetMeta.Spec.ID = vnetID
-				vnetCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(vnet.ModifiedDate/1000), 0))
+				vnetCR.Status.ModifiedDate = fromTimestampToString(vnet.ModifiedDate)
 				err = r.Patch(context.Background(), vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch vnetmeta.Spec.ID} %s", err), "")
@@ -141,7 +139,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if apiVnet.State == "disabled" {
 				provisionState = "Disabled"
 			}
-			vnetCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiVnet.ModifiedDate/1000), 0))
+			vnetCR.Status.ModifiedDate = fromTimestampToString(apiVnet.ModifiedDate)
 			debugLogger.Info("Comparing VnetMeta with Netris Vnet")
 			if ok := compareVNetMetaAPIVnet(vnetMeta, apiVnet); ok {
 				debugLogger.Info("Nothing Changed")
