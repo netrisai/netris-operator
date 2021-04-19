@@ -92,7 +92,11 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if metaFound {
 		debugLogger.Info("Meta found")
-		if l4lb.GetGeneration() != l4lbMeta.Spec.L4LBCRGeneration {
+		imported := false
+		if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+			imported = true
+		}
+		if l4lb.GetGeneration() != l4lbMeta.Spec.L4LBCRGeneration || imported != l4lbMeta.Spec.Imported {
 			debugLogger.Info("Generating New Meta")
 			l4lbID := l4lbMeta.Spec.ID
 			newL4LBMeta, err := r.L4LBToL4LBMeta(l4lb)

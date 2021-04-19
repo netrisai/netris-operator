@@ -97,7 +97,11 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if metaFound {
 		debugLogger.Info("Meta found")
-		if vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration {
+		imported := false
+		if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+			imported = true
+		}
+		if vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration || imported != vnetMeta.Spec.Imported {
 			debugLogger.Info("Generating New Meta")
 			vnetID := vnetMeta.Spec.ID
 			newVnetMeta, err := r.VnetToVnetMeta(vnet)

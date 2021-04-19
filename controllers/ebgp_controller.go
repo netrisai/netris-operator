@@ -89,7 +89,11 @@ func (r *EBGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if metaFound {
 		debugLogger.Info("Meta found")
-		if ebgp.GetGeneration() != ebgpMeta.Spec.EBGPCRGeneration {
+		imported := false
+		if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+			imported = true
+		}
+		if ebgp.GetGeneration() != ebgpMeta.Spec.EBGPCRGeneration || imported != ebgpMeta.Spec.Imported {
 			debugLogger.Info("Generating New Meta")
 			ebgpID := ebgpMeta.Spec.ID
 			newVnetMeta, err := r.EBGPToEBGPMeta(ebgp)
