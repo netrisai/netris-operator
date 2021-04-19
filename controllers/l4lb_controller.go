@@ -144,7 +144,7 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 
 func (r *L4LBReconciler) deleteL4LB(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Result, error) {
-	if l4lbMeta != nil && l4lbMeta.Spec.ID > 0 {
+	if l4lbMeta != nil && l4lbMeta.Spec.ID > 0 && !l4lbMeta.Spec.Reclaim {
 		reply, err := Cred.DeleteLB4(l4lbMeta.Spec.ID)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteL4LB} %s", err)

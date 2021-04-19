@@ -97,6 +97,8 @@ spec:
               type: integer
             protocol:
               type: string
+            reclaimPolicy:
+              type: boolean
             siteId:
               type: integer
             siteName:
@@ -117,6 +119,7 @@ spec:
           - l4lbName
           - port
           - protocol
+          - reclaimPolicy
           - siteId
           - siteName
           - status
