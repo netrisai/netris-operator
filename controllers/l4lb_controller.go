@@ -90,6 +90,17 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
+	if l4lbMustUpdateAnnotations(l4lb) {
+		debugLogger.Info("Setting default annotations")
+		l4lbUpdateDefaultAnnotations(l4lb)
+		err := r.Patch(context.Background(), l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		if err != nil {
+			logger.Error(fmt.Errorf("{Patch L4LB default annotations} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+		return ctrl.Result{}, nil
+	}
+
 	if metaFound {
 		debugLogger.Info("Meta found")
 		if l4lbCompareFieldsForNewMeta(l4lb, l4lbMeta) {

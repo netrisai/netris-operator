@@ -330,3 +330,29 @@ func l4lbCompareFieldsForNewMeta(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1.L
 	}
 	return l4lb.GetGeneration() != l4lbMeta.Spec.L4LBCRGeneration || imported != l4lbMeta.Spec.Imported || reclaim != l4lbMeta.Spec.Reclaim
 }
+
+func l4lbMustUpdateAnnotations(l4lb *k8sv1alpha1.L4LB) bool {
+	update := false
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; !(ok && (i == "true" || i == "false")) {
+		update = true
+	}
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; !(ok && (i == "retain" || i == "delete")) {
+		update = true
+	}
+	return update
+}
+
+func l4lbUpdateDefaultAnnotations(l4lb *k8sv1alpha1.L4LB) {
+	imported := "false"
+	reclaim := "delete"
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = "true"
+	}
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = "retain"
+	}
+	annotations := l4lb.GetAnnotations()
+	annotations["resource.k8s.netris.ai/import"] = imported
+	annotations["resource.k8s.netris.ai/reclaimPolicy"] = reclaim
+	l4lb.SetAnnotations(annotations)
+}
