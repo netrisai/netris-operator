@@ -436,7 +436,7 @@ func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([
 
 					lb := &k8sv1alpha1.L4LB{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      strings.ToLower(fmt.Sprintf("%s-%s-%d", svc.GetUID(), lbIP.Protocol, lbIP.Port)),
+							Name:      strings.ToLower(fmt.Sprintf("%s-%s-%s-%s-%d", svc.GetName(), svc.GetNamespace(), svc.GetUID(), lbIP.Protocol, lbIP.Port)),
 							Namespace: svc.GetNamespace(),
 						},
 						TypeMeta: metav1.TypeMeta{
