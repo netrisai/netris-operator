@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -67,7 +68,7 @@ func assignIngress(clientset *kubernetes.Clientset, ips []string, namespace stri
 
 func eventRecorder(kubeClient *kubernetes.Clientset) (record.EventRecorder, watch.Interface, record.EventBroadcaster) {
 	eventBroadcaster := record.NewBroadcaster()
-	// eventBroadcaster.StartLogging(logger.Debugf)
+	eventBroadcaster.StartLogging(logrus.New().Debugf)
 	w := eventBroadcaster.StartRecordingToSink(
 		&typedcorev1.EventSinkImpl{
 			Interface: kubeClient.CoreV1().Events(""),
