@@ -88,6 +88,17 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
+	if vnetMustUpdateAnnotations(vnet) {
+		debugLogger.Info("Setting default annotations")
+		vnetUpdateDefaultAnnotations(vnet)
+		err := r.Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		if err != nil {
+			logger.Error(fmt.Errorf("{Patch VNet default annotations} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+		return ctrl.Result{}, nil
+	}
+
 	for _, s := range vnet.Spec.Sites {
 		if dup, found := findGatewayDuplicates(s.Gateways); found {
 			errMsg := fmt.Sprintf("Found duplicate value '%s' in '%s' site gateways", dup, s.Name)
