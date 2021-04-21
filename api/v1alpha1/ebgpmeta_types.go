@@ -28,6 +28,7 @@ type EBGPMetaSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	Imported         bool   `json:"imported"`
+	Reclaim          bool   `json:"reclaimPolicy"`
 	EBGPCRGeneration int64  `json:"ebgpGeneration"`
 	ID               int    `json:"id"`
 	EBGPName         string `json:"ebgpName"`

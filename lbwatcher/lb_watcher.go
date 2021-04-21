@@ -32,6 +32,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -56,7 +57,9 @@ func start(mgr manager.Manager) {
 		logger.Error(err, "")
 	}
 	cl := mgr.GetClient()
-	loadBalancerProcess(clientset, cl)
+	recorder, w, _ := eventRecorder(clientset)
+	defer w.Stop()
+	loadBalancerProcess(clientset, cl, recorder)
 }
 
 func Start(mgr manager.Manager, options Options) {
@@ -87,7 +90,7 @@ func filterL4LBs(LBs []k8sv1alpha1.L4LB) []k8sv1alpha1.L4LB {
 	return lbList
 }
 
-func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client) {
+func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client, recorder record.EventRecorder) {
 	debugLogger.Info("Generating load balancers from k8s...")
 	var errors []error = nil
 	lbTimeout := "2000"
@@ -150,6 +153,15 @@ func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client) {
 			_, err := assignIngress(clientset, ingressIPs, serviceLB.GetAnnotations()["servicenamespace"], serviceLB.GetAnnotations()["servicename"])
 			if err != nil {
 				errors = append(errors, err)
+			}
+		}
+	}
+
+	for _, lb := range l4lbs.Items {
+		if lb.Status.Status == "Failure" {
+			err := createEvent(clientset, recorder, lb.GetAnnotations()["servicenamespace"], lb.GetAnnotations()["servicename"], lb.Status.Status, lb.Status.Message)
+			if err != nil {
+				errors = append(errors, fmt.Errorf("{lbEventsPatcher} %s", err))
 			}
 		}
 	}
@@ -424,7 +436,7 @@ func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([
 
 					lb := &k8sv1alpha1.L4LB{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      strings.ToLower(fmt.Sprintf("%s-%s-%d", svc.GetUID(), lbIP.Protocol, lbIP.Port)),
+							Name:      strings.ToLower(fmt.Sprintf("%s-%s-%s-%s-%d", svc.GetName(), svc.GetNamespace(), svc.GetUID(), lbIP.Protocol, lbIP.Port)),
 							Namespace: svc.GetNamespace(),
 						},
 						TypeMeta: metav1.TypeMeta{

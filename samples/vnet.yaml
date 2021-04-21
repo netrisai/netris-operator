@@ -3,7 +3,7 @@ kind: VNet
 metadata:
   name: my-vnet
 spec:
-  ownerTenant: Admin
+  ownerTenant: Default
   guestTenants: []
   sites:
     - name: Yerevan

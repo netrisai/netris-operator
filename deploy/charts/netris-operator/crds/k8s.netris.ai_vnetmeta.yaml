@@ -103,6 +103,8 @@ spec:
               type: integer
             provisioning:
               type: integer
+            reclaimPolicy:
+              type: boolean
             sites:
               items:
                 description: VNetMetaSite .
@@ -139,6 +141,7 @@ spec:
           - owner
           - ownerid
           - provisioning
+          - reclaimPolicy
           - sites
           - state
           - tenants

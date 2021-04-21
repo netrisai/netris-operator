@@ -79,10 +79,12 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	}
 
 	imported := false
-	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok {
-		if i == "true" {
-			imported = true
-		}
+	reclaim := false
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
+	}
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
 	}
 
 	vnetMeta := &k8sv1alpha1.VNetMeta{
@@ -93,6 +95,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.VNetMetaSpec{
 			Imported:     imported,
+			Reclaim:      reclaim,
 			Name:         string(vnet.GetUID()),
 			VnetName:     vnet.Name,
 			Sites:        sitesList,
@@ -349,4 +352,16 @@ func findGatewayDuplicates(items []k8sv1alpha1.VNetGateway) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func vnetCompareFieldsForNewMeta(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) bool {
+	imported := false
+	reclaim := false
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
+	}
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
+	}
+	return vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration || imported != vnetMeta.Spec.Imported || reclaim != vnetMeta.Spec.Reclaim
 }

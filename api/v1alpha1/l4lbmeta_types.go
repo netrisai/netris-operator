@@ -29,6 +29,7 @@ type L4LBMetaSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	Imported         bool   `json:"imported"`
+	Reclaim          bool   `json:"reclaimPolicy"`
 	L4LBCRGeneration int64  `json:"l4lbGeneration"`
 	ID               int    `json:"id"`
 	L4LBName         string `json:"l4lbName"`

@@ -34,12 +34,12 @@ import (
 type VNetStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Status       string      `json:"status,omitempty"`
-	Message      string      `json:"message,omitempty"`
-	State        string      `json:"state,omitempty"`
-	Gateways     string      `json:"gateways,omitempty"`
-	Sites        string      `json:"sites,omitempty"`
-	ModifiedDate metav1.Time `json:"modified,omitempty"`
+	Status       string `json:"status,omitempty"`
+	Message      string `json:"message,omitempty"`
+	State        string `json:"state,omitempty"`
+	Gateways     string `json:"gateways,omitempty"`
+	Sites        string `json:"sites,omitempty"`
+	ModifiedDate string `json:"modified,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -47,7 +47,7 @@ type VNetStatus struct {
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Gateways",type=string,JSONPath=`.status.gateways`
 // +kubebuilder:printcolumn:name="Sites",type=string,JSONPath=".status.sites"
-// +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.status.modified`,priority=1
+// +kubebuilder:printcolumn:name="Modified",type=string,JSONPath=`.status.modified`,priority=1
 // +kubebuilder:printcolumn:name="Owner",type=string,JSONPath=`.spec.ownerTenant`
 // +kubebuilder:printcolumn:name="Guest Tenants",type=string,JSONPath=`.spec.guestTenants`,priority=1
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`

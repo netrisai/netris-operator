@@ -43,7 +43,7 @@ type L4LBSpec struct {
 
 // L4LBCheck .
 type L4LBCheck struct {
-	// +kubebuilder:validation:Enum=tcp;http
+	// +kubebuilder:validation:Enum=tcp;http;none
 	Type        string `json:"type,omitempty"`
 	Timeout     int    `json:"timeout,omitempty"`
 	RequestPath string `json:"requestPath,omitempty"`
@@ -67,12 +67,12 @@ type L4LBFrontend struct {
 type L4LBStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Status       string      `json:"status,omitempty"`
-	State        string      `json:"state,omitempty"`
-	Message      string      `json:"message,omitempty"`
-	ModifiedDate metav1.Time `json:"modified,omitempty"`
-	IP           string      `json:"ip,omitempty"`
-	Port         string      `json:"port,omitempty"`
+	Status       string `json:"status,omitempty"`
+	State        string `json:"state,omitempty"`
+	Message      string `json:"message,omitempty"`
+	ModifiedDate string `json:"modified,omitempty"`
+	IP           string `json:"ip,omitempty"`
+	Port         string `json:"port,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -83,7 +83,7 @@ type L4LBStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed sta
 // +kubebuilder:printcolumn:name="Site",type=string,JSONPath=".spec.site"
 // +kubebuilder:printcolumn:name="Tenant",type=string,JSONPath=`.spec.ownerTenant`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
-// +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.status.modified`,priority=1
+// +kubebuilder:printcolumn:name="Modified",type=string,JSONPath=`.status.modified`,priority=1
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // L4LB is the Schema for the l4lbs API

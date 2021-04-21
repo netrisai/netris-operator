@@ -131,14 +131,13 @@ spec:
   frontend:
     port: 31434                                      # [5]
     ip: 109.23.0.6                                   # [6]  optional
-    subnet: 109.23.0.0/24                            # [7]  optional
-  backend:                                           # [8]
+  backend:                                           # [7]
     - 172.16.0.100:443
     - 172.16.0.101:443
-  check:                                             # [9]  optional. Ignoring when protocol == udp
-    type: http                                       # [10] optional
-    timeout: 3000                                    # [11] optional
-    requestPath: /                                   # [12] optional. Ignoring when check.type == tcp
+  check:                                             # [8]  optional. Ignoring when protocol == udp
+    type: http                                       # [9] optional
+    timeout: 3000                                    # [10] optional
+    requestPath: /                                   # [11] optional. Ignoring when check.type == tcp
 ```
 
 Ref | Attribute                              | Default                | Description
@@ -149,12 +148,11 @@ Ref | Attribute                              | Default                | Descript
 [4] | protocol                               | tcp                    | Protocol. Possible values: `tcp` or `udp`
 [5] | frontend.port                          | nil                    | L4LB frontend port
 [6] | frontend.ip                            | *Assign Automatically* | L4LB frontend ip
-[7] | frontend.subnet                        | *Assign Automatically* | L4LB frontend ip from subnet
-[8] | backend                                | []                     | List of backend servers. Possible values: ip:port
-[9] | check                                  | {}                     | A health check determines whether instances in the target pool are healthy. Ignoring when protocol == udp
-[10]| check.type                             | tcp                    | Probe type. Possible values: `tcp` or `http`
-[11]| check.timeout                          | 2000                   | Probe timeout
-[12]| check.requestPath                      | /                      | Http probe path. Ignoring when check.type == tcp
+[7] | backend                                | []                     | List of backend servers. Possible values: ip:port
+[8] | check                                  | {}                     | A health check determines whether instances in the target pool are healthy. If protocol == `udp` then check.type will be `none`
+[9]| check.type                              | tcp                    | Probe type. Possible values: `tcp`, `http` or `none`
+[10]| check.timeout                          | 2000                   | Probe timeout
+[11]| check.requestPath                      | /                      | Http probe path. Ignoring when check.type == tcp
 
 
 # Annotations
@@ -162,6 +160,7 @@ Ref | Attribute                              | Default                | Descript
 > Annotation keys and values can only be strings. Other types, such as boolean or numeric values must be quoted, i.e. "true", "false", "100".
 
 
-Name                                   | Type             | Description
--------------------------------------- | ---------------- | ----------------
-`resource.k8s.netris.ai/import`        |"true" or "false" | Allow importing existing resources.
+Name                                   | Default      |Values              | Description
+-------------------------------------- | ------------ | ------------------ | ----------------
+`resource.k8s.netris.ai/import`        | "false"      |"true" or "false"   | Allow importing existing resources. 
+`resource.k8s.netris.ai/reclaimPolicy` | "delete"     |"retain" or "delete"| Resources reclaim policy.

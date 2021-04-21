@@ -30,12 +30,6 @@ type lbIP struct {
 	Automatic bool
 }
 
-type lbBackend struct {
-	IP          string `json:"ip"`
-	Port        int    `json:"port"`
-	Maintenance bool   `json:"maintenance"`
-}
-
 type Options struct {
 	LogLevel string
 }

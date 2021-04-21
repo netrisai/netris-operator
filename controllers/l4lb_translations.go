@@ -69,7 +69,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 			timeout = strconv.Itoa(l4lb.Spec.Check.Timeout)
 		}
 
-		if l4lb.Spec.Check.Type == "tcp" {
+		if l4lb.Spec.Check.Type == "tcp" || l4lb.Spec.Check.Type == "" {
 			healthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
 				Timeout: timeout,
 			}
@@ -78,22 +78,16 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 				Timeout:     timeout,
 				RequestPath: l4lb.Spec.Check.RequestPath,
 			}
-		} else {
-			healthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
-				Timeout: timeout,
-			}
 		}
-	}
-
-	if proto == "udp" {
-		healthCheck = nil
 	}
 
 	imported := false
-	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok {
-		if i == "true" {
-			imported = true
-		}
+	reclaim := false
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
+	}
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
 	}
 
 	l4lbMetaBackends := []k8sv1alpha1.L4LBMetaBackend{}
@@ -124,6 +118,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.L4LBMetaSpec{
 			Imported:    imported,
+			Reclaim:     reclaim,
 			L4LBName:    l4lb.Name,
 			SiteID:      siteID,
 			SiteName:    l4lb.Spec.Site,
@@ -139,6 +134,25 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	}
 
 	return l4lbMeta, nil
+}
+
+func compareL4LBMetaAPIL4LBHealthCheck(l4lbMetaHealthCheck k8sv1alpha1.L4LBMetaHealthCheck, apiL4LBHealthCheck api.APILBHealthCheck) bool {
+	var convertedAPIHealthCheck k8sv1alpha1.L4LBMetaHealthCheck
+
+	if apiL4LBHealthCheck.TCP.Timeout != "" {
+		convertedAPIHealthCheck.TCP = &k8sv1alpha1.L4LBMetaHealthCheckTCP{
+			Timeout:     apiL4LBHealthCheck.TCP.Timeout,
+			RequestPath: apiL4LBHealthCheck.TCP.RequestPath,
+		}
+	} else if apiL4LBHealthCheck.HTTP.Timeout != "" {
+		convertedAPIHealthCheck.HTTP = &k8sv1alpha1.L4LBMetaHealthCheckHTTP{
+			Timeout:     apiL4LBHealthCheck.HTTP.Timeout,
+			RequestPath: apiL4LBHealthCheck.HTTP.RequestPath,
+		}
+	}
+
+	changelog, _ := diff.Diff(l4lbMetaHealthCheck, convertedAPIHealthCheck)
+	return len(changelog) <= 0
 }
 
 func compareL4LBMetaAPIL4LBBackend(l4lbMetaBackends []k8sv1alpha1.L4LBMetaBackend, apiL4LBBackends []api.APILBBackend) bool {
@@ -172,7 +186,7 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoad
 	if l4lbMeta.Spec.L4LBName != apiL4LB.Name {
 		return false
 	}
-	if l4lbMeta.Spec.IP != apiL4LB.IP {
+	if l4lbMeta.Spec.IP != apiL4LB.IP || l4lbMeta.Spec.Automatic != apiL4LB.Automatic {
 		return false
 	}
 	if l4lbMeta.Spec.Port != apiL4LB.Port {
@@ -190,6 +204,9 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoad
 	if l4lbMeta.Spec.Status != apiL4LB.Status {
 		return false
 	}
+	if ok := compareL4LBMetaAPIL4LBHealthCheck(*l4lbMeta.Spec.HealthCheck, apiL4LB.HealthCheck); !ok {
+		return false
+	}
 	if ok := compareL4LBMetaAPIL4LBBackend(l4lbMeta.Spec.Backend, apiL4LB.BackendIPs); !ok {
 		return false
 	}
@@ -202,6 +219,10 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 	healthCheck := ""
 	requestPath := ""
 	timeOut := ""
+
+	if l4lbMeta.Spec.Protocol == "TCP" {
+		healthCheck = "None"
+	}
 
 	if l4lbMeta.Spec.HealthCheck.HTTP != nil {
 		healthCheck = "HTTP"
@@ -221,13 +242,18 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 		})
 	}
 
+	ip := ""
+	if !l4lbMeta.Spec.Automatic {
+		ip = l4lbMeta.Spec.IP
+	}
+
 	l4lbAdd := &api.APILoadBalancerAdd{
 		Name:        l4lbMeta.Spec.L4LBName,
 		Tenant:      l4lbMeta.Spec.Tenant,
 		SiteID:      l4lbMeta.Spec.SiteID,
 		Automatic:   l4lbMeta.Spec.Automatic,
 		Protocol:    l4lbMeta.Spec.Protocol,
-		IP:          l4lbMeta.Spec.IP,
+		IP:          ip,
 		Port:        l4lbMeta.Spec.Port,
 		Status:      l4lbMeta.Spec.Status,
 		RequestPath: requestPath,
@@ -247,6 +273,10 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadB
 	healthCheck := ""
 	requestPath := ""
 	timeOut := ""
+
+	if l4lbMeta.Spec.Protocol == "TCP" {
+		healthCheck = "None"
+	}
 
 	if l4lbMeta.Spec.HealthCheck.HTTP != nil {
 		healthCheck = "HTTP"
@@ -287,4 +317,16 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadB
 	}
 
 	return l4lbUpdate, nil
+}
+
+func l4lbCompareFieldsForNewMeta(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1.L4LBMeta) bool {
+	imported := false
+	reclaim := false
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
+	}
+	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
+	}
+	return l4lb.GetGeneration() != l4lbMeta.Spec.L4LBCRGeneration || imported != l4lbMeta.Spec.Imported || reclaim != l4lbMeta.Spec.Reclaim
 }

@@ -20,12 +20,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/go-logr/logr"
 	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -92,7 +90,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				debugLogger.Info("Imported yaml mode. L4LB found")
 				l4lbMeta.Spec.ID = l4lb.ID
 				l4lbMeta.Spec.IP = l4lb.IP
-				l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(l4lb.ModifiedDate/1000), 0))
+				l4lbCR.Status.ModifiedDate = fromTimestampToString(l4lb.ModifiedDate)
 				err := r.Patch(context.Background(), l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch l4lbMeta.Spec.ID} %s", err), "")
@@ -124,7 +122,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			}
 			logger.Info("L4LB Created")
 		} else {
-			l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiL4LB.ModifiedDate/1000), 0))
+			l4lbCR.Status.ModifiedDate = fromTimestampToString(apiL4LB.ModifiedDate)
 			debugLogger.Info("Comparing L4LBMeta with Netris L4LB")
 			if ok := compareL4LBMetaAPIL4LB(l4lbMeta, apiL4LB); ok {
 				debugLogger.Info("Nothing Changed")
@@ -177,20 +175,21 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 
 	var id int
 	idStruct := api.APILoadBalancerAddResponse{}
-	if l4lbMeta.Spec.IP == "" {
+	if l4lbMeta.Spec.Automatic {
 		err = api.CustomDecode(resp.Data, &idStruct)
 		if err != nil {
 			return ctrl.Result{}, err, err
 		}
-		l4lbMeta.Spec.ID = idStruct.ID
+		id = idStruct.ID
 		l4lbMeta.Spec.IP = idStruct.IP
 	} else {
 		err = api.CustomDecode(resp.Data, &id)
 		if err != nil {
 			return ctrl.Result{}, err, err
 		}
-		l4lbMeta.Spec.ID = id
 	}
+
+	l4lbMeta.Spec.ID = id
 
 	debugLogger.Info("L4LB Created", "id", id)
 

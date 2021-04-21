@@ -198,7 +198,12 @@ func (p *SitesStorage) findByName(name string) (*api.APISite, bool) {
 func (p *SitesStorage) FindByID(id int) (*api.APISite, bool) {
 	p.Lock()
 	defer p.Unlock()
-	return p.findByID(id)
+	item, ok := p.findByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findByID(id)
+	}
+	return item, ok
 }
 
 func (p *SitesStorage) findByID(id int) (*api.APISite, bool) {
@@ -277,7 +282,12 @@ func (p *TenantsStorage) findByName(name string) (*api.APITenant, bool) {
 func (p *TenantsStorage) FindByID(id int) (*api.APITenant, bool) {
 	p.Lock()
 	defer p.Unlock()
-	return p.findByID(id)
+	item, ok := p.findByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findByID(id)
+	}
+	return item, ok
 }
 
 func (p *TenantsStorage) findByID(id int) (*api.APITenant, bool) {
@@ -356,7 +366,12 @@ func (p *VNetStorage) findByName(name string) (*api.APIVNet, bool) {
 func (p *VNetStorage) FindByID(id int) (*api.APIVNet, bool) {
 	p.Lock()
 	defer p.Unlock()
-	return p.findByID(id)
+	item, ok := p.findByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findByID(id)
+	}
+	return item, ok
 }
 
 func (p *VNetStorage) findByID(id int) (*api.APIVNet, bool) {
@@ -420,7 +435,12 @@ func (p *EBGPStorage) getAll() []*api.APIEBGP {
 func (p *EBGPStorage) FindByID(id int) (*api.APIEBGP, bool) {
 	p.Lock()
 	defer p.Unlock()
-	return p.findByID(id)
+	item, ok := p.findByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findByID(id)
+	}
+	return item, ok
 }
 
 func (p *EBGPStorage) findByID(id int) (*api.APIEBGP, bool) {
@@ -499,7 +519,12 @@ func (p *L4LBStorage) findByName(name string) (*api.APILoadBalancer, bool) {
 func (p *L4LBStorage) FindByID(id int) (*api.APILoadBalancer, bool) {
 	p.Lock()
 	defer p.Unlock()
-	return p.findByID(id)
+	item, ok := p.findByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findByID(id)
+	}
+	return item, ok
 }
 
 func (p *L4LBStorage) findByID(id int) (*api.APILoadBalancer, bool) {
