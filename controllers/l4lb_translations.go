@@ -186,7 +186,7 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoad
 	if l4lbMeta.Spec.L4LBName != apiL4LB.Name {
 		return false
 	}
-	if l4lbMeta.Spec.IP != apiL4LB.IP && l4lbMeta.Spec.Automatic != apiL4LB.Automatic {
+	if l4lbMeta.Spec.IP != apiL4LB.IP || l4lbMeta.Spec.Automatic != apiL4LB.Automatic {
 		return false
 	}
 	if l4lbMeta.Spec.Port != apiL4LB.Port {
