@@ -19,12 +19,9 @@ package controllers
 import (
 	"fmt"
 	"net"
-	"time"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 )
-
-var ModifiedDateFormat = "02/Jan/06 15:04:05"
 
 func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
 	version := ""
@@ -57,8 +54,4 @@ func regParser(valueMatch []string, subexpNames []string) map[string]string {
 		}
 	}
 	return result
-}
-
-func fromTimestampToString(timestamp int) string {
-	return time.Unix(int64(timestamp/1000), 0).Format(ModifiedDateFormat)
 }
