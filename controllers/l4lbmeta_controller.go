@@ -132,7 +132,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				debugLogger.Info("Something changed")
 				debugLogger.Info("Go to update L4LB in Netris")
 				logger.Info("Updating L4LB")
-				if l4lbMeta.Spec.IP == "" {
+				if l4lbMeta.Spec.IP == "" && l4lbMeta.Spec.Automatic && apiL4LB.Automatic {
 					l4lbMeta.Spec.IP = apiL4LB.IP
 				}
 				l4lbUpdate, err := L4LBMetaToNetrisUpdate(l4lbMeta)
