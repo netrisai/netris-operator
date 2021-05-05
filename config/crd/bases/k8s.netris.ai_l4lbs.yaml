@@ -12,7 +12,7 @@ spec:
   - JSONPath: .status.state
     name: State
     type: string
-  - JSONPath: .status.ip
+  - JSONPath: .spec.frontend.ip
     name: Frontend
     type: string
   - JSONPath: .status.port
@@ -120,8 +120,6 @@ spec:
         status:
           description: L4LBStatus defines the observed state of L4LB
           properties:
-            ip:
-              type: string
             message:
               type: string
             modified:

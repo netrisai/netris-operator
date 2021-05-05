@@ -82,3 +82,13 @@ func (u *uniReconciler) patchL4LBStatus(l4lb *k8sv1alpha1.L4LB, status, message 
 	}
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
+
+func (u *uniReconciler) patchL4LB(l4lb *k8sv1alpha1.L4LB) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching")
+
+	err := u.Patch(context.Background(), l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Patch()}", "error", err)
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}

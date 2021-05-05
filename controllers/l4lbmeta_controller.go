@@ -111,6 +111,11 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			logger.Error(fmt.Errorf("{createL4LB} %s", err), "")
 			return u.patchL4LBStatus(l4lbCR, "Failure", errMsg.Error())
 		}
+		l4lbCR.Spec.Frontend.IP = l4lbMeta.Spec.IP
+		if _, err := u.patchL4LB(l4lbCR); err != nil {
+			logger.Error(err, "")
+			return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
+		}
 		logger.Info("L4LB Created")
 	} else {
 		apiL4LB, ok := NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID)
@@ -122,6 +127,11 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				logger.Error(fmt.Errorf("{createL4LB} %s", err), "")
 				return u.patchL4LBStatus(l4lbCR, "Failure", errMsg.Error())
 			}
+			l4lbCR.Spec.Frontend.IP = l4lbMeta.Spec.IP
+			if _, err := u.patchL4LB(l4lbCR); err != nil {
+				logger.Error(err, "")
+				return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
+			}
 			logger.Info("L4LB Created")
 		} else {
 			l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiL4LB.ModifiedDate/1000), 0))
@@ -132,27 +142,28 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				debugLogger.Info("Something changed")
 				debugLogger.Info("Go to update L4LB in Netris")
 				logger.Info("Updating L4LB")
-				if l4lbMeta.Spec.IP == "" && l4lbMeta.Spec.Automatic && apiL4LB.Automatic {
-					l4lbMeta.Spec.IP = apiL4LB.IP
-				}
 				l4lbUpdate, err := L4LBMetaToNetrisUpdate(l4lbMeta)
 				if err != nil {
 					logger.Error(fmt.Errorf("{VnetMetaToNetrisUpdate} %s", err), "")
 					return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
 				}
-				_, err, errMsg := updateL4LB(l4lbUpdate)
-				if err != nil {
+				if _, err, errMsg := updateL4LB(l4lbUpdate); err != nil {
 					logger.Error(fmt.Errorf("{updateL4LB} %s", err), "")
 					return u.patchL4LBStatus(l4lbCR, "Failure", errMsg.Error())
+				}
+				if updatedL4LB, ok := NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID); ok {
+					l4lbCR.Spec.Frontend.IP = updatedL4LB.IP
+					if _, err = u.patchL4LB(l4lbCR); err != nil {
+						logger.Error(fmt.Errorf("{u.patchL4LB} %s", err), "")
+						return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
+					}
 				}
 				logger.Info("L4LB Updated")
 			}
 			provisionState = apiL4LB.Label.Text
-			l4lbMeta.Spec.IP = apiL4LB.IP
 		}
 	}
 	l4lbCR.Status.Port = fmt.Sprintf("%d/%s", l4lbMeta.Spec.Port, l4lbMeta.Spec.Protocol)
-	l4lbCR.Status.IP = l4lbMeta.Spec.IP
 	return u.patchL4LBStatus(l4lbCR, provisionState, "Successfully reconciled")
 }
 
@@ -179,6 +190,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	}
 
 	var id int
+	ip := l4lbMeta.Spec.IP
 	idStruct := api.APILoadBalancerAddResponse{}
 	if l4lbMeta.Spec.Automatic {
 		err = api.CustomDecode(resp.Data, &idStruct)
@@ -186,7 +198,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 			return ctrl.Result{}, err, err
 		}
 		id = idStruct.ID
-		l4lbMeta.Spec.IP = idStruct.IP
+		ip = idStruct.IP
 	} else {
 		err = api.CustomDecode(resp.Data, &id)
 		if err != nil {
@@ -195,6 +207,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	}
 
 	l4lbMeta.Spec.ID = id
+	l4lbMeta.Spec.IP = ip
 
 	debugLogger.Info("L4LB Created", "id", id)
 
