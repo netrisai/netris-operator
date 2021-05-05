@@ -31,7 +31,7 @@ type L4LBSpec struct {
 	State string `json:"state,omitempty"`
 
 	Check       L4LBCheck `json:"check,omitempty"`
-	OwnerTenant string    `json:"ownerTenant"`
+	OwnerTenant string    `json:"ownerTenant,omitempty"`
 	Site        string    `json:"site"`
 
 	// +kubebuilder:validation:Enum=tcp;udp

@@ -114,7 +114,6 @@ spec:
           required:
           - backend
           - frontend
-          - ownerTenant
           - site
           type: object
         status:
