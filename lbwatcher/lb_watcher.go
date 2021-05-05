@@ -114,7 +114,7 @@ func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client, reco
 	ipAuto := make(map[string]string)
 	for _, lb := range filteerdL4LBs {
 		if uid := lb.GetServiceUID(); uid != "" && lb.IPRole() == "main" {
-			ipAuto[uid] = lb.Status.IP
+			ipAuto[uid] = lb.Spec.Frontend.IP
 		}
 	}
 
@@ -302,15 +302,17 @@ func compareLoadBalancers(LBs []k8sv1alpha1.L4LB, serviceLBs []*k8sv1alpha1.L4LB
 					lbIngressMap[serviceLB.GetServiceUID()] = make(map[string]int)
 				}
 
-				lbIngressMap[serviceLB.GetServiceUID()][lb.Status.IP] = 1
+				lbIngressMap[serviceLB.GetServiceUID()][lb.Spec.Frontend.IP] = 1
 
-				if (serviceLB.Spec.Frontend.IP != "" || lb.IPRole() != "child") && serviceLB.Spec.Frontend.IP != lb.Spec.Frontend.IP {
-					lb.Spec.Frontend.IP = serviceLB.Spec.Frontend.IP
-					update = true
+				if serviceLB.Spec.Frontend.IP != "" || (lb.IPRole() != "child" && lb.IPRole() != "main") {
+					if serviceLB.Spec.Frontend.IP != lb.Spec.Frontend.IP {
+						lb.Spec.Frontend.IP = serviceLB.Spec.Frontend.IP
+						update = true
+					}
 				}
 
-				if lb.IPRole() == "main" && lb.Status.IP != "" {
-					autoIPs[lb.GetServiceUID()] = lb.Status.IP
+				if lb.IPRole() == "main" && lb.Spec.Frontend.IP != "" {
+					autoIPs[lb.GetServiceUID()] = lb.Spec.Frontend.IP
 				}
 
 				if ip, ok := autoIPs[lb.GetServiceUID()]; ok && lb.IPRole() == "child" && ip != lb.Spec.Frontend.IP && !update {
