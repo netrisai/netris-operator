@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 	"strconv"
 	"strings"
@@ -44,11 +45,38 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		return nil, fmt.Errorf("'%s' site not found", l4lb.Spec.Site)
 	}
 
-	tenant, ok := NStorage.TenantsStorage.FindByName(l4lb.Spec.OwnerTenant)
-	if !ok {
-		return nil, fmt.Errorf("Tenant '%s' not found", l4lb.Spec.OwnerTenant)
+	l4lbMetaBackends := []k8sv1alpha1.L4LBMetaBackend{}
+	ipForTenant := ""
+
+	for _, backend := range l4lb.Spec.Backend {
+		valueMatch := bReg.FindStringSubmatch(string(backend))
+		result := regParser(valueMatch, bReg.SubexpNames())
+		port, err := strconv.Atoi(result["port"])
+		if err != nil {
+			return nil, err
+		}
+		ipForTenant = result["ip"]
+		l4lbMetaBackends = append(l4lbMetaBackends, k8sv1alpha1.L4LBMetaBackend{
+			IP:   result["ip"],
+			Port: port,
+		})
 	}
-	tenantID = tenant.ID
+
+	if l4lb.Spec.OwnerTenant == "" {
+		tenantid, err := findTenantByIP(ipForTenant)
+		if err != nil {
+			return nil, err
+		}
+		tenantID = tenantid
+	}
+
+	if tenantID == 0 {
+		tenant, ok := NStorage.TenantsStorage.FindByName(l4lb.Spec.OwnerTenant)
+		if !ok {
+			return nil, fmt.Errorf("Tenant '%s' not found", l4lb.Spec.OwnerTenant)
+		}
+		tenantID = tenant.ID
+	}
 
 	if l4lb.Spec.State == "" || l4lb.Spec.State == "active" {
 		state = "enable"
@@ -88,21 +116,6 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	}
 	if i, ok := l4lb.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
 		reclaim = true
-	}
-
-	l4lbMetaBackends := []k8sv1alpha1.L4LBMetaBackend{}
-
-	for _, backend := range l4lb.Spec.Backend {
-		valueMatch := bReg.FindStringSubmatch(string(backend))
-		result := regParser(valueMatch, bReg.SubexpNames())
-		port, err := strconv.Atoi(result["port"])
-		if err != nil {
-			return nil, err
-		}
-		l4lbMetaBackends = append(l4lbMetaBackends, k8sv1alpha1.L4LBMetaBackend{
-			IP:   result["ip"],
-			Port: port,
-		})
 	}
 
 	automatic := false
@@ -358,4 +371,30 @@ func l4lbUpdateDefaultAnnotations(l4lb *k8sv1alpha1.L4LB) {
 	annotations["resource.k8s.netris.ai/import"] = imported
 	annotations["resource.k8s.netris.ai/reclaimPolicy"] = reclaim
 	l4lb.SetAnnotations(annotations)
+}
+
+func findTenantByIP(ip string) (int, error) {
+	tenantID := 0
+	subnets, err := Cred.GetSubnets()
+	if err != nil {
+		return tenantID, err
+	}
+
+	subnetChilds := []api.APISubnetChild{}
+	for _, subnet := range subnets {
+		subnetChilds = append(subnetChilds, subnet.Children...)
+	}
+
+	for _, subnet := range subnetChilds {
+		ipAddr := net.ParseIP(ip)
+		_, ipNet, err := net.ParseCIDR(fmt.Sprintf("%s/%d", subnet.Prefix, subnet.Length))
+		if err != nil {
+			return tenantID, err
+		}
+		if ipNet.Contains(ipAddr) {
+			return subnet.TenantID, nil
+		}
+	}
+
+	return tenantID, fmt.Errorf("There is no subnets for specified IP address %s", ip)
 }

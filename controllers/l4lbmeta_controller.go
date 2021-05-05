@@ -30,6 +30,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/netrisai/netris-operator/api/v1alpha1"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	api "github.com/netrisai/netrisapi"
 )
@@ -111,11 +112,6 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			logger.Error(fmt.Errorf("{createL4LB} %s", err), "")
 			return u.patchL4LBStatus(l4lbCR, "Failure", errMsg.Error())
 		}
-		l4lbCR.Spec.Frontend.IP = l4lbMeta.Spec.IP
-		if _, err := u.patchL4LB(l4lbCR); err != nil {
-			logger.Error(err, "")
-			return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
-		}
 		logger.Info("L4LB Created")
 	} else {
 		apiL4LB, ok := NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID)
@@ -126,11 +122,6 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if _, err, errMsg := r.createL4LB(l4lbMeta); err != nil {
 				logger.Error(fmt.Errorf("{createL4LB} %s", err), "")
 				return u.patchL4LBStatus(l4lbCR, "Failure", errMsg.Error())
-			}
-			l4lbCR.Spec.Frontend.IP = l4lbMeta.Spec.IP
-			if _, err := u.patchL4LB(l4lbCR); err != nil {
-				logger.Error(err, "")
-				return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
 			}
 			logger.Info("L4LB Created")
 		} else {
@@ -151,18 +142,17 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					logger.Error(fmt.Errorf("{updateL4LB} %s", err), "")
 					return u.patchL4LBStatus(l4lbCR, "Failure", errMsg.Error())
 				}
-				if updatedL4LB, ok := NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID); ok {
-					l4lbCR.Spec.Frontend.IP = updatedL4LB.IP
-					if _, err = u.patchL4LB(l4lbCR); err != nil {
-						logger.Error(fmt.Errorf("{u.patchL4LB} %s", err), "")
-						return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
-					}
-				}
 				logger.Info("L4LB Updated")
 			}
 			provisionState = apiL4LB.Label.Text
 		}
 	}
+
+	if _, err := u.updateL4LBIfNeccesarry(l4lbCR, *l4lbMeta); err != nil {
+		logger.Error(fmt.Errorf("{updateL4LBIfNeccesarry} %s", err), "")
+		return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
+	}
+
 	l4lbCR.Status.Port = fmt.Sprintf("%d/%s", l4lbMeta.Spec.Port, l4lbMeta.Spec.Protocol)
 	return u.patchL4LBStatus(l4lbCR, provisionState, "Successfully reconciled")
 }
@@ -245,4 +235,28 @@ func (r *L4LBMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.L4LBMeta{}).
 		Complete(r)
+}
+
+func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *v1alpha1.L4LB, l4lbMeta v1alpha1.L4LBMeta) (ctrl.Result, error) {
+	shouldUpdateCR := false
+	if l4lbCR.Spec.Frontend.IP != l4lbMeta.Spec.IP {
+		l4lbCR.Spec.Frontend.IP = l4lbMeta.Spec.IP
+		shouldUpdateCR = true
+	}
+	if l4lbCR.Spec.OwnerTenant == "" {
+		if updatedL4LB, ok := NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID); ok {
+			l4lbCR.Spec.OwnerTenant = updatedL4LB.TenantName
+			if l4lbCR.Spec.Frontend.IP == "" {
+				l4lbCR.Spec.Frontend.IP = updatedL4LB.IP
+			}
+			shouldUpdateCR = true
+		}
+	}
+	if shouldUpdateCR {
+		u.DebugLogger.Info("Updating L4LB CR")
+		if _, err := u.patchL4LB(l4lbCR); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+	return ctrl.Result{}, nil
 }
