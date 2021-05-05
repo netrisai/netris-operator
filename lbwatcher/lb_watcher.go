@@ -403,11 +403,6 @@ func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([
 		return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)
 	}
 
-	tenant, ok := controllers.NStorage.TenantsStorage.FindByID(1)
-	if !ok {
-		return lbList, fmt.Errorf("{generateLoadBalancers} Default tenant not found")
-	}
-
 	site, ok := controllers.NStorage.SitesStorage.FindByID(1)
 	if !ok {
 		return lbList, fmt.Errorf("{generateLoadBalancers} Default site not found")
@@ -483,9 +478,8 @@ func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([
 							APIVersion: "k8s.netris.ai/v1alpha1",
 						},
 						Spec: k8sv1alpha1.L4LBSpec{
-							OwnerTenant: tenant.Name,
-							Site:        site.Name,
-							Protocol:    strings.ToLower(lbIP.Protocol),
+							Site:     site.Name,
+							Protocol: strings.ToLower(lbIP.Protocol),
 							Frontend: k8sv1alpha1.L4LBFrontend{
 								Port: lbIP.Port,
 								IP:   lbIP.IP,
