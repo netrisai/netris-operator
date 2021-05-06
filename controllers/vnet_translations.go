@@ -365,3 +365,29 @@ func vnetCompareFieldsForNewMeta(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.V
 	}
 	return vnet.GetGeneration() != vnetMeta.Spec.VnetCRGeneration || imported != vnetMeta.Spec.Imported || reclaim != vnetMeta.Spec.Reclaim
 }
+
+func vnetMustUpdateAnnotations(vnet *k8sv1alpha1.VNet) bool {
+	update := false
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; !(ok && (i == "true" || i == "false")) {
+		update = true
+	}
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; !(ok && (i == "retain" || i == "delete")) {
+		update = true
+	}
+	return update
+}
+
+func vnetUpdateDefaultAnnotations(vnet *k8sv1alpha1.VNet) {
+	imported := "false"
+	reclaim := "delete"
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = "true"
+	}
+	if i, ok := vnet.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = "retain"
+	}
+	annotations := vnet.GetAnnotations()
+	annotations["resource.k8s.netris.ai/import"] = imported
+	annotations["resource.k8s.netris.ai/reclaimPolicy"] = reclaim
+	vnet.SetAnnotations(annotations)
+}

@@ -113,3 +113,29 @@ func ebgpCompareFieldsForNewMeta(ebgp *k8sv1alpha1.EBGP, ebgpMeta *k8sv1alpha1.E
 	}
 	return ebgp.GetGeneration() != ebgpMeta.Spec.EBGPCRGeneration || imported != ebgpMeta.Spec.Imported || reclaim != ebgpMeta.Spec.Reclaim
 }
+
+func ebgpMustUpdateAnnotations(ebgp *k8sv1alpha1.EBGP) bool {
+	update := false
+	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/import"]; !(ok && (i == "true" || i == "false")) {
+		update = true
+	}
+	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; !(ok && (i == "retain" || i == "delete")) {
+		update = true
+	}
+	return update
+}
+
+func ebgpUpdateDefaultAnnotations(ebgp *k8sv1alpha1.EBGP) {
+	imported := "false"
+	reclaim := "delete"
+	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = "true"
+	}
+	if i, ok := ebgp.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = "retain"
+	}
+	annotations := ebgp.GetAnnotations()
+	annotations["resource.k8s.netris.ai/import"] = imported
+	annotations["resource.k8s.netris.ai/reclaimPolicy"] = reclaim
+	ebgp.SetAnnotations(annotations)
+}

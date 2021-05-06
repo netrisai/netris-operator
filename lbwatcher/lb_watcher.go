@@ -83,7 +83,7 @@ func Start(mgr manager.Manager, options Options) {
 func filterL4LBs(LBs []k8sv1alpha1.L4LB) []k8sv1alpha1.L4LB {
 	lbList := []k8sv1alpha1.L4LB{}
 	for _, lb := range LBs {
-		if lb.GetAnnotations()["servicename"] != "" && lb.GetAnnotations()["servicenamespace"] != "" && lb.GetAnnotations()["serviceuid"] != "" {
+		if lb.GetServiceName() != "" && lb.GetServiceNamespace() != "" && lb.GetServiceUID() != "" {
 			lbList = append(lbList, lb)
 		}
 	}
@@ -113,8 +113,8 @@ func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client, reco
 
 	ipAuto := make(map[string]string)
 	for _, lb := range filteerdL4LBs {
-		if uid, ok := lb.GetAnnotations()["serviceuid"]; uid != "" && ok {
-			ipAuto[uid] = lb.Status.IP
+		if uid := lb.GetServiceUID(); uid != "" && lb.IPRole() == "main" {
+			ipAuto[uid] = lb.Spec.Frontend.IP
 		}
 	}
 
@@ -131,12 +131,12 @@ func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client, reco
 
 	lbsByUID := make(map[string][]*k8sv1alpha1.L4LB)
 	for _, lb := range lbsToCreate {
-		lbsByUID[lb.GetAnnotations()["serviceuid"]] = append(lbsByUID[lb.GetAnnotations()["serviceuid"]], lb)
+		lbsByUID[lb.GetServiceUID()] = append(lbsByUID[lb.GetServiceUID()], lb)
 	}
 
 	errors = append(errors, deleteL4LBs(cl, lbsToDelete)...)
 
-	errs := updateL4LBs(cl, lbsToUpdate)
+	errs := updateL4LBs(cl, lbsToUpdate, ipAuto)
 	errors = append(errors, errs...)
 
 	for _, lbs := range lbsByUID {
@@ -146,11 +146,11 @@ func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client, reco
 
 	for _, serviceLB := range serviceLBs {
 		ingressIPs := []string{}
-		if ingress, ok := ingressIPsMap[serviceLB.GetAnnotations()["serviceuid"]]; ok {
+		if ingress, ok := ingressIPsMap[serviceLB.GetServiceUID()]; ok {
 			for ip := range ingress {
 				ingressIPs = append(ingressIPs, ip)
 			}
-			_, err := assignIngress(clientset, ingressIPs, serviceLB.GetAnnotations()["servicenamespace"], serviceLB.GetAnnotations()["servicename"])
+			_, err := assignIngress(clientset, ingressIPs, serviceLB.GetServiceNamespace(), serviceLB.GetServiceName())
 			if err != nil {
 				errors = append(errors, err)
 			}
@@ -159,7 +159,7 @@ func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client, reco
 
 	for _, lb := range l4lbs.Items {
 		if lb.Status.Status == "Failure" {
-			err := createEvent(clientset, recorder, lb.GetAnnotations()["servicenamespace"], lb.GetAnnotations()["servicename"], lb.Status.Status, lb.Status.Message)
+			err := createEvent(clientset, recorder, lb.GetServiceNamespace(), lb.GetServiceName(), lb.Status.Status, lb.Status.Message)
 			if err != nil {
 				errors = append(errors, fmt.Errorf("{lbEventsPatcher} %s", err))
 			}
@@ -186,12 +186,33 @@ func deleteL4LB(cl client.Client, lb k8sv1alpha1.L4LB) error {
 	return cl.Delete(context.Background(), lb.DeepCopyObject(), &client.DeleteOptions{})
 }
 
-func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB) []error {
+func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
 	var errors []error
 	for _, lb := range lbs {
-		err := updateL4LB(cl, lb)
-		if err != nil {
-			errors = append(errors, fmt.Errorf("{updateL4LBs} %s", err))
+		if ip, ok := ipAuto[lb.GetServiceUID()]; ok && lb.Spec.Frontend.IP == "" {
+			if ip == "" {
+				break
+			} else {
+				lb.Spec.Frontend.IP = ip
+				lb.SetIPRole("child")
+				err := updateL4LB(cl, lb)
+				if err != nil {
+					errors = append(errors, fmt.Errorf("{updateL4LB} %s", err))
+				}
+			}
+		} else {
+			if lb.Spec.Frontend.IP == "" {
+				lb.SetIPRole("main")
+			} else {
+				lb.SetIPRole("standard")
+			}
+			err := updateL4LB(cl, lb)
+			if err != nil {
+				errors = append(errors, fmt.Errorf("{updateL4LB} %s", err))
+			}
+			if lb.Spec.Frontend.IP == "" {
+				break
+			}
 		}
 	}
 	return errors
@@ -204,20 +225,26 @@ func createL4LB(cl client.Client, lb *k8sv1alpha1.L4LB) error {
 func createL4LBs(cl client.Client, lbs []*k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
 	var errors []error
 	for _, lb := range lbs {
-		if ip, ok := ipAuto[lb.GetAnnotations()["serviceuid"]]; ok && lb.Spec.Frontend.IP == "" {
+		if ip, ok := ipAuto[lb.GetServiceUID()]; ok && lb.Spec.Frontend.IP == "" {
 			if ip == "" {
 				break
 			} else {
 				lb.Spec.Frontend.IP = ip
+				lb.SetIPRole("child")
 				err := createL4LB(cl, lb)
 				if err != nil {
-					errors = append(errors, fmt.Errorf("{createL4LBs} %s", err))
+					errors = append(errors, fmt.Errorf("{createL4LB} %s", err))
 				}
 			}
 		} else {
+			if lb.Spec.Frontend.IP == "" {
+				lb.SetIPRole("main")
+			} else {
+				lb.SetIPRole("standard")
+			}
 			err := createL4LB(cl, lb)
 			if err != nil {
-				errors = append(errors, fmt.Errorf("{createL4LBs} %s", err))
+				errors = append(errors, fmt.Errorf("{createL4LB} %s", err))
 			}
 			if lb.Spec.Frontend.IP == "" {
 				break
@@ -245,40 +272,51 @@ func compareLoadBalancers(LBs []k8sv1alpha1.L4LB, serviceLBs []*k8sv1alpha1.L4LB
 
 	for _, serviceLB := range serviceLBs {
 		serviceLBsMap[serviceLB.Name] = serviceLB
-		if _, ok := serviceIngressMap[serviceLB.GetAnnotations()["serviceuid"]]; !ok {
-			serviceIngressMap[serviceLB.GetAnnotations()["serviceuid"]] = make(map[string]int)
+		if _, ok := serviceIngressMap[serviceLB.GetServiceUID()]; !ok {
+			serviceIngressMap[serviceLB.GetServiceUID()] = make(map[string]int)
 		}
-		ingressList := strings.Split(serviceLB.GetAnnotations()["serviceingressips"], ",")
+		ingressList := strings.Split(serviceLB.GetServiceIngressIPs(), ",")
 		for _, ingress := range ingressList {
-			serviceIngressMap[serviceLB.GetAnnotations()["serviceuid"]][ingress] = 1
+			serviceIngressMap[serviceLB.GetServiceUID()][ingress] = 1
 		}
 	}
 
 	for _, lb := range LBs {
 		LBsMap[lb.Name] = lb
 		if l, ok := serviceLBsMap[lb.Name]; ok {
-			IPsMap[l.GetAnnotations()["serviceuid"]] = lb.Spec.Frontend.IP
+			IPsMap[l.GetServiceUID()] = lb.Spec.Frontend.IP
 		}
 	}
+
+	autoIPs := make(map[string]string)
 
 	if len(serviceLBsMap) > 0 {
 		for _, serviceLB := range serviceLBsMap {
 			if lb, ok := LBsMap[serviceLB.Name]; ok {
-				anns := lb.GetAnnotations()
-				anns["servicenamespace"] = serviceLB.GetAnnotations()["servicenamespace"]
-				anns["serviceuid"] = serviceLB.GetAnnotations()["serviceuid"]
-				anns["servicename"] = serviceLB.GetAnnotations()["servicename"]
-				lb.SetAnnotations(anns)
+				lb.SetServiceNamespace(serviceLB.GetServiceNamespace())
+				lb.SetServiceName(serviceLB.GetServiceName())
+				lb.SetServiceUID(serviceLB.GetServiceUID())
 				update := false
 
-				if _, ok := lbIngressMap[serviceLB.GetAnnotations()["serviceuid"]]; !ok {
-					lbIngressMap[serviceLB.GetAnnotations()["serviceuid"]] = make(map[string]int)
+				if _, ok := lbIngressMap[serviceLB.GetServiceUID()]; !ok {
+					lbIngressMap[serviceLB.GetServiceUID()] = make(map[string]int)
 				}
 
-				lbIngressMap[serviceLB.GetAnnotations()["serviceuid"]][lb.Status.IP] = 1
+				lbIngressMap[serviceLB.GetServiceUID()][lb.Spec.Frontend.IP] = 1
 
-				if serviceLB.Spec.Frontend.IP != "" && serviceLB.Spec.Frontend.IP != lb.Spec.Frontend.IP {
-					lb.Spec.Frontend.IP = serviceLB.Spec.Frontend.IP
+				if serviceLB.Spec.Frontend.IP != "" || (lb.IPRole() != "child" && lb.IPRole() != "main") {
+					if serviceLB.Spec.Frontend.IP != lb.Spec.Frontend.IP {
+						lb.Spec.Frontend.IP = serviceLB.Spec.Frontend.IP
+						update = true
+					}
+				}
+
+				if lb.IPRole() == "main" && lb.Spec.Frontend.IP != "" {
+					autoIPs[lb.GetServiceUID()] = lb.Spec.Frontend.IP
+				}
+
+				if ip, ok := autoIPs[lb.GetServiceUID()]; ok && lb.IPRole() == "child" && ip != lb.Spec.Frontend.IP && !update {
+					lb.Spec.Frontend.IP = ip
 					update = true
 				}
 
@@ -295,7 +333,7 @@ func compareLoadBalancers(LBs []k8sv1alpha1.L4LB, serviceLBs []*k8sv1alpha1.L4LB
 					lbsToUpdate = append(lbsToUpdate, lb)
 				}
 			} else {
-				if ip, ok := IPsMap[serviceLB.GetAnnotations()["serviceuid"]]; ok {
+				if ip, ok := IPsMap[serviceLB.GetServiceUID()]; ok {
 					serviceLB.Spec.Frontend.IP = ip
 				}
 				lbsToCreate = append(lbsToCreate, serviceLB)
@@ -365,11 +403,6 @@ func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([
 		return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)
 	}
 
-	tenant, ok := controllers.NStorage.TenantsStorage.FindByID(1)
-	if !ok {
-		return lbList, fmt.Errorf("{generateLoadBalancers} Default tenant not found")
-	}
-
 	site, ok := controllers.NStorage.SitesStorage.FindByID(1)
 	if !ok {
 		return lbList, fmt.Errorf("{generateLoadBalancers} Default site not found")
@@ -436,17 +469,17 @@ func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([
 
 					lb := &k8sv1alpha1.L4LB{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:      strings.ToLower(fmt.Sprintf("%s-%s-%s-%s-%d", svc.GetName(), svc.GetNamespace(), svc.GetUID(), lbIP.Protocol, lbIP.Port)),
-							Namespace: svc.GetNamespace(),
+							Name:        strings.ToLower(fmt.Sprintf("%s-%s-%s-%s-%d", svc.GetName(), svc.GetNamespace(), svc.GetUID(), lbIP.Protocol, lbIP.Port)),
+							Namespace:   svc.GetNamespace(),
+							Annotations: make(map[string]string),
 						},
 						TypeMeta: metav1.TypeMeta{
 							Kind:       "L4LB",
 							APIVersion: "k8s.netris.ai/v1alpha1",
 						},
 						Spec: k8sv1alpha1.L4LBSpec{
-							OwnerTenant: tenant.Name,
-							Site:        site.Name,
-							Protocol:    strings.ToLower(lbIP.Protocol),
+							Site:     site.Name,
+							Protocol: strings.ToLower(lbIP.Protocol),
 							Frontend: k8sv1alpha1.L4LBFrontend{
 								Port: lbIP.Port,
 								IP:   lbIP.IP,
@@ -460,12 +493,10 @@ func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([
 						},
 					}
 
-					anns := make(map[string]string)
-					anns["servicenamespace"] = svc.GetNamespace()
-					anns["servicename"] = svc.GetName()
-					anns["serviceuid"] = string(svc.UID)
-					anns["serviceingressips"] = ingressIPsString
-					lb.SetAnnotations(anns)
+					lb.SetServiceName(svc.GetName())
+					lb.SetServiceNamespace(svc.GetNamespace())
+					lb.SetServiceUID(string(svc.GetUID()))
+					lb.SetServiceIngressIPs(ingressIPsString)
 
 					lbList = append(lbList, lb)
 				}

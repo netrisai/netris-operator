@@ -87,6 +87,17 @@ func (r *EBGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
+	if ebgpMustUpdateAnnotations(ebgp) {
+		debugLogger.Info("Setting default annotations")
+		ebgpUpdateDefaultAnnotations(ebgp)
+		err := r.Patch(context.Background(), ebgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		if err != nil {
+			logger.Error(fmt.Errorf("{Patch EBGP default annotations} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+		return ctrl.Result{}, nil
+	}
+
 	if metaFound {
 		debugLogger.Info("Meta found")
 		if ebgpCompareFieldsForNewMeta(ebgp, ebgpMeta) {

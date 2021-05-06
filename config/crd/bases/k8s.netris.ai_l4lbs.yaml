@@ -12,7 +12,7 @@ spec:
   - JSONPath: .status.state
     name: State
     type: string
-  - JSONPath: .status.ip
+  - JSONPath: .spec.frontend.ip
     name: Frontend
     type: string
   - JSONPath: .status.port
@@ -30,7 +30,7 @@ spec:
   - JSONPath: .status.modified
     name: Modified
     priority: 1
-    type: string
+    type: date
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
@@ -114,17 +114,15 @@ spec:
           required:
           - backend
           - frontend
-          - ownerTenant
           - site
           type: object
         status:
           description: L4LBStatus defines the observed state of L4LB
           properties:
-            ip:
-              type: string
             message:
               type: string
             modified:
+              format: date-time
               type: string
             port:
               type: string

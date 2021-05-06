@@ -38,6 +38,7 @@ type Storage struct {
 	*VNetStorage
 	*EBGPStorage
 	*L4LBStorage
+	*SubnetsStorage
 }
 
 // NewStorage .
@@ -49,6 +50,7 @@ func NewStorage() *Storage {
 		VNetStorage:    NewVNetStorage(),
 		EBGPStorage:    NewEBGPStoragee(),
 		L4LBStorage:    NewL4LBStorage(),
+		SubnetsStorage: NewSubnetsStorage(),
 	}
 }
 
@@ -548,6 +550,91 @@ func (p *L4LBStorage) download() error {
 
 // Download .
 func (p *L4LBStorage) Download() error {
+	p.Lock()
+	defer p.Unlock()
+	return p.download()
+}
+
+/********************************************************************************
+	Subnets Storage
+*********************************************************************************/
+
+// SubnetsStorage .
+type SubnetsStorage struct {
+	sync.Mutex
+	Subnets []*api.APISubnet
+}
+
+// NewVNetStorage .
+func NewSubnetsStorage() *SubnetsStorage {
+	return &SubnetsStorage{}
+}
+
+// GetAll .
+func (p *SubnetsStorage) GetAll() []*api.APISubnet {
+	p.Lock()
+	defer p.Unlock()
+	return p.getAll()
+}
+
+func (p *SubnetsStorage) getAll() []*api.APISubnet {
+	return p.Subnets
+}
+
+func (p *SubnetsStorage) storeAll(items []*api.APISubnet) {
+	p.Subnets = items
+}
+
+// FindByName .
+func (p *SubnetsStorage) FindByName(name string) (*api.APISubnet, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByName(name)
+}
+
+func (p *SubnetsStorage) findByName(name string) (*api.APISubnet, bool) {
+	for _, item := range p.Subnets {
+		if item.Name == name {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// FindByID .
+func (p *SubnetsStorage) FindByID(id int) (*api.APISubnet, bool) {
+	p.Lock()
+	defer p.Unlock()
+	item, ok := p.findByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findByID(id)
+	}
+	return item, ok
+}
+
+func (p *SubnetsStorage) findByID(id int) (*api.APISubnet, bool) {
+	for _, item := range p.Subnets {
+		subnetID, _ := strconv.Atoi(item.ID)
+		if subnetID == id {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// Download .
+func (p *SubnetsStorage) download() error {
+	items, err := Cred.GetSubnets()
+	if err != nil {
+		return err
+	}
+	p.storeAll(items)
+	return nil
+}
+
+// Download .
+func (p *SubnetsStorage) Download() error {
 	p.Lock()
 	defer p.Unlock()
 	return p.download()
