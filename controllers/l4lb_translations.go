@@ -406,7 +406,7 @@ func findTenantByIP(ip string) (int, error) {
 		}
 	}
 
-	return tenantID, fmt.Errorf("There is no subnets for specified IP address %s", ip)
+	return tenantID, fmt.Errorf("There are no subnets for specified IP address %s", ip)
 }
 
 func findSiteByIP(ip string) (int, error) {
