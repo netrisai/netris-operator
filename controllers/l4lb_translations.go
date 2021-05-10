@@ -39,12 +39,6 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	var timeout string
 	proto := "tcp"
 
-	if site, ok := NStorage.SitesStorage.FindByName(l4lb.Spec.Site); ok {
-		siteID = site.ID
-	} else {
-		return nil, fmt.Errorf("'%s' site not found", l4lb.Spec.Site)
-	}
-
 	l4lbMetaBackends := []k8sv1alpha1.L4LBMetaBackend{}
 	ipForTenant := ""
 
@@ -76,6 +70,22 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 			return nil, fmt.Errorf("Tenant '%s' not found", l4lb.Spec.OwnerTenant)
 		}
 		tenantID = tenant.ID
+	}
+
+	if l4lb.Spec.Site == "" {
+		siteid, err := findSiteByIP(ipForTenant)
+		if err != nil {
+			return nil, err
+		}
+		siteID = siteid
+	}
+
+	if siteID == 0 {
+		if site, ok := NStorage.SitesStorage.FindByName(l4lb.Spec.Site); ok {
+			siteID = site.ID
+		} else {
+			return nil, fmt.Errorf("'%s' site not found", l4lb.Spec.Site)
+		}
 	}
 
 	if l4lb.Spec.State == "" || l4lb.Spec.State == "active" {
@@ -397,4 +407,34 @@ func findTenantByIP(ip string) (int, error) {
 	}
 
 	return tenantID, fmt.Errorf("There is no subnets for specified IP address %s", ip)
+}
+
+func findSiteByIP(ip string) (int, error) {
+	siteID := 0
+	subnets, err := Cred.GetSubnets()
+	if err != nil {
+		return siteID, err
+	}
+
+	subnetChilds := []api.APISubnetChild{}
+	for _, subnet := range subnets {
+		subnetChilds = append(subnetChilds, subnet.Children...)
+	}
+
+	for _, subnet := range subnetChilds {
+		ipAddr := net.ParseIP(ip)
+		_, ipNet, err := net.ParseCIDR(fmt.Sprintf("%s/%d", subnet.Prefix, subnet.Length))
+		if err != nil {
+			return siteID, err
+		}
+		if ipNet.Contains(ipAddr) {
+			sID, _ := strconv.Atoi(subnet.SiteID)
+			if err != nil {
+				return siteID, err
+			}
+			return sID, nil
+		}
+	}
+
+	return siteID, fmt.Errorf("There are no sites  for specified IP address %s", ip)
 }
