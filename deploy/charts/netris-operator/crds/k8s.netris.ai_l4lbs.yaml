@@ -114,7 +114,6 @@ spec:
           required:
           - backend
           - frontend
-          - site
           type: object
         status:
           description: L4LBStatus defines the observed state of L4LB

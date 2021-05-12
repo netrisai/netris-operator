@@ -5,7 +5,6 @@
 [![](https://github.com/netrisai/netris-operator/workflows/Create%20release/badge.svg)](https://github.com/netrisai/netris-operator/actions)
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/netrisai)](https://artifacthub.io/packages/helm/netrisai/netris-operator)
 [![Go Report Card](https://goreportcard.com/badge/github.com/netrisai/netris-operator)](https://goreportcard.com/report/github.com/netrisai/netris-operator)
-[![Language](https://img.shields.io/badge/Language-Go-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 

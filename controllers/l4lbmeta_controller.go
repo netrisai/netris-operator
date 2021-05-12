@@ -243,9 +243,10 @@ func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *v1alpha1.L4LB, l4lbMeta v
 		l4lbCR.Spec.Frontend.IP = l4lbMeta.Spec.IP
 		shouldUpdateCR = true
 	}
-	if l4lbCR.Spec.OwnerTenant == "" {
+	if l4lbCR.Spec.OwnerTenant == "" || l4lbCR.Spec.Site == "" {
 		if updatedL4LB, ok := NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID); ok {
 			l4lbCR.Spec.OwnerTenant = updatedL4LB.TenantName
+			l4lbCR.Spec.Site = updatedL4LB.SiteName
 			if l4lbCR.Spec.Frontend.IP == "" {
 				l4lbCR.Spec.Frontend.IP = updatedL4LB.IP
 			}
