@@ -27,8 +27,11 @@ import (
 func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EBGPMeta, error) {
 	ebgpMeta := &k8sv1alpha1.EBGPMeta{}
 	var siteID int
-	// var softgate string
+	var nfvID int
+	var nfvPortID int
 	var state string
+	terminateOnSwitch := "false"
+
 	originate := "false"
 	localPreference := 100
 	if site, ok := NStorage.SitesStorage.FindByName(ebgp.Spec.Site); ok {
@@ -49,9 +52,35 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 		state = "enabled"
 	}
 
-	// if !ebgp.Spec.TerminateOnSwitch {
-	// softgate = ebgp.Spec.Softgate
-	// }
+	if !ebgp.Spec.TerminateOnSwitch {
+		if softgate, ok := NStorage.EBGPStorage.FindOffloaderByName(siteID, ebgp.Spec.Softgate); ok {
+			nfvID = softgate.SwitchID
+			nfvPortID = softgate.OffloadPortID
+		} else {
+			return ebgpMeta, fmt.Errorf("invalid softgate '%s'", ebgp.Spec.Softgate)
+		}
+	} else {
+		terminateOnSwitch = "true"
+	}
+
+	var portID int
+	var vlanID int
+	var vnetID int
+
+	if ebgp.Spec.Transport.Type == "port" {
+		if port, ok := NStorage.EBGPStorage.FindPort(siteID, ebgp.Spec.Transport.Name); ok {
+			portID = port.PortID
+			vlanID = ebgp.Spec.Transport.VlanID
+		} else {
+			return ebgpMeta, fmt.Errorf("invalid port '%s'", ebgp.Spec.Transport.Name)
+		}
+	} else {
+		if vnet, ok := NStorage.EBGPStorage.FindVNetByName(ebgp.Spec.Transport.Name); ok {
+			vnetID = vnet.ID
+		} else {
+			return ebgpMeta, fmt.Errorf("invalid vnet '%s'", ebgp.Spec.Transport.Name)
+		}
+	}
 
 	imported := false
 	reclaim := false
@@ -73,16 +102,26 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 			Reclaim:  reclaim,
 			Name:     string(ebgp.GetUID()),
 			EBGPName: ebgp.Name,
-			// Softgate: softgate, ?
-			// Transport ?
+
+			NfvID:     nfvID,
+			NfvPortID: nfvPortID,
+
+			SwitchPortID: portID,
+			Vlan:         vlanID,
+			RcircuitID:   vnetID,
+
 			SiteID:            siteID,
 			NeighborAs:        ebgp.Spec.NeighborAS,
 			LocalIP:           ebgp.Spec.LocalIP,
 			RemoteIP:          ebgp.Spec.RemoteIP,
 			Description:       ebgp.Spec.Description,
 			Status:            state,
-			TerminateOnSwitch: ebgpMeta.Spec.TerminateOnSwitch,
-			// Multihop ?
+			TerminateOnSwitch: terminateOnSwitch,
+
+			NeighborAddress: ebgp.Spec.Multihop.NeighborAddress,
+			UpdateSource:    ebgp.Spec.Multihop.UpdateSource,
+			Multihop:        ebgp.Spec.Multihop.Hops,
+
 			BgpPassword:     ebgp.Spec.BGPPassword,
 			AllowasIn:       ebgp.Spec.AllowAsIn,
 			Originate:       originate,
@@ -93,8 +132,8 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 			PrependInbound:  ebgp.Spec.PrependInbound,
 			PrependOutbound: ebgp.Spec.PrependOutbound,
 			// PrefixLength: , ?
-			PrefixListInbound:  ebgpMeta.Spec.PrefixListInbound,
-			PrefixListOutbound: ebgpMeta.Spec.PrefixListOutbound,
+			// PrefixListInbound:  ebgpMeta.Spec.PrefixListInbound, ?
+			// PrefixListOutbound: ebgpMeta.Spec.PrefixListOutbound, ?
 			// Community:          ebgp.Spec.SendBGPCommunity, ?
 		},
 	}
