@@ -17,6 +17,7 @@ limitations under the License.
 package netrisstorage
 
 import (
+	"fmt"
 	"sync"
 
 	api "github.com/netrisai/netrisapi"
@@ -107,6 +108,210 @@ func (p *EBGPStorage) FindByID(id int) (*api.APIEBGP, bool) {
 func (p *EBGPStorage) findByID(id int) (*api.APIEBGP, bool) {
 	for _, item := range p.EBGPs {
 		if item.ID == id {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// FindSiteByID .
+func (p *EBGPStorage) FindSiteByID(id int) (*api.APIEBGPSite, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findSiteByID(id)
+}
+
+func (p *EBGPStorage) findSiteByID(id int) (*api.APIEBGPSite, bool) {
+	for _, item := range p.EBGPSites {
+		if item.ID == id {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// FindSiteByName .
+func (p *EBGPStorage) FindSiteByName(name string) (*api.APIEBGPSite, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findSiteByName(name)
+}
+
+func (p *EBGPStorage) findSiteByName(name string) (*api.APIEBGPSite, bool) {
+	for _, item := range p.EBGPSites {
+		if item.Name == name {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// FindOffloaderByID .
+func (p *EBGPStorage) FindOffloaderByID(siteID, id int) (*api.APIEBGPOffloader, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findOffloaderByID(siteID, id)
+}
+
+func (p *EBGPStorage) findOffloaderByID(siteID, id int) (*api.APIEBGPOffloader, bool) {
+	if offloaders, ok := p.EBGPOffloaders[siteID]; ok {
+		for _, item := range offloaders {
+			if item.SwitchID == id {
+				return item, true
+			}
+		}
+	}
+	return nil, false
+}
+
+// FindOffloaderByName .
+func (p *EBGPStorage) FindOffloaderByName(siteID int, name string) (*api.APIEBGPOffloader, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findOffloaderByName(siteID, name)
+}
+
+func (p *EBGPStorage) findOffloaderByName(siteID int, name string) (*api.APIEBGPOffloader, bool) {
+	if offloaders, ok := p.EBGPOffloaders[siteID]; ok {
+		for _, item := range offloaders {
+			if item.Location == name {
+				return item, true
+			}
+		}
+	}
+	return nil, false
+}
+
+/* FindPort .
+Example: FindPort(swp1@switch1)
+*/
+func (p *EBGPStorage) FindPort(siteID int, portName string) (*api.APIEBGPPort, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findPort(siteID, portName)
+}
+
+func (p *EBGPStorage) findPort(siteID int, portName string) (*api.APIEBGPPort, bool) {
+	if ports, ok := p.EBGPPorts[siteID]; ok {
+		for _, port := range ports {
+			if fmt.Sprintf("%s@%s", port.Port, port.SwitchName) == portName {
+				return port, true
+			}
+		}
+	}
+	return nil, false
+}
+
+// FindVNetByID .
+func (p *EBGPStorage) FindVNetByID(id int) (*api.APIEBGPVNet, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findVNetByID(id)
+}
+
+func (p *EBGPStorage) findVNetByID(id int) (*api.APIEBGPVNet, bool) {
+	for _, vnet := range p.EBGPVNets {
+		if vnet.ID == id {
+			return vnet, true
+		}
+	}
+	return nil, false
+}
+
+// FindVNetByName .
+func (p *EBGPStorage) FindVNetByName(name string) (*api.APIEBGPVNet, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findVNetByName(name)
+}
+
+func (p *EBGPStorage) findVNetByName(name string) (*api.APIEBGPVNet, bool) {
+	for _, vnet := range p.EBGPVNets {
+		if vnet.Name == name {
+			return vnet, true
+		}
+	}
+	return nil, false
+}
+
+// FindSwitchByID .
+func (p *EBGPStorage) FindSwitchByID(siteID, id int) (*api.APIEBGPSwitch, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findSwitchByID(siteID, id)
+}
+
+func (p *EBGPStorage) findSwitchByID(siteID, id int) (*api.APIEBGPSwitch, bool) {
+	if switches, ok := p.EBGPSwitches[siteID]; ok {
+		for _, item := range switches {
+			if item.SwitchID == id {
+				return item, true
+			}
+		}
+	}
+	return nil, false
+}
+
+// FindSwitchByName .
+func (p *EBGPStorage) FindSwitchByName(siteID int, name string) (*api.APIEBGPSwitch, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findSwitchByName(siteID, name)
+}
+
+func (p *EBGPStorage) findSwitchByName(siteID int, name string) (*api.APIEBGPSwitch, bool) {
+	if offloaders, ok := p.EBGPSwitches[siteID]; ok {
+		for _, item := range offloaders {
+			if item.Location == name {
+				return item, true
+			}
+		}
+	}
+	return nil, false
+}
+
+// FindRouteMapByID .
+func (p *EBGPStorage) FindRouteMapByID(id int) (*api.APIEBGPRouteMap, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findRouteMapByID(id)
+}
+
+func (p *EBGPStorage) findRouteMapByID(id int) (*api.APIEBGPRouteMap, bool) {
+	for _, item := range p.EBGPRouteMaps {
+		if item.ID == id {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// FindRouteMapByName .
+func (p *EBGPStorage) FindRouteMapByName(name string) (*api.APIEBGPRouteMap, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findRouteMapByName(name)
+}
+
+func (p *EBGPStorage) findRouteMapByName(name string) (*api.APIEBGPRouteMap, bool) {
+	for _, item := range p.EBGPRouteMaps {
+		if item.Name == name {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
+// FindUpdatedSource .
+func (p *EBGPStorage) FindUpdatedSource(source string) (*api.APIEBGPUpdatedSource, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findUpdatedSource(source)
+}
+
+func (p *EBGPStorage) findUpdatedSource(source string) (*api.APIEBGPUpdatedSource, bool) {
+	for _, item := range p.EBGPUpdatedSources {
+		if item.IPAddress == source {
 			return item, true
 		}
 	}
