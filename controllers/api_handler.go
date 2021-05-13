@@ -21,10 +21,10 @@ import (
 	"log"
 	"time"
 
-	api "github.com/netrisai/netrisapi"
-
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/configloader"
+	"github.com/netrisai/netris-operator/netrisstorage"
+	api "github.com/netrisai/netrisapi"
 )
 
 var (
@@ -33,7 +33,7 @@ var (
 	requeueInterval = time.Duration(10 * time.Second)
 
 	// NStorage is the instance of the Netris API in-memory storage.
-	NStorage = NewStorage()
+	NStorage *netrisstorage.Storage
 )
 
 func init() {
@@ -52,12 +52,15 @@ func init() {
 		log.Printf("LoginUser error %v", err)
 	}
 	go Cred.CheckAuthWithInterval()
+
+	fmt.Println("Requeue interval", requeueInterval)
+
+	NStorage = netrisstorage.NewStorage(Cred)
 	err = NStorage.Download()
 	if err != nil {
 		log.Printf("Storage.Download() error %v", err)
 	}
 	go NStorage.DownloadWithInterval()
-	fmt.Println("Requeue interval", requeueInterval)
 }
 
 func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([]k8sv1alpha1.VNetMetaMember, error) {
