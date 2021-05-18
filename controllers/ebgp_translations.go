@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"fmt"
+	"strings"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -132,9 +133,9 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 			PrependInbound:  ebgp.Spec.PrependInbound,
 			PrependOutbound: ebgp.Spec.PrependOutbound,
 			// PrefixLength: , ?
-			// PrefixListInbound:  ebgpMeta.Spec.PrefixListInbound, ?
-			// PrefixListOutbound: ebgpMeta.Spec.PrefixListOutbound, ?
-			// Community:          ebgp.Spec.SendBGPCommunity, ?
+			PrefixListInbound:  strings.Join(ebgp.Spec.PrefixListInbound, "\n"),
+			PrefixListOutbound: strings.Join(ebgp.Spec.PrefixListOutbound, "\n"),
+			Community:          strings.Join(ebgp.Spec.SendBGPCommunity, "\n"),
 		},
 	}
 
