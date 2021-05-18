@@ -114,6 +114,22 @@ func (p *EBGPStorage) findByID(id int) (*api.APIEBGP, bool) {
 	return nil, false
 }
 
+// FindByName .
+func (p *EBGPStorage) FindByName(name string) (*api.APIEBGP, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByName(name)
+}
+
+func (p *EBGPStorage) findByName(name string) (*api.APIEBGP, bool) {
+	for _, item := range p.EBGPs {
+		if item.Name == name {
+			return item, true
+		}
+	}
+	return nil, false
+}
+
 // FindSiteByID .
 func (p *EBGPStorage) FindSiteByID(id int) (*api.APIEBGPSite, bool) {
 	p.Lock()

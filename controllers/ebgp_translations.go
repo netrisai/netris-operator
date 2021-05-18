@@ -18,13 +18,15 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	api "github.com/netrisai/netrisapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// VnetToVnetMeta converts the VNet resource to VNetMeta type and used for add the VNet for Netris API.
+// EBGPToEBGPMeta converts the EBGP resource to EBGPMeta type and used for add the EBGP for Netris API.
 func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EBGPMeta, error) {
 	ebgpMeta := &k8sv1alpha1.EBGPMeta{}
 	var siteID int
@@ -178,4 +180,95 @@ func ebgpUpdateDefaultAnnotations(ebgp *k8sv1alpha1.EBGP) {
 	annotations["resource.k8s.netris.ai/import"] = imported
 	annotations["resource.k8s.netris.ai/reclaimPolicy"] = reclaim
 	ebgp.SetAnnotations(annotations)
+}
+
+// EBGPMetaToNetris converts the k8s EBGP resource to Netris type and used for add the EBGP for Netris API.
+func EBGPMetaToNetris(ebgpMeta *k8sv1alpha1.EBGPMeta) (*api.APIEBGPAdd, error) {
+	ebgpAdd := &api.APIEBGPAdd{
+		AllowasIn:          ebgpMeta.Spec.AllowasIn,
+		BgpPassword:        ebgpMeta.Spec.BgpPassword,
+		Community:          ebgpMeta.Spec.Community,
+		Description:        ebgpMeta.Spec.Description,
+		InboundRouteMap:    ebgpMeta.Spec.InboundRouteMap,
+		IPVersion:          ebgpMeta.Spec.IPVersion,
+		LocalIP:            ebgpMeta.Spec.LocalIP,
+		LocalPreference:    ebgpMeta.Spec.LocalPreference,
+		Multihop:           ebgpMeta.Spec.Multihop,
+		Name:               ebgpMeta.Spec.EBGPName,
+		NeighborAddress:    ebgpMeta.Spec.NeighborAddress,
+		NeighborAs:         strconv.Itoa(ebgpMeta.Spec.NeighborAs),
+		NfvID:              ebgpMeta.Spec.NfvID,
+		NfvPortID:          ebgpMeta.Spec.NfvPortID,
+		Originate:          ebgpMeta.Spec.Originate,
+		OutboundRouteMap:   ebgpMeta.Spec.OutboundRouteMap,
+		PrefixLength:       ebgpMeta.Spec.PrefixLength,
+		PrefixLimit:        strconv.Itoa(ebgpMeta.Spec.PrefixLimit),
+		PrefixListInbound:  ebgpMeta.Spec.PrefixListInbound,
+		PrefixListOutbound: ebgpMeta.Spec.PrefixListOutbound,
+		PrependInbound:     ebgpMeta.Spec.PrependInbound,
+		PrependOutbound:    ebgpMeta.Spec.PrependInbound,
+		RcircuitID:         ebgpMeta.Spec.RcircuitID,
+		RemoteIP:           ebgpMeta.Spec.RemoteIP,
+		SiteID:             ebgpMeta.Spec.SiteID,
+		Status:             ebgpMeta.Spec.Status,
+		SwitchID:           ebgpMeta.Spec.SwitchID,
+		SwitchName:         ebgpMeta.Spec.SwitchName,
+		SwitchPortID:       ebgpMeta.Spec.SwitchPortID,
+		TermSwitchID:       ebgpMeta.Spec.TermSwitchID,
+		TermSwitchName:     ebgpMeta.Spec.TermSwitchName,
+		TerminateOnSwitch:  ebgpMeta.Spec.TerminateOnSwitch,
+		UpdateSource:       ebgpMeta.Spec.UpdateSource,
+		Vlan:               ebgpMeta.Spec.Vlan,
+		Weight:             ebgpMeta.Spec.Weight,
+	}
+
+	return ebgpAdd, nil
+}
+
+// EBGPMetaToNetrisUpdate converts the k8s EBGP resource to Netris type and used for update the EBGP for Netris API.
+func EBGPMetaToNetrisUpdate(ebgpMeta *k8sv1alpha1.EBGPMeta) (*api.APIEBGPUpdate, error) {
+	ebgpAdd := &api.APIEBGPUpdate{
+		ID:                 ebgpMeta.Spec.ID,
+		AllowasIn:          ebgpMeta.Spec.AllowasIn,
+		BgpPassword:        ebgpMeta.Spec.BgpPassword,
+		Community:          ebgpMeta.Spec.Community,
+		Description:        ebgpMeta.Spec.Description,
+		InboundRouteMap:    ebgpMeta.Spec.InboundRouteMap,
+		IPVersion:          ebgpMeta.Spec.IPVersion,
+		LocalIP:            ebgpMeta.Spec.LocalIP,
+		LocalPreference:    ebgpMeta.Spec.LocalPreference,
+		Multihop:           ebgpMeta.Spec.Multihop,
+		Name:               ebgpMeta.Spec.EBGPName,
+		NeighborAddress:    ebgpMeta.Spec.NeighborAddress,
+		NeighborAs:         strconv.Itoa(ebgpMeta.Spec.NeighborAs),
+		NfvID:              ebgpMeta.Spec.NfvID,
+		NfvPortID:          ebgpMeta.Spec.NfvPortID,
+		Originate:          ebgpMeta.Spec.Originate,
+		OutboundRouteMap:   ebgpMeta.Spec.OutboundRouteMap,
+		PrefixLength:       ebgpMeta.Spec.PrefixLength,
+		PrefixLimit:        ebgpMeta.Spec.PrefixLimit,
+		PrefixListInbound:  ebgpMeta.Spec.PrefixListInbound,
+		PrefixListOutbound: ebgpMeta.Spec.PrefixListOutbound,
+		PrependInbound:     ebgpMeta.Spec.PrependInbound,
+		PrependOutbound:    ebgpMeta.Spec.PrependInbound,
+		RcircuitID:         ebgpMeta.Spec.RcircuitID,
+		RemoteIP:           ebgpMeta.Spec.RemoteIP,
+		SiteID:             ebgpMeta.Spec.SiteID,
+		Status:             ebgpMeta.Spec.Status,
+		SwitchID:           ebgpMeta.Spec.SwitchID,
+		SwitchName:         ebgpMeta.Spec.SwitchName,
+		SwitchPortID:       ebgpMeta.Spec.SwitchPortID,
+		TermSwitchID:       ebgpMeta.Spec.TermSwitchID,
+		TermSwitchName:     ebgpMeta.Spec.TermSwitchName,
+		TerminateOnSwitch:  ebgpMeta.Spec.TerminateOnSwitch,
+		UpdateSource:       ebgpMeta.Spec.UpdateSource,
+		Vlan:               ebgpMeta.Spec.Vlan,
+		Weight:             ebgpMeta.Spec.Weight,
+	}
+
+	return ebgpAdd, nil
+}
+
+func compareEBGPMetaAPIEBGP(vnetMeta *k8sv1alpha1.EBGPMeta, apiEBGP *api.APIEBGP) bool {
+	return true
 }

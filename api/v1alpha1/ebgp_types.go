@@ -28,8 +28,9 @@ type EBGPStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Status  string `json:"status,omitempty"`
-	Message string `json:"message,omitempty"`
+	Status       string      `json:"status,omitempty"`
+	ModifiedDate metav1.Time `json:"modified,omitempty"`
+	Message      string      `json:"message,omitempty"`
 }
 
 // EBGPSpec defines the desired state of EBGP
