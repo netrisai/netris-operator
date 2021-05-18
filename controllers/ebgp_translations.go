@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 
@@ -94,6 +95,9 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 		reclaim = true
 	}
 
+	_, net, _ := net.ParseCIDR(ebgp.Spec.LocalIP)
+	prefixLength, _ := net.Mask.Size()
+
 	ebgpMeta = &k8sv1alpha1.EBGPMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(ebgp.GetUID()),
@@ -125,16 +129,16 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 			UpdateSource:    ebgp.Spec.Multihop.UpdateSource,
 			Multihop:        ebgp.Spec.Multihop.Hops,
 
-			BgpPassword:     ebgp.Spec.BGPPassword,
-			AllowasIn:       ebgp.Spec.AllowAsIn,
-			Originate:       originate,
-			PrefixLimit:     ebgp.Spec.PrefixInboundMax, // ?
-			InboundRouteMap: ebgpMeta.Spec.InboundRouteMap,
-			LocalPreference: localPreference,
-			Weight:          ebgp.Spec.Weight,
-			PrependInbound:  ebgp.Spec.PrependInbound,
-			PrependOutbound: ebgp.Spec.PrependOutbound,
-			// PrefixLength: , ?
+			BgpPassword:        ebgp.Spec.BGPPassword,
+			AllowasIn:          ebgp.Spec.AllowAsIn,
+			Originate:          originate,
+			PrefixLimit:        ebgp.Spec.PrefixInboundMax, // ?
+			InboundRouteMap:    ebgpMeta.Spec.InboundRouteMap,
+			LocalPreference:    localPreference,
+			Weight:             ebgp.Spec.Weight,
+			PrependInbound:     ebgp.Spec.PrependInbound,
+			PrependOutbound:    ebgp.Spec.PrependOutbound,
+			PrefixLength:       prefixLength, // ?
 			PrefixListInbound:  strings.Join(ebgp.Spec.PrefixListInbound, "\n"),
 			PrefixListOutbound: strings.Join(ebgp.Spec.PrefixListOutbound, "\n"),
 			Community:          strings.Join(ebgp.Spec.SendBGPCommunity, "\n"),
