@@ -23,78 +23,78 @@ import (
 	api "github.com/netrisai/netrisapi"
 )
 
-// EBGPStorage .
-type EBGPStorage struct {
+// BGPStorage .
+type BGPStorage struct {
 	sync.Mutex
-	EBGPs              []*api.APIEBGP
-	EBGPSites          []*api.APIEBGPSite
-	EBGPVNets          []*api.APIEBGPVNet
-	EBGPRouteMaps      []*api.APIEBGPRouteMap
-	EBGPOffloaders     map[int][]*api.APIEBGPOffloader
-	EBGPPorts          map[int][]*api.APIEBGPPort
-	EBGPSwitches       map[int][]*api.APIEBGPSwitch
-	EBGPUpdatedSources []*api.APIEBGPUpdatedSource
+	BGPs              []*api.APIEBGP
+	BGPSites          []*api.APIEBGPSite
+	BGPVNets          []*api.APIEBGPVNet
+	BGPRouteMaps      []*api.APIEBGPRouteMap
+	BGPOffloaders     map[int][]*api.APIEBGPOffloader
+	BGPPorts          map[int][]*api.APIEBGPPort
+	BGPSwitches       map[int][]*api.APIEBGPSwitch
+	BGPUpdatedSources []*api.APIEBGPUpdatedSource
 }
 
-// NewEBGPStorage .
-func NewEBGPStoragee() *EBGPStorage {
-	return &EBGPStorage{
-		EBGPs:              []*api.APIEBGP{},
-		EBGPSites:          []*api.APIEBGPSite{},
-		EBGPVNets:          []*api.APIEBGPVNet{},
-		EBGPRouteMaps:      []*api.APIEBGPRouteMap{},
-		EBGPOffloaders:     make(map[int][]*api.APIEBGPOffloader),
-		EBGPPorts:          make(map[int][]*api.APIEBGPPort),
-		EBGPSwitches:       make(map[int][]*api.APIEBGPSwitch),
-		EBGPUpdatedSources: []*api.APIEBGPUpdatedSource{},
+// NewBGPStorage .
+func NewBGPStoragee() *BGPStorage {
+	return &BGPStorage{
+		BGPs:              []*api.APIEBGP{},
+		BGPSites:          []*api.APIEBGPSite{},
+		BGPVNets:          []*api.APIEBGPVNet{},
+		BGPRouteMaps:      []*api.APIEBGPRouteMap{},
+		BGPOffloaders:     make(map[int][]*api.APIEBGPOffloader),
+		BGPPorts:          make(map[int][]*api.APIEBGPPort),
+		BGPSwitches:       make(map[int][]*api.APIEBGPSwitch),
+		BGPUpdatedSources: []*api.APIEBGPUpdatedSource{},
 	}
 }
 
-func (p *EBGPStorage) storeEBGPSites(items []*api.APIEBGPSite) {
-	p.EBGPSites = items
+func (p *BGPStorage) storeBGPSites(items []*api.APIEBGPSite) {
+	p.BGPSites = items
 }
 
-func (p *EBGPStorage) storeEBGPVNets(items []*api.APIEBGPVNet) {
-	p.EBGPVNets = items
+func (p *BGPStorage) storeBGPVNets(items []*api.APIEBGPVNet) {
+	p.BGPVNets = items
 }
 
-func (p *EBGPStorage) storeEBGPRouteMaps(items []*api.APIEBGPRouteMap) {
-	p.EBGPRouteMaps = items
+func (p *BGPStorage) storeBGPRouteMaps(items []*api.APIEBGPRouteMap) {
+	p.BGPRouteMaps = items
 }
 
-func (p *EBGPStorage) storeEBGPOffloaders(siteID int, items []*api.APIEBGPOffloader) {
-	p.EBGPOffloaders[siteID] = items
+func (p *BGPStorage) storeBGPOffloaders(siteID int, items []*api.APIEBGPOffloader) {
+	p.BGPOffloaders[siteID] = items
 }
 
-func (p *EBGPStorage) storeEBGPPorts(siteID int, items []*api.APIEBGPPort) {
-	p.EBGPPorts[siteID] = items
+func (p *BGPStorage) storeBGPPorts(siteID int, items []*api.APIEBGPPort) {
+	p.BGPPorts[siteID] = items
 }
 
-func (p *EBGPStorage) storeEBGPSwitches(siteID int, items []*api.APIEBGPSwitch) {
-	p.EBGPSwitches[siteID] = items
+func (p *BGPStorage) storeBGPSwitches(siteID int, items []*api.APIEBGPSwitch) {
+	p.BGPSwitches[siteID] = items
 }
 
-func (p *EBGPStorage) storeEBGPUpdatedSources(items []*api.APIEBGPUpdatedSource) {
-	p.EBGPUpdatedSources = items
+func (p *BGPStorage) storeBGPUpdatedSources(items []*api.APIEBGPUpdatedSource) {
+	p.BGPUpdatedSources = items
 }
 
-func (p *EBGPStorage) storeAll(items []*api.APIEBGP) {
-	p.EBGPs = items
+func (p *BGPStorage) storeAll(items []*api.APIEBGP) {
+	p.BGPs = items
 }
 
 // GetAll .
-func (p *EBGPStorage) GetAll() []*api.APIEBGP {
+func (p *BGPStorage) GetAll() []*api.APIEBGP {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *EBGPStorage) getAll() []*api.APIEBGP {
-	return p.EBGPs
+func (p *BGPStorage) getAll() []*api.APIEBGP {
+	return p.BGPs
 }
 
 // FindByID .
-func (p *EBGPStorage) FindByID(id int) (*api.APIEBGP, bool) {
+func (p *BGPStorage) FindByID(id int) (*api.APIEBGP, bool) {
 	p.Lock()
 	defer p.Unlock()
 	item, ok := p.findByID(id)
@@ -105,8 +105,8 @@ func (p *EBGPStorage) FindByID(id int) (*api.APIEBGP, bool) {
 	return item, ok
 }
 
-func (p *EBGPStorage) findByID(id int) (*api.APIEBGP, bool) {
-	for _, item := range p.EBGPs {
+func (p *BGPStorage) findByID(id int) (*api.APIEBGP, bool) {
+	for _, item := range p.BGPs {
 		if item.ID == id {
 			return item, true
 		}
@@ -115,14 +115,14 @@ func (p *EBGPStorage) findByID(id int) (*api.APIEBGP, bool) {
 }
 
 // FindByName .
-func (p *EBGPStorage) FindByName(name string) (*api.APIEBGP, bool) {
+func (p *BGPStorage) FindByName(name string) (*api.APIEBGP, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findByName(name)
 }
 
-func (p *EBGPStorage) findByName(name string) (*api.APIEBGP, bool) {
-	for _, item := range p.EBGPs {
+func (p *BGPStorage) findByName(name string) (*api.APIEBGP, bool) {
+	for _, item := range p.BGPs {
 		if item.Name == name {
 			return item, true
 		}
@@ -131,14 +131,14 @@ func (p *EBGPStorage) findByName(name string) (*api.APIEBGP, bool) {
 }
 
 // FindSiteByID .
-func (p *EBGPStorage) FindSiteByID(id int) (*api.APIEBGPSite, bool) {
+func (p *BGPStorage) FindSiteByID(id int) (*api.APIEBGPSite, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findSiteByID(id)
 }
 
-func (p *EBGPStorage) findSiteByID(id int) (*api.APIEBGPSite, bool) {
-	for _, item := range p.EBGPSites {
+func (p *BGPStorage) findSiteByID(id int) (*api.APIEBGPSite, bool) {
+	for _, item := range p.BGPSites {
 		if item.ID == id {
 			return item, true
 		}
@@ -147,14 +147,14 @@ func (p *EBGPStorage) findSiteByID(id int) (*api.APIEBGPSite, bool) {
 }
 
 // FindSiteByName .
-func (p *EBGPStorage) FindSiteByName(name string) (*api.APIEBGPSite, bool) {
+func (p *BGPStorage) FindSiteByName(name string) (*api.APIEBGPSite, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findSiteByName(name)
 }
 
-func (p *EBGPStorage) findSiteByName(name string) (*api.APIEBGPSite, bool) {
-	for _, item := range p.EBGPSites {
+func (p *BGPStorage) findSiteByName(name string) (*api.APIEBGPSite, bool) {
+	for _, item := range p.BGPSites {
 		if item.Name == name {
 			return item, true
 		}
@@ -163,14 +163,14 @@ func (p *EBGPStorage) findSiteByName(name string) (*api.APIEBGPSite, bool) {
 }
 
 // FindOffloaderByID .
-func (p *EBGPStorage) FindOffloaderByID(siteID, id int) (*api.APIEBGPOffloader, bool) {
+func (p *BGPStorage) FindOffloaderByID(siteID, id int) (*api.APIEBGPOffloader, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findOffloaderByID(siteID, id)
 }
 
-func (p *EBGPStorage) findOffloaderByID(siteID, id int) (*api.APIEBGPOffloader, bool) {
-	if offloaders, ok := p.EBGPOffloaders[siteID]; ok {
+func (p *BGPStorage) findOffloaderByID(siteID, id int) (*api.APIEBGPOffloader, bool) {
+	if offloaders, ok := p.BGPOffloaders[siteID]; ok {
 		for _, item := range offloaders {
 			if item.SwitchID == id {
 				return item, true
@@ -181,14 +181,14 @@ func (p *EBGPStorage) findOffloaderByID(siteID, id int) (*api.APIEBGPOffloader, 
 }
 
 // FindOffloaderByName .
-func (p *EBGPStorage) FindOffloaderByName(siteID int, name string) (*api.APIEBGPOffloader, bool) {
+func (p *BGPStorage) FindOffloaderByName(siteID int, name string) (*api.APIEBGPOffloader, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findOffloaderByName(siteID, name)
 }
 
-func (p *EBGPStorage) findOffloaderByName(siteID int, name string) (*api.APIEBGPOffloader, bool) {
-	if offloaders, ok := p.EBGPOffloaders[siteID]; ok {
+func (p *BGPStorage) findOffloaderByName(siteID int, name string) (*api.APIEBGPOffloader, bool) {
+	if offloaders, ok := p.BGPOffloaders[siteID]; ok {
 		for _, item := range offloaders {
 			if item.Location == name {
 				return item, true
@@ -201,14 +201,14 @@ func (p *EBGPStorage) findOffloaderByName(siteID int, name string) (*api.APIEBGP
 /* FindPort .
 Example: FindPort(swp1@switch1)
 */
-func (p *EBGPStorage) FindPort(siteID int, portName string) (*api.APIEBGPPort, bool) {
+func (p *BGPStorage) FindPort(siteID int, portName string) (*api.APIEBGPPort, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findPort(siteID, portName)
 }
 
-func (p *EBGPStorage) findPort(siteID int, portName string) (*api.APIEBGPPort, bool) {
-	if ports, ok := p.EBGPPorts[siteID]; ok {
+func (p *BGPStorage) findPort(siteID int, portName string) (*api.APIEBGPPort, bool) {
+	if ports, ok := p.BGPPorts[siteID]; ok {
 		for _, port := range ports {
 			if fmt.Sprintf("%s@%s", port.Port, port.SwitchName) == portName {
 				return port, true
@@ -219,14 +219,14 @@ func (p *EBGPStorage) findPort(siteID int, portName string) (*api.APIEBGPPort, b
 }
 
 // FindVNetByID .
-func (p *EBGPStorage) FindVNetByID(id int) (*api.APIEBGPVNet, bool) {
+func (p *BGPStorage) FindVNetByID(id int) (*api.APIEBGPVNet, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findVNetByID(id)
 }
 
-func (p *EBGPStorage) findVNetByID(id int) (*api.APIEBGPVNet, bool) {
-	for _, vnet := range p.EBGPVNets {
+func (p *BGPStorage) findVNetByID(id int) (*api.APIEBGPVNet, bool) {
+	for _, vnet := range p.BGPVNets {
 		if vnet.ID == id {
 			return vnet, true
 		}
@@ -235,14 +235,14 @@ func (p *EBGPStorage) findVNetByID(id int) (*api.APIEBGPVNet, bool) {
 }
 
 // FindVNetByName .
-func (p *EBGPStorage) FindVNetByName(name string) (*api.APIEBGPVNet, bool) {
+func (p *BGPStorage) FindVNetByName(name string) (*api.APIEBGPVNet, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findVNetByName(name)
 }
 
-func (p *EBGPStorage) findVNetByName(name string) (*api.APIEBGPVNet, bool) {
-	for _, vnet := range p.EBGPVNets {
+func (p *BGPStorage) findVNetByName(name string) (*api.APIEBGPVNet, bool) {
+	for _, vnet := range p.BGPVNets {
 		if vnet.Name == name {
 			return vnet, true
 		}
@@ -251,14 +251,14 @@ func (p *EBGPStorage) findVNetByName(name string) (*api.APIEBGPVNet, bool) {
 }
 
 // FindSwitchByID .
-func (p *EBGPStorage) FindSwitchByID(siteID, id int) (*api.APIEBGPSwitch, bool) {
+func (p *BGPStorage) FindSwitchByID(siteID, id int) (*api.APIEBGPSwitch, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findSwitchByID(siteID, id)
 }
 
-func (p *EBGPStorage) findSwitchByID(siteID, id int) (*api.APIEBGPSwitch, bool) {
-	if switches, ok := p.EBGPSwitches[siteID]; ok {
+func (p *BGPStorage) findSwitchByID(siteID, id int) (*api.APIEBGPSwitch, bool) {
+	if switches, ok := p.BGPSwitches[siteID]; ok {
 		for _, item := range switches {
 			if item.SwitchID == id {
 				return item, true
@@ -269,14 +269,14 @@ func (p *EBGPStorage) findSwitchByID(siteID, id int) (*api.APIEBGPSwitch, bool) 
 }
 
 // FindSwitchByName .
-func (p *EBGPStorage) FindSwitchByName(siteID int, name string) (*api.APIEBGPSwitch, bool) {
+func (p *BGPStorage) FindSwitchByName(siteID int, name string) (*api.APIEBGPSwitch, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findSwitchByName(siteID, name)
 }
 
-func (p *EBGPStorage) findSwitchByName(siteID int, name string) (*api.APIEBGPSwitch, bool) {
-	if offloaders, ok := p.EBGPSwitches[siteID]; ok {
+func (p *BGPStorage) findSwitchByName(siteID int, name string) (*api.APIEBGPSwitch, bool) {
+	if offloaders, ok := p.BGPSwitches[siteID]; ok {
 		for _, item := range offloaders {
 			if item.Location == name {
 				return item, true
@@ -287,14 +287,14 @@ func (p *EBGPStorage) findSwitchByName(siteID int, name string) (*api.APIEBGPSwi
 }
 
 // FindRouteMapByID .
-func (p *EBGPStorage) FindRouteMapByID(id int) (*api.APIEBGPRouteMap, bool) {
+func (p *BGPStorage) FindRouteMapByID(id int) (*api.APIEBGPRouteMap, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findRouteMapByID(id)
 }
 
-func (p *EBGPStorage) findRouteMapByID(id int) (*api.APIEBGPRouteMap, bool) {
-	for _, item := range p.EBGPRouteMaps {
+func (p *BGPStorage) findRouteMapByID(id int) (*api.APIEBGPRouteMap, bool) {
+	for _, item := range p.BGPRouteMaps {
 		if item.ID == id {
 			return item, true
 		}
@@ -303,14 +303,14 @@ func (p *EBGPStorage) findRouteMapByID(id int) (*api.APIEBGPRouteMap, bool) {
 }
 
 // FindRouteMapByName .
-func (p *EBGPStorage) FindRouteMapByName(name string) (*api.APIEBGPRouteMap, bool) {
+func (p *BGPStorage) FindRouteMapByName(name string) (*api.APIEBGPRouteMap, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findRouteMapByName(name)
 }
 
-func (p *EBGPStorage) findRouteMapByName(name string) (*api.APIEBGPRouteMap, bool) {
-	for _, item := range p.EBGPRouteMaps {
+func (p *BGPStorage) findRouteMapByName(name string) (*api.APIEBGPRouteMap, bool) {
+	for _, item := range p.BGPRouteMaps {
 		if item.Name == name {
 			return item, true
 		}
@@ -319,14 +319,14 @@ func (p *EBGPStorage) findRouteMapByName(name string) (*api.APIEBGPRouteMap, boo
 }
 
 // FindUpdatedSource .
-func (p *EBGPStorage) FindUpdatedSource(source string) (*api.APIEBGPUpdatedSource, bool) {
+func (p *BGPStorage) FindUpdatedSource(source string) (*api.APIEBGPUpdatedSource, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findUpdatedSource(source)
 }
 
-func (p *EBGPStorage) findUpdatedSource(source string) (*api.APIEBGPUpdatedSource, bool) {
-	for _, item := range p.EBGPUpdatedSources {
+func (p *BGPStorage) findUpdatedSource(source string) (*api.APIEBGPUpdatedSource, bool) {
+	for _, item := range p.BGPUpdatedSources {
 		if item.IPAddress == source {
 			return item, true
 		}
@@ -335,7 +335,7 @@ func (p *EBGPStorage) findUpdatedSource(source string) (*api.APIEBGPUpdatedSourc
 }
 
 // Download .
-func (p *EBGPStorage) download() error {
+func (p *BGPStorage) download() error {
 	items, err := Cred.GetEBGPs()
 	if err != nil {
 		return err
@@ -346,51 +346,51 @@ func (p *EBGPStorage) download() error {
 	if err != nil {
 		return err
 	}
-	p.storeEBGPSites(sites)
+	p.storeBGPSites(sites)
 
 	vnets, err := Cred.GetEBGPVNets()
 	if err != nil {
 		return err
 	}
-	p.storeEBGPVNets(vnets)
+	p.storeBGPVNets(vnets)
 
 	rmaps, err := Cred.GetEBGPRouteMaps()
 	if err != nil {
 		return err
 	}
-	p.storeEBGPRouteMaps(rmaps)
+	p.storeBGPRouteMaps(rmaps)
 
 	for _, site := range sites {
 		offloaders, err := Cred.GetEBGPOffloaders(site.ID)
 		if err != nil {
 			return err
 		}
-		p.storeEBGPOffloaders(site.ID, offloaders)
+		p.storeBGPOffloaders(site.ID, offloaders)
 
 		ports, err := Cred.GetEBGPPorts(site.ID)
 		if err != nil {
 			return err
 		}
-		p.storeEBGPPorts(site.ID, ports)
+		p.storeBGPPorts(site.ID, ports)
 
 		sws, err := Cred.GetEBGPSwitches(site.ID)
 		if err != nil {
 			return err
 		}
-		p.storeEBGPSwitches(site.ID, sws)
+		p.storeBGPSwitches(site.ID, sws)
 	}
 
 	usources, err := Cred.GetEBGPUpdatedSources()
 	if err != nil {
 		return err
 	}
-	p.storeEBGPUpdatedSources(usources)
+	p.storeBGPUpdatedSources(usources)
 
 	return nil
 }
 
 // Download .
-func (p *EBGPStorage) Download() error {
+func (p *BGPStorage) Download() error {
 	p.Lock()
 	defer p.Unlock()
 	return p.download()

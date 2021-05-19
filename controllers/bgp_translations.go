@@ -1,0 +1,283 @@
+/*
+Copyright 2021. Netris, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package controllers
+
+import (
+	"fmt"
+	"net"
+	"strconv"
+	"strings"
+
+	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	api "github.com/netrisai/netrisapi"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+// BGPToBGPMeta converts the BGP resource to BGPMeta type and used for add the BGP for Netris API.
+func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta, error) {
+	bgpMeta := &k8sv1alpha1.BGPMeta{}
+	var siteID int
+	var nfvID int
+	var nfvPortID int
+	var state string
+	terminateOnSwitch := "false"
+
+	originate := "false"
+	localPreference := 100
+	if site, ok := NStorage.SitesStorage.FindByName(bgp.Spec.Site); ok {
+		siteID = site.ID
+	} else {
+		return bgpMeta, fmt.Errorf("invalid site '%s'", bgp.Spec.Site)
+	}
+
+	if bgp.Spec.DefaultOriginate {
+		originate = "true"
+	}
+
+	if bgp.Spec.LocalPreference > 0 {
+		localPreference = bgp.Spec.LocalPreference
+	}
+
+	state = bgp.Spec.State
+	if bgp.Spec.State == "" {
+		state = "enabled"
+	}
+
+	if !bgp.Spec.TerminateOnSwitch {
+		if softgate, ok := NStorage.BGPStorage.FindOffloaderByName(siteID, bgp.Spec.Softgate); ok {
+			nfvID = softgate.SwitchID
+			nfvPortID = softgate.OffloadPortID
+		} else {
+			return bgpMeta, fmt.Errorf("invalid softgate '%s'", bgp.Spec.Softgate)
+		}
+	} else {
+		terminateOnSwitch = "true"
+	}
+
+	var portID int
+	var vlanID int
+	var vnetID int
+
+	if bgp.Spec.Transport.Type == "port" {
+		if port, ok := NStorage.BGPStorage.FindPort(siteID, bgp.Spec.Transport.Name); ok {
+			portID = port.PortID
+			vlanID = bgp.Spec.Transport.VlanID
+			if bgp.Spec.Transport.VlanID == 0 {
+				vlanID = 1
+			}
+		} else {
+			return bgpMeta, fmt.Errorf("invalid port '%s'", bgp.Spec.Transport.Name)
+		}
+	} else {
+		if vnet, ok := NStorage.BGPStorage.FindVNetByName(bgp.Spec.Transport.Name); ok {
+			vnetID = vnet.ID
+		} else {
+			return bgpMeta, fmt.Errorf("invalid vnet '%s'", bgp.Spec.Transport.Name)
+		}
+	}
+
+	imported := false
+	reclaim := false
+	if i, ok := bgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
+	}
+	if i, ok := bgp.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
+	}
+
+	localIP, cidr, _ := net.ParseCIDR(bgp.Spec.LocalIP)
+	remoteIP, _, _ := net.ParseCIDR(bgp.Spec.RemoteIP)
+	prefixLength, _ := cidr.Mask.Size()
+
+	bgpMeta = &k8sv1alpha1.BGPMeta{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      string(bgp.GetUID()),
+			Namespace: bgp.GetNamespace(),
+		},
+		TypeMeta: metav1.TypeMeta{},
+		Spec: k8sv1alpha1.BGPMetaSpec{
+			Imported: imported,
+			Reclaim:  reclaim,
+			Name:     string(bgp.GetUID()),
+			BGPName:  bgp.Name,
+
+			NfvID:     nfvID,
+			NfvPortID: nfvPortID,
+
+			SwitchPortID: portID,
+			Vlan:         vlanID,
+			RcircuitID:   vnetID,
+
+			SiteID:            siteID,
+			NeighborAs:        bgp.Spec.NeighborAS,
+			LocalIP:           localIP.String(),
+			RemoteIP:          remoteIP.String(),
+			Description:       bgp.Spec.Description,
+			Status:            state,
+			TerminateOnSwitch: terminateOnSwitch,
+
+			NeighborAddress: bgp.Spec.Multihop.NeighborAddress,
+			UpdateSource:    bgp.Spec.Multihop.UpdateSource,
+			Multihop:        bgp.Spec.Multihop.Hops,
+
+			BgpPassword:        bgp.Spec.BGPPassword,
+			AllowasIn:          bgp.Spec.AllowAsIn,
+			Originate:          originate,
+			PrefixLimit:        bgp.Spec.PrefixInboundMax, // ?
+			InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
+			LocalPreference:    localPreference,
+			Weight:             bgp.Spec.Weight,
+			PrependInbound:     bgp.Spec.PrependInbound,
+			PrependOutbound:    bgp.Spec.PrependOutbound,
+			PrefixLength:       prefixLength, // ?
+			PrefixListInbound:  strings.Join(bgp.Spec.PrefixListInbound, "\n"),
+			PrefixListOutbound: strings.Join(bgp.Spec.PrefixListOutbound, "\n"),
+			Community:          strings.Join(bgp.Spec.SendBGPCommunity, "\n"),
+		},
+	}
+
+	return bgpMeta, nil
+}
+
+func bgpCompareFieldsForNewMeta(bgp *k8sv1alpha1.BGP, bgpMeta *k8sv1alpha1.BGPMeta) bool {
+	imported := false
+	reclaim := false
+	if i, ok := bgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = true
+	}
+	if i, ok := bgp.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = true
+	}
+	return bgp.GetGeneration() != bgpMeta.Spec.BGPCRGeneration || imported != bgpMeta.Spec.Imported || reclaim != bgpMeta.Spec.Reclaim
+}
+
+func bgpMustUpdateAnnotations(bgp *k8sv1alpha1.BGP) bool {
+	update := false
+	if i, ok := bgp.GetAnnotations()["resource.k8s.netris.ai/import"]; !(ok && (i == "true" || i == "false")) {
+		update = true
+	}
+	if i, ok := bgp.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; !(ok && (i == "retain" || i == "delete")) {
+		update = true
+	}
+	return update
+}
+
+func bgpUpdateDefaultAnnotations(bgp *k8sv1alpha1.BGP) {
+	imported := "false"
+	reclaim := "delete"
+	if i, ok := bgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
+		imported = "true"
+	}
+	if i, ok := bgp.GetAnnotations()["resource.k8s.netris.ai/reclaimPolicy"]; ok && i == "retain" {
+		reclaim = "retain"
+	}
+	annotations := bgp.GetAnnotations()
+	annotations["resource.k8s.netris.ai/import"] = imported
+	annotations["resource.k8s.netris.ai/reclaimPolicy"] = reclaim
+	bgp.SetAnnotations(annotations)
+}
+
+// BGPMetaToNetris converts the k8s BGP resource to Netris type and used for add the BGP for Netris API.
+func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPAdd, error) {
+	bgpAdd := &api.APIEBGPAdd{
+		AllowasIn:          bgpMeta.Spec.AllowasIn,
+		BgpPassword:        bgpMeta.Spec.BgpPassword,
+		Community:          bgpMeta.Spec.Community,
+		Description:        bgpMeta.Spec.Description,
+		InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
+		IPVersion:          bgpMeta.Spec.IPVersion,
+		LocalIP:            bgpMeta.Spec.LocalIP,
+		LocalPreference:    bgpMeta.Spec.LocalPreference,
+		Multihop:           bgpMeta.Spec.Multihop,
+		Name:               bgpMeta.Spec.BGPName,
+		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
+		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
+		NfvID:              bgpMeta.Spec.NfvID,
+		NfvPortID:          bgpMeta.Spec.NfvPortID,
+		Originate:          bgpMeta.Spec.Originate,
+		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
+		PrefixLength:       bgpMeta.Spec.PrefixLength,
+		PrefixLimit:        strconv.Itoa(bgpMeta.Spec.PrefixLimit),
+		PrefixListInbound:  bgpMeta.Spec.PrefixListInbound,
+		PrefixListOutbound: bgpMeta.Spec.PrefixListOutbound,
+		PrependInbound:     bgpMeta.Spec.PrependInbound,
+		PrependOutbound:    bgpMeta.Spec.PrependInbound,
+		RcircuitID:         bgpMeta.Spec.RcircuitID,
+		RemoteIP:           bgpMeta.Spec.RemoteIP,
+		SiteID:             bgpMeta.Spec.SiteID,
+		Status:             bgpMeta.Spec.Status,
+		SwitchID:           bgpMeta.Spec.SwitchID,
+		SwitchName:         bgpMeta.Spec.SwitchName,
+		SwitchPortID:       bgpMeta.Spec.SwitchPortID,
+		TermSwitchID:       bgpMeta.Spec.TermSwitchID,
+		TermSwitchName:     bgpMeta.Spec.TermSwitchName,
+		TerminateOnSwitch:  bgpMeta.Spec.TerminateOnSwitch,
+		UpdateSource:       bgpMeta.Spec.UpdateSource,
+		Vlan:               bgpMeta.Spec.Vlan,
+		Weight:             bgpMeta.Spec.Weight,
+	}
+
+	return bgpAdd, nil
+}
+
+// BGPMetaToNetrisUpdate converts the k8s BGP resource to Netris type and used for update the BGP for Netris API.
+func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPUpdate, error) {
+	bgpAdd := &api.APIEBGPUpdate{
+		ID:                 bgpMeta.Spec.ID,
+		AllowasIn:          bgpMeta.Spec.AllowasIn,
+		BgpPassword:        bgpMeta.Spec.BgpPassword,
+		Community:          bgpMeta.Spec.Community,
+		Description:        bgpMeta.Spec.Description,
+		InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
+		IPVersion:          bgpMeta.Spec.IPVersion,
+		LocalIP:            bgpMeta.Spec.LocalIP,
+		LocalPreference:    bgpMeta.Spec.LocalPreference,
+		Multihop:           bgpMeta.Spec.Multihop,
+		Name:               bgpMeta.Spec.BGPName,
+		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
+		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
+		NfvID:              bgpMeta.Spec.NfvID,
+		NfvPortID:          bgpMeta.Spec.NfvPortID,
+		Originate:          bgpMeta.Spec.Originate,
+		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
+		PrefixLength:       bgpMeta.Spec.PrefixLength,
+		PrefixLimit:        bgpMeta.Spec.PrefixLimit,
+		PrefixListInbound:  bgpMeta.Spec.PrefixListInbound,
+		PrefixListOutbound: bgpMeta.Spec.PrefixListOutbound,
+		PrependInbound:     bgpMeta.Spec.PrependInbound,
+		PrependOutbound:    bgpMeta.Spec.PrependInbound,
+		RcircuitID:         bgpMeta.Spec.RcircuitID,
+		RemoteIP:           bgpMeta.Spec.RemoteIP,
+		SiteID:             bgpMeta.Spec.SiteID,
+		Status:             bgpMeta.Spec.Status,
+		SwitchID:           bgpMeta.Spec.SwitchID,
+		SwitchName:         bgpMeta.Spec.SwitchName,
+		SwitchPortID:       bgpMeta.Spec.SwitchPortID,
+		TermSwitchID:       bgpMeta.Spec.TermSwitchID,
+		TermSwitchName:     bgpMeta.Spec.TermSwitchName,
+		TerminateOnSwitch:  bgpMeta.Spec.TerminateOnSwitch,
+		UpdateSource:       bgpMeta.Spec.UpdateSource,
+		Vlan:               bgpMeta.Spec.Vlan,
+		Weight:             bgpMeta.Spec.Weight,
+	}
+
+	return bgpAdd, nil
+}
+
+func compareBGPMetaAPIEBGP(vnetMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bool {
+	return true
+}

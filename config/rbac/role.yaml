@@ -41,7 +41,7 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgpmeta
+  - bgpmeta
   verbs:
   - create
   - delete
@@ -53,7 +53,7 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgpmeta/status
+  - bgpmeta/status
   verbs:
   - get
   - patch
@@ -61,7 +61,7 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgps
+  - bgps
   verbs:
   - create
   - delete
@@ -73,7 +73,7 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgps/status
+  - bgps/status
   verbs:
   - get
   - patch

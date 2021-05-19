@@ -1,7 +1,7 @@
 apiVersion: k8s.netris.ai/v1alpha1
-kind: EBGP
+kind: BGP
 metadata:
-  name: my-ebgp
+  name: my-bgp
 spec:
   site: Default
   softgate: softgate1

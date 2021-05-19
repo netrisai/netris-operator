@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: ebgps.k8s.netris.ai
+  name: bgps.k8s.netris.ai
 spec:
   group: k8s.netris.ai
   names:
-    kind: EBGP
-    listKind: EBGPList
-    plural: ebgps
-    singular: ebgp
+    kind: BGP
+    listKind: BGPList
+    plural: bgps
+    singular: bgp
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: EBGP is the Schema for the ebgps API
+      description: BGP is the Schema for the bgps API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -34,7 +34,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: EBGPSpec defines the desired state of EBGP
+          description: BGPSpec defines the desired state of BGP
           properties:
             allowAsIn:
               type: integer
@@ -52,7 +52,7 @@ spec:
             localPreference:
               type: integer
             multihop:
-              description: EBGPMultihop .
+              description: BGPMultihop .
               properties:
                 hops:
                   type: integer
@@ -100,10 +100,10 @@ spec:
             terminateOnSwitch:
               type: boolean
             transport:
-              description: EBGPTransport .
+              description: BGPTransport .
               properties:
                 name:
-                  pattern: (^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$)
+                  pattern: (^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-z0-9])?(\.[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?)*$)
                   type: string
                 type:
                   enum:
@@ -122,13 +122,15 @@ spec:
           - neighborAs
           - remoteIP
           - site
-          - softgate
           - transport
           type: object
         status:
-          description: EBGPStatus defines the observed state of EBGP
+          description: BGPStatus defines the observed state of BGP
           properties:
             message:
+              type: string
+            modified:
+              format: date-time
               type: string
             status:
               type: string

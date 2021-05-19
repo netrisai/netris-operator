@@ -37,7 +37,7 @@ type Storage struct {
 	*SitesStorage
 	*TenantsStorage
 	*VNetStorage
-	*EBGPStorage
+	*BGPStorage
 	*L4LBStorage
 	*SubnetsStorage
 }
@@ -50,7 +50,7 @@ func NewStorage(cred *api.HTTPCred) *Storage {
 		SitesStorage:   NewSitesStorage(),
 		TenantsStorage: NewTenantsStorage(),
 		VNetStorage:    NewVNetStorage(),
-		EBGPStorage:    NewEBGPStoragee(),
+		BGPStorage:     NewBGPStoragee(),
 		L4LBStorage:    NewL4LBStorage(),
 		SubnetsStorage: NewSubnetsStorage(),
 	}
@@ -72,7 +72,7 @@ func (s *Storage) Download() error {
 	if err := s.VNetStorage.Download(); err != nil {
 		return err
 	}
-	if err := s.EBGPStorage.Download(); err != nil {
+	if err := s.BGPStorage.Download(); err != nil {
 		return err
 	}
 	if err := s.L4LBStorage.Download(); err != nil {

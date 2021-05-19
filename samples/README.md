@@ -43,9 +43,9 @@ Ref | Attribute                              | Default     | Description
 
 ```
 apiVersion: k8s.netris.ai/v1alpha1
-kind: EBGP
+kind: BGP
 metadata:
-  name: my-ebgp
+  name: my-bgp
 spec:
   site: Default                                      # [1]
   softgate: softgate1                                # [2] Ignoring when terminateOnSwitch == true

@@ -10,10 +10,10 @@ resources:
   kind: VNetMeta
   version: v1alpha1
 - group: k8s
-  kind: EBGP
+  kind: BGP
   version: v1alpha1
 - group: k8s
-  kind: EBGPMeta
+  kind: BGPMeta
   version: v1alpha1
 - group: k8s
   kind: L4LB

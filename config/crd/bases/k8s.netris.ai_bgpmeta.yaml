@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: ebgpmeta.k8s.netris.ai
+  name: bgpmeta.k8s.netris.ai
 spec:
   group: k8s.netris.ai
   names:
-    kind: EBGPMeta
-    listKind: EBGPMetaList
-    plural: ebgpmeta
-    singular: ebgpmeta
+    kind: BGPMeta
+    listKind: BGPMetaList
+    plural: bgpmeta
+    singular: bgpmeta
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: EBGPMeta is the Schema for the ebgpmeta API
+      description: BGPMeta is the Schema for the bgpmeta API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -34,20 +34,20 @@ spec:
         metadata:
           type: object
         spec:
-          description: EBGPMetaSpec defines the desired state of EBGPMeta
+          description: BGPMetaSpec defines the desired state of BGPMeta
           properties:
             allowas_in:
               type: integer
             bgp_password:
               type: string
+            bgpGeneration:
+              format: int64
+              type: integer
+            bgpName:
+              type: string
             community:
               type: string
             description:
-              type: string
-            ebgpGeneration:
-              format: int64
-              type: integer
-            ebgpName:
               type: string
             id:
               type: integer
@@ -123,11 +123,11 @@ spec:
               type: integer
           required:
           - allowas_in
+          - bgpGeneration
+          - bgpName
           - bgp_password
           - community
           - description
-          - ebgpGeneration
-          - ebgpName
           - id
           - imported
           - inboundRouteMap
@@ -165,7 +165,7 @@ spec:
           - weight
           type: object
         status:
-          description: EBGPMetaStatus defines the observed state of EBGPMeta
+          description: BGPMetaStatus defines the observed state of BGPMeta
           type: object
       type: object
   version: v1alpha1

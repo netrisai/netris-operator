@@ -23,15 +23,15 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// EBGPMetaSpec defines the desired state of EBGPMeta
-type EBGPMetaSpec struct {
+// BGPMetaSpec defines the desired state of BGPMeta
+type BGPMetaSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Imported         bool   `json:"imported"`
-	Reclaim          bool   `json:"reclaimPolicy"`
-	EBGPCRGeneration int64  `json:"ebgpGeneration"`
-	ID               int    `json:"id"`
-	EBGPName         string `json:"ebgpName"`
+	Imported        bool   `json:"imported"`
+	Reclaim         bool   `json:"reclaimPolicy"`
+	BGPCRGeneration int64  `json:"bgpGeneration"`
+	ID              int    `json:"id"`
+	BGPName         string `json:"bgpName"`
 
 	AllowasIn          int    `json:"allowas_in"`
 	BgpPassword        string `json:"bgp_password"`
@@ -71,32 +71,32 @@ type EBGPMetaSpec struct {
 	Weight             int    `json:"weight"`
 }
 
-// EBGPMetaStatus defines the observed state of EBGPMeta
-type EBGPMetaStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+// BGPMetaStatus defines the observed state of BGPMeta
+type BGPMetaStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// EBGPMeta is the Schema for the ebgpmeta API
-type EBGPMeta struct {
+// BGPMeta is the Schema for the bgpmeta API
+type BGPMeta struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   EBGPMetaSpec   `json:"spec,omitempty"`
-	Status EBGPMetaStatus `json:"status,omitempty"`
+	Spec   BGPMetaSpec   `json:"spec,omitempty"`
+	Status BGPMetaStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// EBGPMetaList contains a list of EBGPMeta
-type EBGPMetaList struct {
+// BGPMetaList contains a list of BGPMeta
+type BGPMetaList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []EBGPMeta `json:"items"`
+	Items           []BGPMeta `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&EBGPMeta{}, &EBGPMetaList{})
+	SchemeBuilder.Register(&BGPMeta{}, &BGPMetaList{})
 }
