@@ -39,7 +39,7 @@ type EBGPSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	Site       string        `json:"site"`
-	Softgate   string        `json:"softgate"`
+	Softgate   string        `json:"softgate,omitempty"`
 	NeighborAS int           `json:"neighborAs"`
 	Transport  EBGPTransport `json:"transport"`
 
@@ -83,7 +83,7 @@ type EBGPMultihop struct {
 type EBGPTransport struct {
 	// +kubebuilder:validation:Enum=port;vnet
 	Type string `json:"type,omitempty"`
-	// +kubebuilder:validation:Pattern=`(^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$)`
+	// +kubebuilder:validation:Pattern=`(^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-z0-9])?(\.[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?)*$)`
 	Name   string `json:"name"`
 	VlanID int    `json:"vlanId,omitempty"`
 }

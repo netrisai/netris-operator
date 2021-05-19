@@ -52,6 +52,7 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 		localPreference = ebgp.Spec.LocalPreference
 	}
 
+	state = ebgp.Spec.State
 	if ebgp.Spec.State == "" {
 		state = "enabled"
 	}
@@ -75,6 +76,9 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 		if port, ok := NStorage.EBGPStorage.FindPort(siteID, ebgp.Spec.Transport.Name); ok {
 			portID = port.PortID
 			vlanID = ebgp.Spec.Transport.VlanID
+			if ebgp.Spec.Transport.VlanID == 0 {
+				vlanID = 1
+			}
 		} else {
 			return ebgpMeta, fmt.Errorf("invalid port '%s'", ebgp.Spec.Transport.Name)
 		}
@@ -95,8 +99,9 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 		reclaim = true
 	}
 
-	_, net, _ := net.ParseCIDR(ebgp.Spec.LocalIP)
-	prefixLength, _ := net.Mask.Size()
+	localIP, cidr, _ := net.ParseCIDR(ebgp.Spec.LocalIP)
+	remoteIP, _, _ := net.ParseCIDR(ebgp.Spec.RemoteIP)
+	prefixLength, _ := cidr.Mask.Size()
 
 	ebgpMeta = &k8sv1alpha1.EBGPMeta{
 		ObjectMeta: metav1.ObjectMeta{
@@ -119,8 +124,8 @@ func (r *EBGPReconciler) EBGPToEBGPMeta(ebgp *k8sv1alpha1.EBGP) (*k8sv1alpha1.EB
 
 			SiteID:            siteID,
 			NeighborAs:        ebgp.Spec.NeighborAS,
-			LocalIP:           ebgp.Spec.LocalIP,
-			RemoteIP:          ebgp.Spec.RemoteIP,
+			LocalIP:           localIP.String(),
+			RemoteIP:          remoteIP.String(),
 			Description:       ebgp.Spec.Description,
 			Status:            state,
 			TerminateOnSwitch: terminateOnSwitch,

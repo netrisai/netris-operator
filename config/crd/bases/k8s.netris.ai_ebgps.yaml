@@ -103,7 +103,7 @@ spec:
               description: EBGPTransport .
               properties:
                 name:
-                  pattern: (^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$)
+                  pattern: (^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-z0-9])?(\.[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?)*$)
                   type: string
                 type:
                   enum:
@@ -122,7 +122,6 @@ spec:
           - neighborAs
           - remoteIP
           - site
-          - softgate
           - transport
           type: object
         status:
