@@ -34,9 +34,9 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	var nfvID int
 	var nfvPortID int
 	var state string
-	terminateOnSwitch := "false"
+	terminateOnSwitch := ""
 
-	originate := "false"
+	originate := ""
 	localPreference := 100
 	if site, ok := NStorage.SitesStorage.FindByName(bgp.Spec.Site); ok {
 		siteID = site.ID
@@ -278,6 +278,103 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPUpdate, er
 	return bgpAdd, nil
 }
 
-func compareBGPMetaAPIEBGP(vnetMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bool {
+func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bool {
+	if apiBGP.AllowasIn != bgpMeta.Spec.AllowasIn {
+		return false
+	}
+	if apiBGP.BgpPassword != bgpMeta.Spec.BgpPassword {
+		return false
+	}
+	if apiBGP.Community != bgpMeta.Spec.Community {
+		return false
+	}
+	if apiBGP.Description != bgpMeta.Spec.Description {
+		return false
+	}
+	if apiBGP.InboundRouteMap != strconv.Itoa(bgpMeta.Spec.InboundRouteMap) {
+		return false
+	}
+	if apiBGP.IPVersion != bgpMeta.Spec.IPVersion {
+		return false
+	}
+	if apiBGP.LocalIP != bgpMeta.Spec.LocalIP {
+		return false
+	}
+	if apiBGP.LocalPreference != bgpMeta.Spec.LocalPreference {
+		return false
+	}
+	if apiBGP.Multihop != bgpMeta.Spec.Multihop {
+		return false
+	}
+	if apiBGP.Name != bgpMeta.Spec.BGPName {
+		return false
+	}
+	if apiBGP.NeighborAddress != bgpMeta.Spec.NeighborAddress {
+		return false
+	}
+	if apiBGP.NeighborAs != bgpMeta.Spec.NeighborAs {
+		return false
+	}
+	// if apiBGP.NfvID != bgpMeta.Spec.NfvID {
+	// 	return false
+	// }
+	// if apiBGP.NfvPortID != bgpMeta.Spec.NfvPortID {
+	// 	return false
+	// }
+	if apiBGP.Originate != bgpMeta.Spec.Originate {
+		return false
+	}
+	if apiBGP.OutboundRouteMap != strconv.Itoa(bgpMeta.Spec.OutboundRouteMap) {
+		return false
+	}
+	if apiBGP.PrefixLength != bgpMeta.Spec.PrefixLength {
+		return false
+	}
+	if apiBGP.PrefixLimit != bgpMeta.Spec.PrefixLimit {
+		return false
+	}
+	if apiBGP.PrefixListInbound != bgpMeta.Spec.PrefixListInbound {
+		return false
+	}
+	if apiBGP.PrefixListOutbound != bgpMeta.Spec.PrefixListOutbound {
+		return false
+	}
+	if apiBGP.PrependInbound != bgpMeta.Spec.PrependInbound {
+		return false
+	}
+	if apiBGP.PrependOutbound != bgpMeta.Spec.PrependInbound {
+		return false
+	}
+	if apiBGP.RemoteIP != bgpMeta.Spec.RemoteIP {
+		return false
+	}
+	if apiBGP.SiteID != bgpMeta.Spec.SiteID {
+		return false
+	}
+	if apiBGP.Status != bgpMeta.Spec.Status {
+		return false
+	}
+	if apiBGP.SwitchPortID != bgpMeta.Spec.SwitchPortID {
+		return false
+	}
+	if apiBGP.TermSwitchID != bgpMeta.Spec.TermSwitchID {
+		return false
+	}
+	if apiBGP.TermSwName != bgpMeta.Spec.TermSwitchName {
+		return false
+	}
+	if apiBGP.TerminateOnSwitch != bgpMeta.Spec.TerminateOnSwitch {
+		return false
+	}
+	if apiBGP.UpdateSource != bgpMeta.Spec.UpdateSource {
+		return false
+	}
+	if apiBGP.Vlan != bgpMeta.Spec.Vlan {
+		return false
+	}
+	if apiBGP.Weight != bgpMeta.Spec.Weight {
+		return false
+	}
+
 	return true
 }
