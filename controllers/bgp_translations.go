@@ -341,9 +341,9 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bo
 	if apiBGP.PrefixLength != bgpMeta.Spec.PrefixLength {
 		return false
 	}
-	if apiBGP.PrefixLimit != bgpMeta.Spec.PrefixLimit {
-		return false
-	}
+	// if apiBGP.PrefixLimit != bgpMeta.Spec.PrefixLimit {
+	// 	return false
+	// }
 	if apiBGP.PrefixListInbound != bgpMeta.Spec.PrefixListInbound {
 		return false
 	}
