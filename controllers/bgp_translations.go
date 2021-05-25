@@ -35,6 +35,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	var nfvPortID int
 	var state string
 	terminateOnSwitch := "no"
+	var termSwitchID int
 
 	originate := ""
 	localPreference := 100
@@ -60,6 +61,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	if !bgp.Spec.TerminateOnSwitch {
 		if softgate, ok := NStorage.BGPStorage.FindOffloaderByName(siteID, bgp.Spec.Softgate); ok {
 			nfvID = softgate.SwitchID
+			termSwitchID = softgate.SwitchID
 			nfvPortID = softgate.OffloadPortID
 		} else {
 			return bgpMeta, fmt.Errorf("invalid softgate '%s'", bgp.Spec.Softgate)
@@ -75,6 +77,9 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	if bgp.Spec.Transport.Type == "port" {
 		if port, ok := NStorage.BGPStorage.FindPort(siteID, bgp.Spec.Transport.Name); ok {
 			portID = port.PortID
+			if bgp.Spec.TerminateOnSwitch {
+				termSwitchID = port.SwitchID
+			}
 			vlanID = bgp.Spec.Transport.VlanID
 			if bgp.Spec.Transport.VlanID == 0 {
 				vlanID = 1
@@ -129,6 +134,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			Description:       bgp.Spec.Description,
 			Status:            state,
 			TerminateOnSwitch: terminateOnSwitch,
+			TermSwitchID:      termSwitchID,
 
 			NeighborAddress: bgp.Spec.Multihop.NeighborAddress,
 			UpdateSource:    bgp.Spec.Multihop.UpdateSource,
