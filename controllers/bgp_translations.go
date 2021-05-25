@@ -34,7 +34,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	var nfvID int
 	var nfvPortID int
 	var state string
-	terminateOnSwitch := ""
+	terminateOnSwitch := "no"
 
 	originate := ""
 	localPreference := 100
@@ -65,7 +65,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			return bgpMeta, fmt.Errorf("invalid softgate '%s'", bgp.Spec.Softgate)
 		}
 	} else {
-		terminateOnSwitch = "true"
+		terminateOnSwitch = "yes"
 	}
 
 	var portID int
