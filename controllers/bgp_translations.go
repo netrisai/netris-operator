@@ -386,6 +386,9 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bo
 	if apiBGP.Weight != bgpMeta.Spec.Weight {
 		return false
 	}
+	if bgpMeta.Spec.RcircuitID > 0 && apiBGP.RcircuitID != bgpMeta.Spec.RcircuitID {
+		return false
+	}
 
 	return true
 }
