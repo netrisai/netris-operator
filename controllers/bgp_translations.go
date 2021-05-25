@@ -371,9 +371,6 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bo
 	if apiBGP.TermSwitchID != bgpMeta.Spec.TermSwitchID {
 		return false
 	}
-	if apiBGP.TermSwName != bgpMeta.Spec.TermSwitchName {
-		return false
-	}
 	if apiBGP.TerminateOnSwitch != bgpMeta.Spec.TerminateOnSwitch {
 		return false
 	}
