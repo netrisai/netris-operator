@@ -51,22 +51,28 @@ type BGPSpec struct {
 	Description string `json:"description,omitempty"`
 
 	// +kubebuilder:validation:Enum=enabled;disabled
-	State              string      `json:"state,omitempty"`
-	TerminateOnSwitch  bool        `json:"terminateOnSwitch,omitempty"`
-	Multihop           BGPMultihop `json:"multihop,omitempty"`
-	BGPPassword        string      `json:"bgpPassword,omitempty"`
-	AllowAsIn          int         `json:"allowAsIn,omitempty"`
-	DefaultOriginate   bool        `json:"defaultOriginate,omitempty"`
-	PrefixInboundMax   int         `json:"prefixInboundMax,omitempty"`
-	InboundRouteMap    string      `json:"inboundRouteMap,omitempty"`
-	OutboundRouteMap   string      `json:"outboundRouteMap,omitempty"`
-	LocalPreference    int         `json:"localPreference,omitempty"`
-	Weight             int         `json:"weight,omitempty"`
-	PrependInbound     int         `json:"prependInbound,omitempty"`
-	PrependOutbound    int         `json:"prependOutbound,omitempty"`
-	PrefixListInbound  []string    `json:"prefixListInbound,omitempty"`
-	PrefixListOutbound []string    `json:"prefixListOutbound,omitempty"`
-	SendBGPCommunity   []string    `json:"sendBGPCommunity,omitempty"`
+	State              string               `json:"state,omitempty"`
+	TerminateOnSwitch  BGPTerminateOnSwitch `json:"terminateOnSwitch,omitempty"`
+	Multihop           BGPMultihop          `json:"multihop,omitempty"`
+	BGPPassword        string               `json:"bgpPassword,omitempty"`
+	AllowAsIn          int                  `json:"allowAsIn,omitempty"`
+	DefaultOriginate   bool                 `json:"defaultOriginate,omitempty"`
+	PrefixInboundMax   int                  `json:"prefixInboundMax,omitempty"`
+	InboundRouteMap    string               `json:"inboundRouteMap,omitempty"`
+	OutboundRouteMap   string               `json:"outboundRouteMap,omitempty"`
+	LocalPreference    int                  `json:"localPreference,omitempty"`
+	Weight             int                  `json:"weight,omitempty"`
+	PrependInbound     int                  `json:"prependInbound,omitempty"`
+	PrependOutbound    int                  `json:"prependOutbound,omitempty"`
+	PrefixListInbound  []string             `json:"prefixListInbound,omitempty"`
+	PrefixListOutbound []string             `json:"prefixListOutbound,omitempty"`
+	SendBGPCommunity   []string             `json:"sendBGPCommunity,omitempty"`
+}
+
+// BGPTerminateOnSwitch .
+type BGPTerminateOnSwitch struct {
+	Enabled    bool   `json:"enabled"`
+	SwitchName string `json:"switchName,omitempty"`
 }
 
 // BGPMultihop .

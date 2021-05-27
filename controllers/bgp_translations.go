@@ -58,10 +58,10 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		state = "enabled"
 	}
 
-	if !bgp.Spec.TerminateOnSwitch {
+	if !bgp.Spec.TerminateOnSwitch.Enabled {
 		if softgate, ok := NStorage.BGPStorage.FindOffloaderByName(siteID, bgp.Spec.Softgate); ok {
 			nfvID = softgate.SwitchID
-			termSwitchID = softgate.SwitchID
+			termSwitchID = nfvID
 			nfvPortID = softgate.OffloadPortID
 		} else {
 			return bgpMeta, fmt.Errorf("invalid softgate '%s'", bgp.Spec.Softgate)
@@ -77,7 +77,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	if bgp.Spec.Transport.Type == "port" {
 		if port, ok := NStorage.BGPStorage.FindPort(siteID, bgp.Spec.Transport.Name); ok {
 			portID = port.PortID
-			if bgp.Spec.TerminateOnSwitch {
+			if bgp.Spec.TerminateOnSwitch.Enabled {
 				termSwitchID = port.SwitchID
 			}
 			vlanID = bgp.Spec.Transport.VlanID
@@ -90,6 +90,13 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	} else {
 		if vnet, ok := NStorage.BGPStorage.FindVNetByName(bgp.Spec.Transport.Name); ok {
 			vnetID = vnet.ID
+			if bgp.Spec.TerminateOnSwitch.Enabled {
+				if sw, ok := NStorage.BGPStorage.FindSwitchByName(siteID, bgp.Spec.TerminateOnSwitch.SwitchName); ok {
+					termSwitchID = sw.SwitchID
+				} else {
+					return bgpMeta, fmt.Errorf("invalid TerminateOnSwitchName '%s'", bgp.Spec.TerminateOnSwitch.SwitchName)
+				}
+			}
 		} else {
 			return bgpMeta, fmt.Errorf("invalid vnet '%s'", bgp.Spec.Transport.Name)
 		}

@@ -98,7 +98,15 @@ spec:
               - disabled
               type: string
             terminateOnSwitch:
-              type: boolean
+              description: BGPTerminateOnSwitch .
+              properties:
+                enabled:
+                  type: boolean
+                switchName:
+                  type: string
+              required:
+              - enabled
+              type: object
             transport:
               description: BGPTransport .
               properties:
