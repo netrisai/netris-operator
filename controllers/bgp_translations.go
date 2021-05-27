@@ -30,12 +30,19 @@ import (
 // BGPToBGPMeta converts the BGP resource to BGPMeta type and used for add the BGP for Netris API.
 func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta, error) {
 	bgpMeta := &k8sv1alpha1.BGPMeta{}
-	var siteID int
-	var nfvID int
-	var nfvPortID int
-	var state string
-	terminateOnSwitch := "no"
-	var termSwitchID int
+	var (
+		vlanID            int
+		siteID            int
+		nfvID             int
+		nfvPortID         int
+		state             string
+		terminateOnSwitch = "no"
+		termSwitchID      int
+		portID            int
+		vnetID            int
+		imported          = false
+		reclaim           = false
+	)
 
 	originate := ""
 	localPreference := 100
@@ -47,6 +54,12 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 
 	if bgp.Spec.DefaultOriginate {
 		originate = "true"
+	}
+
+	if bgp.Spec.Transport.VlanID > 0 {
+		vlanID = bgp.Spec.Transport.VlanID
+	} else {
+		vlanID = 1
 	}
 
 	if bgp.Spec.LocalPreference > 0 {
@@ -70,10 +83,6 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		terminateOnSwitch = "yes"
 	}
 
-	var portID int
-	var vlanID int
-	var vnetID int
-
 	if bgp.Spec.Transport.Type == "port" {
 		if port, ok := NStorage.BGPStorage.FindPort(siteID, bgp.Spec.Transport.Name); ok {
 			portID = port.PortID
@@ -88,6 +97,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			return bgpMeta, fmt.Errorf("invalid port '%s'", bgp.Spec.Transport.Name)
 		}
 	} else {
+		vlanID = 1
 		if vnet, ok := NStorage.BGPStorage.FindVNetByName(bgp.Spec.Transport.Name); ok {
 			vnetID = vnet.ID
 			if bgp.Spec.TerminateOnSwitch.Enabled {
@@ -102,8 +112,6 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		}
 	}
 
-	imported := false
-	reclaim := false
 	if i, ok := bgp.GetAnnotations()["resource.k8s.netris.ai/import"]; ok && i == "true" {
 		imported = true
 	}
