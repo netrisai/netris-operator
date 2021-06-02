@@ -54,7 +54,13 @@ func (u *uniReconciler) patchVNetStatus(vnet *k8sv1alpha1.VNet, status, message 
 func (u *uniReconciler) patchBGPStatus(bgp *k8sv1alpha1.BGP, status, message string) (ctrl.Result, error) {
 	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
 
+	state := "enabled"
+	if len(bgp.Spec.State) > 0 {
+		state = bgp.Spec.State
+	}
+
 	bgp.Status.Status = status
+	bgp.Status.State = state
 	bgp.Status.Message = message
 
 	err := u.Status().Patch(context.Background(), bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})

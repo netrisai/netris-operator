@@ -8,6 +8,44 @@ metadata:
   creationTimestamp: null
   name: bgps.k8s.netris.ai
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.state
+    name: State
+    type: string
+  - JSONPath: .status.bgpstate
+    name: BGP State
+    type: string
+  - JSONPath: .status.portstate
+    name: Port State
+    type: string
+  - JSONPath: .spec.neighborAs
+    name: NeighborAS
+    type: string
+  - JSONPath: .spec.localIP
+    name: Local address
+    type: string
+  - JSONPath: .spec.remoteIP
+    name: Remote address
+    type: string
+  - JSONPath: .spec.transport.name
+    name: Port
+    priority: 1
+    type: string
+  - JSONPath: .status.vlanID
+    name: VLANID
+    priority: 1
+    type: string
+  - JSONPath: .status.terminateOnSwitch
+    name: TerminatedOn
+    priority: 1
+    type: string
+  - JSONPath: .status.modified
+    name: Modified
+    priority: 1
+    type: date
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: k8s.netris.ai
   names:
     kind: BGP
@@ -135,12 +173,22 @@ spec:
         status:
           description: BGPStatus defines the observed state of BGP
           properties:
+            bgpstate:
+              type: string
             message:
               type: string
             modified:
               format: date-time
               type: string
+            portstate:
+              type: string
+            state:
+              type: string
             status:
+              type: string
+            terminateOnSwitch:
+              type: string
+            vlanID:
               type: string
           type: object
       type: object

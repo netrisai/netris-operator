@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -91,6 +92,15 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				debugLogger.Info("Imported yaml mode. BGP found")
 				bgpMeta.Spec.ID = bgp.ID
 				bgpCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(bgp.ModifiedDate/1000), 0))
+				bgpCR.Status.BGPState = fmt.Sprintf("bgp: %s; prefix: %s; time: %s", bgp.BgpState, bgp.BgpPrefixes, bgp.BgpUptime)
+				bgpCR.Status.PortState = bgp.PortStatus
+				bgpCR.Status.TerminateOnSwitch = bgp.TermSwName
+				if bgp.Vlan > 1 {
+					bgpCR.Status.VLANID = strconv.Itoa(bgp.Vlan)
+				} else {
+					bgpCR.Status.VLANID = "untagged"
+				}
+
 				err := r.Patch(context.Background(), bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch bgpmeta.Spec.ID} %s", err), "")
@@ -113,6 +123,14 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	} else {
 		if apiBGP, ok := NStorage.BGPStorage.FindByID(bgpMeta.Spec.ID); ok {
 			bgpCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiBGP.ModifiedDate/1000), 0))
+			bgpCR.Status.BGPState = fmt.Sprintf("bgp: %s; prefix: %s; time: %s", apiBGP.BgpState, apiBGP.BgpPrefixes, apiBGP.BgpUptime)
+			bgpCR.Status.PortState = apiBGP.PortStatus
+			bgpCR.Status.TerminateOnSwitch = apiBGP.TermSwName
+			if apiBGP.Vlan > 1 {
+				bgpCR.Status.VLANID = strconv.Itoa(apiBGP.Vlan)
+			} else {
+				bgpCR.Status.VLANID = "untagged"
+			}
 			debugLogger.Info("Comparing BGPMeta with Netris BGP")
 			if ok := compareBGPMetaAPIEBGP(bgpMeta, apiBGP); ok {
 				debugLogger.Info("Nothing Changed")

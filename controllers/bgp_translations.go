@@ -35,7 +35,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		siteID            int
 		nfvID             int
 		nfvPortID         int
-		state             string
+		state             = "enabled"
 		terminateOnSwitch = "no"
 		termSwitchID      int
 		portID            int
@@ -66,9 +66,8 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		localPreference = bgp.Spec.LocalPreference
 	}
 
-	state = bgp.Spec.State
-	if bgp.Spec.State == "" {
-		state = "enabled"
+	if len(bgp.Spec.State) > 0 {
+		state = bgp.Spec.State
 	}
 
 	if !bgp.Spec.TerminateOnSwitch.Enabled {

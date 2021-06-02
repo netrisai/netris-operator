@@ -28,9 +28,14 @@ type BGPStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Status       string      `json:"status,omitempty"`
-	ModifiedDate metav1.Time `json:"modified,omitempty"`
-	Message      string      `json:"message,omitempty"`
+	Status            string      `json:"status,omitempty"`
+	State             string      `json:"state,omitempty"`
+	ModifiedDate      metav1.Time `json:"modified,omitempty"`
+	Message           string      `json:"message,omitempty"`
+	BGPState          string      `json:"bgpstate,omitempty"`
+	PortState         string      `json:"portstate,omitempty"`
+	TerminateOnSwitch string      `json:"terminateOnSwitch,omitempty"`
+	VLANID            string      `json:"vlanID,omitempty"`
 }
 
 // BGPSpec defines the desired state of BGP
@@ -96,6 +101,17 @@ type BGPTransport struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+// +kubebuilder:printcolumn:name="BGP State",type=string,JSONPath=`.status.bgpstate`
+// +kubebuilder:printcolumn:name="Port State",type=string,JSONPath=`.status.portstate`
+// +kubebuilder:printcolumn:name="NeighborAS",type=string,JSONPath=`.spec.neighborAs`
+// +kubebuilder:printcolumn:name="Local address",type=string,JSONPath=`.spec.localIP`
+// +kubebuilder:printcolumn:name="Remote address",type=string,JSONPath=`.spec.remoteIP`
+// +kubebuilder:printcolumn:name="Port",type=string,JSONPath=`.spec.transport.name`,priority=1
+// +kubebuilder:printcolumn:name="VLANID",type=string,JSONPath=`.status.vlanID`,priority=1
+// +kubebuilder:printcolumn:name="TerminatedOn",type=string,JSONPath=`.status.terminateOnSwitch`,priority=1
+// +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.status.modified`,priority=1
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // BGP is the Schema for the bgps API
 type BGP struct {
