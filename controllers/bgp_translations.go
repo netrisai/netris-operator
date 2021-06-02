@@ -31,7 +31,7 @@ import (
 func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta, error) {
 	bgpMeta := &k8sv1alpha1.BGPMeta{}
 	var (
-		vlanID            int
+		vlanID            = 1
 		siteID            int
 		nfvID             int
 		nfvPortID         int
@@ -56,10 +56,8 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		originate = "true"
 	}
 
-	if bgp.Spec.Transport.VlanID > 0 {
+	if bgp.Spec.Transport.VlanID > 1 {
 		vlanID = bgp.Spec.Transport.VlanID
-	} else {
-		vlanID = 1
 	}
 
 	if bgp.Spec.LocalPreference > 0 {
@@ -87,10 +85,6 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			portID = port.PortID
 			if bgp.Spec.TerminateOnSwitch.Enabled {
 				termSwitchID = port.SwitchID
-			}
-			vlanID = bgp.Spec.Transport.VlanID
-			if bgp.Spec.Transport.VlanID == 0 {
-				vlanID = 1
 			}
 		} else {
 			return bgpMeta, fmt.Errorf("invalid port '%s'", bgp.Spec.Transport.Name)
