@@ -42,6 +42,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		vnetID            int
 		imported          = false
 		reclaim           = false
+		ipVersion         = "ipv6"
 	)
 
 	originate := ""
@@ -115,6 +116,9 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	localIP, cidr, _ := net.ParseCIDR(bgp.Spec.LocalIP)
 	remoteIP, _, _ := net.ParseCIDR(bgp.Spec.RemoteIP)
 	prefixLength, _ := cidr.Mask.Size()
+	if localIP.To4() != nil {
+		ipVersion = "ipv4"
+	}
 
 	bgpMeta = &k8sv1alpha1.BGPMeta{
 		ObjectMeta: metav1.ObjectMeta{
@@ -152,6 +156,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			AllowasIn:          bgp.Spec.AllowAsIn,
 			Originate:          originate,
 			PrefixLimit:        bgp.Spec.PrefixInboundMax, // ?
+			IPVersion:          ipVersion,
 			InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
 			LocalPreference:    localPreference,
 			Weight:             bgp.Spec.Weight,
