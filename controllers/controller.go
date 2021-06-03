@@ -51,13 +51,19 @@ func (u *uniReconciler) patchVNetStatus(vnet *k8sv1alpha1.VNet, status, message 
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
-func (u *uniReconciler) patchEBGPStatus(ebgp *k8sv1alpha1.EBGP, status, message string) (ctrl.Result, error) {
+func (u *uniReconciler) patchBGPStatus(bgp *k8sv1alpha1.BGP, status, message string) (ctrl.Result, error) {
 	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
 
-	ebgp.Status.Status = status
-	ebgp.Status.Message = message
+	state := "enabled"
+	if len(bgp.Spec.State) > 0 {
+		state = bgp.Spec.State
+	}
 
-	err := u.Status().Patch(context.Background(), ebgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	bgp.Status.Status = status
+	bgp.Status.State = state
+	bgp.Status.Message = message
+
+	err := u.Status().Patch(context.Background(), bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}

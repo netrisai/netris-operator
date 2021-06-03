@@ -1,13 +1,13 @@
-# permissions for end users to edit ebgpmeta.
+# permissions for end users to edit bgps.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ebgpmeta-editor-role
+  name: bgp-editor-role
 rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgpmeta
+  - bgps
   verbs:
   - create
   - delete
@@ -19,6 +19,6 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgpmeta/status
+  - bgps/status
   verbs:
   - get

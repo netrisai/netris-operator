@@ -90,7 +90,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if vnetMeta.Spec.Imported {
 			logger.Info("Importing vnet")
 			debugLogger.Info("Imported yaml mode. Finding VNet by name")
-			if vnet, ok := NStorage.VNetStorage.findByName(vnetMeta.Spec.VnetName); ok {
+			if vnet, ok := NStorage.VNetStorage.FindByName(vnetMeta.Spec.VnetName); ok {
 				debugLogger.Info("Imported yaml mode. Vnet found")
 				vnetID, err := strconv.Atoi(vnet.ID)
 				if err != nil {

@@ -21,6 +21,7 @@ COPY api/ api/
 COPY controllers/ controllers/
 COPY configloader/ configloader/
 COPY lbwatcher/ lbwatcher/
+COPY netrisstorage/ netrisstorage/
 
 # Build
 RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -a -o manager main.go

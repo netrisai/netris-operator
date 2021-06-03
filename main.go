@@ -92,20 +92,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.EBGPReconciler{
+	if err = (&controllers.BGPReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("EBGP"),
+		Log:    ctrl.Log.WithName("BGP"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "EBGP")
+		setupLog.Error(err, "unable to create controller", "controller", "BGP")
 		os.Exit(1)
 	}
-	if err = (&controllers.EBGPMetaReconciler{
+	if err = (&controllers.BGPMetaReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("EBGPMeta"),
+		Log:    ctrl.Log.WithName("BGPMeta"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "EBGPMeta")
+		setupLog.Error(err, "unable to create controller", "controller", "BGPMeta")
 		os.Exit(1)
 	}
 	if err = (&controllers.L4LBReconciler{

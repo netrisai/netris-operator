@@ -89,7 +89,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if l4lbMeta.Spec.Imported {
 			logger.Info("Importing l4lb")
 			debugLogger.Info("Imported yaml mode. Finding L4LB by name")
-			if l4lb, ok := NStorage.L4LBStorage.findByName(l4lbMeta.Spec.L4LBName); ok {
+			if l4lb, ok := NStorage.L4LBStorage.FindByName(l4lbMeta.Spec.L4LBName); ok {
 				debugLogger.Info("Imported yaml mode. L4LB found")
 				l4lbMeta.Spec.ID = l4lb.ID
 				l4lbMeta.Spec.IP = l4lb.IP

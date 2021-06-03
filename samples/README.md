@@ -39,13 +39,13 @@ Ref | Attribute                              | Default     | Description
 [10] | sites[n].switchPorts[n].state         | active      | Port state. Allowed values: `active` or `disable`. 
 
 
-### E-BGP Attributes
+### BGP Attributes
 
 ```
 apiVersion: k8s.netris.ai/v1alpha1
-kind: EBGP
+kind: BGP
 metadata:
-  name: my-ebgp
+  name: my-bgp
 spec:
   site: Default                                      # [1]
   softgate: softgate1                                # [2] Ignoring when terminateOnSwitch == true
@@ -58,27 +58,29 @@ spec:
   remoteIP: 172.16.0.2/30                            # [9]
   description: someDesc                              # [10] optional
   state: enabled                                     # [11] optional
-  terminateOnSwitch: false                           # [12] optional
-  multihop:                                          # [13] optional
-    neighborAddress: 8.8.8.8                         # [14] optional
-    updateSource: 10.254.97.33                       # [15] optional
-    hops: 5                                          # [16] optional
-  bgpPassword: somestrongpass                        # [17] optional
-  allowAsIn: 5                                       # [18] optional
-  defaultOriginate: false                            # [19] optional
-  prefixInboundMax: 10000                            # [20] optional
-  inboundRouteMap: my-in-rm                          # [21] optional
-  outboundRouteMap: my-out-rm                        # [22] optional
-  localPreference: 100                               # [23] optional. Ignoring when *RouteMap defined
-  weight: 0                                          # [24] optional. Ignoring when *RouteMap defined
-  prependInbound: 2                                  # [25] optional. Ignoring when *RouteMap defined
-  prependOutbound: 1                                 # [26] optional. Ignoring when *RouteMap defined
-  prefixListInbound:                                 # [27] optional. Ignoring when *RouteMap defined
+  terminateOnSwitch:
+    enabled: false                                   # [12] optional
+    switchName: spine1                               # [13] optional. Using when transport.type == vnet AND terminateOnSwitch.enabled == true
+  multihop:                                          # [14] optional
+    neighborAddress: 8.8.8.8                         # [15] optional
+    updateSource: 10.254.97.33                       # [16] optional
+    hops: 5                                          # [17] optional
+  bgpPassword: somestrongpass                        # [18] optional
+  allowAsIn: 5                                       # [19] optional
+  defaultOriginate: false                            # [20] optional
+  prefixInboundMax: 10000                            # [21] optional
+  inboundRouteMap: my-in-rm                          # [22] optional
+  outboundRouteMap: my-out-rm                        # [23] optional
+  localPreference: 100                               # [24] optional. Ignoring when *RouteMap defined
+  weight: 0                                          # [25] optional. Ignoring when *RouteMap defined
+  prependInbound: 2                                  # [26] optional. Ignoring when *RouteMap defined
+  prependOutbound: 1                                 # [27] optional. Ignoring when *RouteMap defined
+  prefixListInbound:                                 # [28] optional. Ignoring when *RouteMap defined
     - deny 127.0.0.0/8 le 32
     - permit 0.0.0.0/0 le 24
-  prefixListOutbound:                                # [28] optional. Ignoring when *RouteMap defined
+  prefixListOutbound:                                # [29] optional. Ignoring when *RouteMap defined
     - permit 192.168.0.0/23
-  sendBGPCommunity:                                  # [29] optional. Ignoring when *RouteMap defined
+  sendBGPCommunity:                                  # [30] optional. Ignoring when *RouteMap defined
     - 65501:777
     - 65501:779
 ```
@@ -96,24 +98,25 @@ Ref | Attribute                              | Default     | Description
 [9] | remoteIP                               | ""          | BGP session remote ip
 [10]| description                            | ""          | BGP session description
 [11]| state                                  | enabled     | Possible values: enabled/disabled; enabled - initiating and waiting for BGP connections, disabled - disable Layer-2 tunnel and Layer-3 address.
-[12]| terminateOnSwitch                      | false       | Terminate Layer-3 and BGP session directly on the physical spine or border switch. Available for BGP sessions limited to 1000 prefixes or less.
-[13]| multihop                               | {}          | Multihop BGP session configurations
-[14]| multihop.neighborAddress               | ""          | -
-[15]| multihop.updateSource                  | ""          | -
-[16]| multihop.hops                          | 0           | -
-[17]| bgpPassword                            | ""          | BGP session password
-[18]| allowAsIn                              | 0           | Optionally allow number of occurrences of the own AS number in received prefix AS-path.
-[19]| defaultOriginate                       | false       | Originate default route to current neighbor.
-[20]| prefixInboundMax                       | 0           | BGP session will be terminated if neighbor advertises more prefixes than defined.
-[21]| inboundRouteMap                        | ""          | Reference to route-map resource.
-[22]| outboundRouteMap                       | ""          | Reference to route-map resource. 
-[23]| localPreference                        | 100         | -
-[24]| weight                                 | 0           | -
-[25]| prependInbound                         | 0           | Number of times to prepend self AS to as-path of received prefix advertisements.
-[26]| prependOutbound                        | 0           | Number of times to prepend self AS to as-path being advertised to neighbors.
-[27]| prefixListInbound                      | []          | -
-[28]| prefixListOutbound                     | []          | Define outbound prefix list, if not defined autogenerated prefix list will apply which will permit defined allocations and assignments, and will deny all private addresses.
-[29]| sendBGPCommunity                       | []          | Send BGP Community Unconditionally advertise defined list of BGP communities towards BGP neighbor. Format: AA:NN Community number in AA:NN format (where AA and NN are (0-65535)) or local-AS|no-advertise|no-export|internet or additive
+[12]| terminateOnSwitch.enabled              | false       | Terminate Layer-3 and BGP session directly on the physical spine or border switch. Available for BGP sessions limited to 1000 prefixes or less.
+[13]| terminateOnSwitch.switchName           | ""          | The name of the switch on which the BGP session should be terminated. Using when transport.type == vnet AND terminateOnSwitch.enabled == true
+[14]| multihop                               | {}          | Multihop BGP session configurations
+[15]| multihop.neighborAddress               | ""          | -
+[16]| multihop.updateSource                  | ""          | -
+[17]| multihop.hops                          | 0           | -
+[18]| bgpPassword                            | ""          | BGP session password
+[19]| allowAsIn                              | 0           | Optionally allow number of occurrences of the own AS number in received prefix AS-path.
+[20]| defaultOriginate                       | false       | Originate default route to current neighbor.
+[21]| prefixInboundMax                       | 0           | BGP session will be terminated if neighbor advertises more prefixes than defined.
+[22]| inboundRouteMap                        | ""          | Reference to route-map resource.
+[23]| outboundRouteMap                       | ""          | Reference to route-map resource. 
+[24]| localPreference                        | 100         | -
+[25]| weight                                 | 0           | -
+[26]| prependInbound                         | 0           | Number of times to prepend self AS to as-path of received prefix advertisements.
+[27]| prependOutbound                        | 0           | Number of times to prepend self AS to as-path being advertised to neighbors.
+[28]| prefixListInbound                      | []          | -
+[29]| prefixListOutbound                     | []          | Define outbound prefix list, if not defined autogenerated prefix list will apply which will permit defined allocations and assignments, and will deny all private addresses.
+[30]| sendBGPCommunity                       | []          | Send BGP Community Unconditionally advertise defined list of BGP communities towards BGP neighbor. Format: AA:NN Community number in AA:NN format (where AA and NN are (0-65535)) or local-AS|no-advertise|no-export|internet or additive
 
 
 ### L4LB Attributes

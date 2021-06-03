@@ -1,13 +1,13 @@
-# permissions for end users to view ebgpmeta.
+# permissions for end users to view bgpmeta.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ebgpmeta-viewer-role
+  name: bgpmeta-viewer-role
 rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgpmeta
+  - bgpmeta
   verbs:
   - get
   - list
@@ -15,6 +15,6 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgpmeta/status
+  - bgpmeta/status
   verbs:
   - get

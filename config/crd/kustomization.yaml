@@ -4,8 +4,8 @@
 resources:
 - bases/k8s.netris.ai_vnets.yaml
 - bases/k8s.netris.ai_vnetmeta.yaml
-- bases/k8s.netris.ai_ebgps.yaml
-- bases/k8s.netris.ai_ebgpmeta.yaml
+- bases/k8s.netris.ai_bgps.yaml
+- bases/k8s.netris.ai_bgpmeta.yaml
 - bases/k8s.netris.ai_l4lbs.yaml
 - bases/k8s.netris.ai_l4lbmeta.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
@@ -15,8 +15,8 @@ patchesStrategicMerge:
 # patches here are for enabling the conversion webhook for each CRD
 #- patches/webhook_in_vnets.yaml
 #- patches/webhook_in_vnetmeta.yaml
-#- patches/webhook_in_ebgps.yaml
-#- patches/webhook_in_ebgpmeta.yaml
+#- patches/webhook_in_bgps.yaml
+#- patches/webhook_in_bgpmeta.yaml
 #- patches/webhook_in_l4lbs.yaml
 #- patches/webhook_in_l4lbmeta.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
@@ -25,8 +25,8 @@ patchesStrategicMerge:
 # patches here are for enabling the CA injection for each CRD
 #- patches/cainjection_in_vnets.yaml
 #- patches/cainjection_in_vnetmeta.yaml
-#- patches/cainjection_in_ebgps.yaml
-#- patches/cainjection_in_ebgpmeta.yaml
+#- patches/cainjection_in_bgps.yaml
+#- patches/cainjection_in_bgpmeta.yaml
 #- patches/cainjection_in_l4lbs.yaml
 #- patches/cainjection_in_l4lbmeta.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch

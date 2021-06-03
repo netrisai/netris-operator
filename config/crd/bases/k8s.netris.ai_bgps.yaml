@@ -6,20 +6,58 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: ebgps.k8s.netris.ai
+  name: bgps.k8s.netris.ai
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.state
+    name: State
+    type: string
+  - JSONPath: .status.bgpstate
+    name: BGP State
+    type: string
+  - JSONPath: .status.portstate
+    name: Port State
+    type: string
+  - JSONPath: .spec.neighborAs
+    name: NeighborAS
+    type: string
+  - JSONPath: .spec.localIP
+    name: Local address
+    type: string
+  - JSONPath: .spec.remoteIP
+    name: Remote address
+    type: string
+  - JSONPath: .spec.transport.name
+    name: Port
+    priority: 1
+    type: string
+  - JSONPath: .status.vlanID
+    name: VLANID
+    priority: 1
+    type: string
+  - JSONPath: .status.terminateOnSwitch
+    name: TerminatedOn
+    priority: 1
+    type: string
+  - JSONPath: .status.modified
+    name: Modified
+    priority: 1
+    type: date
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: k8s.netris.ai
   names:
-    kind: EBGP
-    listKind: EBGPList
-    plural: ebgps
-    singular: ebgp
+    kind: BGP
+    listKind: BGPList
+    plural: bgps
+    singular: bgp
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: EBGP is the Schema for the ebgps API
+      description: BGP is the Schema for the bgps API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -34,7 +72,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: EBGPSpec defines the desired state of EBGP
+          description: BGPSpec defines the desired state of BGP
           properties:
             allowAsIn:
               type: integer
@@ -52,7 +90,7 @@ spec:
             localPreference:
               type: integer
             multihop:
-              description: EBGPMultihop .
+              description: BGPMultihop .
               properties:
                 hops:
                   type: integer
@@ -98,12 +136,20 @@ spec:
               - disabled
               type: string
             terminateOnSwitch:
-              type: boolean
+              description: BGPTerminateOnSwitch .
+              properties:
+                enabled:
+                  type: boolean
+                switchName:
+                  type: string
+              required:
+              - enabled
+              type: object
             transport:
-              description: EBGPTransport .
+              description: BGPTransport .
               properties:
                 name:
-                  pattern: (^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$)
+                  pattern: (^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-z0-9])?(\.[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?)*$)
                   type: string
                 type:
                   enum:
@@ -122,15 +168,27 @@ spec:
           - neighborAs
           - remoteIP
           - site
-          - softgate
           - transport
           type: object
         status:
-          description: EBGPStatus defines the observed state of EBGP
+          description: BGPStatus defines the observed state of BGP
           properties:
+            bgpstate:
+              type: string
             message:
               type: string
+            modified:
+              format: date-time
+              type: string
+            portstate:
+              type: string
+            state:
+              type: string
             status:
+              type: string
+            terminateOnSwitch:
+              type: string
+            vlanID:
               type: string
           type: object
       type: object

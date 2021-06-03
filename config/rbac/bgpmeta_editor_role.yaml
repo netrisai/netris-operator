@@ -1,20 +1,24 @@
-# permissions for end users to view ebgps.
+# permissions for end users to edit bgpmeta.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ebgp-viewer-role
+  name: bgpmeta-editor-role
 rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgps
+  - bgpmeta
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - k8s.netris.ai
   resources:
-  - ebgps/status
+  - bgpmeta/status
   verbs:
   - get
