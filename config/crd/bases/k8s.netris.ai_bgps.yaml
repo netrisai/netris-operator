@@ -28,7 +28,7 @@ spec:
     name: Remote address
     type: string
   - JSONPath: .spec.transport.name
-    name: Port
+    name: Port/Vnet
     priority: 1
     type: string
   - JSONPath: .status.vlanID

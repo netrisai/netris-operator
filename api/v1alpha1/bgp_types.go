@@ -107,7 +107,7 @@ type BGPTransport struct {
 // +kubebuilder:printcolumn:name="Neighbor AS",type=string,JSONPath=`.spec.neighborAs`
 // +kubebuilder:printcolumn:name="Local address",type=string,JSONPath=`.spec.localIP`
 // +kubebuilder:printcolumn:name="Remote address",type=string,JSONPath=`.spec.remoteIP`
-// +kubebuilder:printcolumn:name="Port",type=string,JSONPath=`.spec.transport.name`,priority=1
+// +kubebuilder:printcolumn:name="Port/Vnet",type=string,JSONPath=`.spec.transport.name`,priority=1
 // +kubebuilder:printcolumn:name="VLANID",type=string,JSONPath=`.status.vlanID`,priority=1
 // +kubebuilder:printcolumn:name="Terminated On",type=string,JSONPath=`.status.terminateOnSwitch`,priority=1
 // +kubebuilder:printcolumn:name="Modified",type=date,JSONPath=`.status.modified`,priority=1
