@@ -11,7 +11,7 @@ All resources are included in a single YAML manifest file:
 1) Install the CustomResourceDefinitions and netris-operator itself:
 
 ```
-kubectl apply -f https://github.com/netrisai/netris-operator/releases/download/v0.4.0/netris-operator.yaml
+kubectl apply -f https://github.com/netrisai/netris-operator/releases/download/v0.4.1/netris-operator.yaml
 ```
 
 
