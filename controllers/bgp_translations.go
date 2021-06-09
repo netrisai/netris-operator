@@ -45,7 +45,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		ipVersion         = "ipv6"
 	)
 
-	originate := ""
+	originate := "false"
 	localPreference := 100
 	if site, ok := NStorage.SitesStorage.FindByName(bgp.Spec.Site); ok {
 		siteID = site.ID
