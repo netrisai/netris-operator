@@ -148,7 +148,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			TerminateOnSwitch: terminateOnSwitch,
 			TermSwitchID:      termSwitchID,
 
-			NeighborAddress: bgp.Spec.Multihop.NeighborAddress,
+			NeighborAddress: stringOrNull(bgp.Spec.Multihop.NeighborAddress),
 			UpdateSource:    bgp.Spec.Multihop.UpdateSource,
 			Multihop:        bgp.Spec.Multihop.Hops,
 
@@ -328,7 +328,7 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bo
 	if apiBGP.Name != bgpMeta.Spec.BGPName {
 		return false
 	}
-	if apiBGP.NeighborAddress != bgpMeta.Spec.NeighborAddress {
+	if &apiBGP.NeighborAddress != bgpMeta.Spec.NeighborAddress {
 		return false
 	}
 	if apiBGP.NeighborAs != bgpMeta.Spec.NeighborAs {
