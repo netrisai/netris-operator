@@ -45,7 +45,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		ipVersion         = "ipv6"
 	)
 
-	originate := "false"
+	originate := "disabled"
 	localPreference := 100
 	if site, ok := NStorage.SitesStorage.FindByName(bgp.Spec.Site); ok {
 		siteID = site.ID
@@ -54,7 +54,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	}
 
 	if bgp.Spec.DefaultOriginate {
-		originate = "true"
+		originate = "enabled"
 	}
 
 	if bgp.Spec.Transport.VlanID > 1 {
@@ -274,7 +274,7 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPUpdate, er
 		Originate:          bgpMeta.Spec.Originate,
 		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
 		PrefixLength:       bgpMeta.Spec.PrefixLength,
-		PrefixLimit:        bgpMeta.Spec.PrefixLimit,
+		PrefixLimit:        strconv.Itoa(bgpMeta.Spec.PrefixLimit),
 		PrefixListInbound:  bgpMeta.Spec.PrefixListInbound,
 		PrefixListOutbound: bgpMeta.Spec.PrefixListOutbound,
 		PrependInbound:     bgpMeta.Spec.PrependInbound,
