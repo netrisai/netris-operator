@@ -148,7 +148,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			TerminateOnSwitch: terminateOnSwitch,
 			TermSwitchID:      termSwitchID,
 
-			NeighborAddress: stringOrNull(bgp.Spec.Multihop.NeighborAddress),
+			NeighborAddress: bgp.Spec.Multihop.NeighborAddress,
 			UpdateSource:    bgp.Spec.Multihop.UpdateSource,
 			Multihop:        bgp.Spec.Multihop.Hops,
 
@@ -223,7 +223,7 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPAdd, error) {
 		LocalPreference:    bgpMeta.Spec.LocalPreference,
 		Multihop:           bgpMeta.Spec.Multihop,
 		Name:               bgpMeta.Spec.BGPName,
-		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
+		NeighborAddress:    stringOrNull(bgpMeta.Spec.NeighborAddress),
 		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
 		NfvID:              bgpMeta.Spec.NfvID,
 		NfvPortID:          bgpMeta.Spec.NfvPortID,
@@ -267,7 +267,7 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPUpdate, er
 		LocalPreference:    bgpMeta.Spec.LocalPreference,
 		Multihop:           bgpMeta.Spec.Multihop,
 		Name:               bgpMeta.Spec.BGPName,
-		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
+		NeighborAddress:    stringOrNull(bgpMeta.Spec.NeighborAddress),
 		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
 		NfvID:              bgpMeta.Spec.NfvID,
 		NfvPortID:          bgpMeta.Spec.NfvPortID,
@@ -328,7 +328,7 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bo
 	if apiBGP.Name != bgpMeta.Spec.BGPName {
 		return false
 	}
-	if &apiBGP.NeighborAddress != bgpMeta.Spec.NeighborAddress {
+	if apiBGP.NeighborAddress != bgpMeta.Spec.NeighborAddress {
 		return false
 	}
 	if apiBGP.NeighborAs != bgpMeta.Spec.NeighborAs {
