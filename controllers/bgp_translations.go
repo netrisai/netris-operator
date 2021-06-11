@@ -335,8 +335,11 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bo
 		return false
 	}
 
+	if bgpMeta.Spec.TerminateOnSwitch != apiBGP.TerminateOnSwitch {
+		return false
+	}
+
 	if bgpMeta.Spec.TerminateOnSwitch != "yes" && bgpMeta.Spec.NfvID != apiBGP.TermSwitchID {
-		fmt.Println("TermSwitchID")
 		return false
 	}
 	// if apiBGP.NfvID != bgpMeta.Spec.NfvID {
