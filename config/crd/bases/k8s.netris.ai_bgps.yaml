@@ -19,7 +19,7 @@ spec:
     name: Port State
     type: string
   - JSONPath: .spec.neighborAs
-    name: NeighborAS
+    name: Neighbor AS
     type: string
   - JSONPath: .spec.localIP
     name: Local address
@@ -28,7 +28,7 @@ spec:
     name: Remote address
     type: string
   - JSONPath: .spec.transport.name
-    name: Port
+    name: Port/Vnet
     priority: 1
     type: string
   - JSONPath: .status.vlanID
@@ -36,7 +36,7 @@ spec:
     priority: 1
     type: string
   - JSONPath: .status.terminateOnSwitch
-    name: TerminatedOn
+    name: Terminated On
     priority: 1
     type: string
   - JSONPath: .status.modified

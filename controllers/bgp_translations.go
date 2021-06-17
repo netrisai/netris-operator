@@ -42,9 +42,10 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		vnetID            int
 		imported          = false
 		reclaim           = false
+		ipVersion         = "ipv6"
 	)
 
-	originate := ""
+	originate := "disabled"
 	localPreference := 100
 	if site, ok := NStorage.SitesStorage.FindByName(bgp.Spec.Site); ok {
 		siteID = site.ID
@@ -53,7 +54,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	}
 
 	if bgp.Spec.DefaultOriginate {
-		originate = "true"
+		originate = "enabled"
 	}
 
 	if bgp.Spec.Transport.VlanID > 1 {
@@ -115,6 +116,9 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	localIP, cidr, _ := net.ParseCIDR(bgp.Spec.LocalIP)
 	remoteIP, _, _ := net.ParseCIDR(bgp.Spec.RemoteIP)
 	prefixLength, _ := cidr.Mask.Size()
+	if localIP.To4() != nil {
+		ipVersion = "ipv4"
+	}
 
 	bgpMeta = &k8sv1alpha1.BGPMeta{
 		ObjectMeta: metav1.ObjectMeta{
@@ -152,6 +156,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			AllowasIn:          bgp.Spec.AllowAsIn,
 			Originate:          originate,
 			PrefixLimit:        bgp.Spec.PrefixInboundMax, // ?
+			IPVersion:          ipVersion,
 			InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
 			LocalPreference:    localPreference,
 			Weight:             bgp.Spec.Weight,
@@ -218,7 +223,7 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPAdd, error) {
 		LocalPreference:    bgpMeta.Spec.LocalPreference,
 		Multihop:           bgpMeta.Spec.Multihop,
 		Name:               bgpMeta.Spec.BGPName,
-		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
+		NeighborAddress:    stringOrNull(bgpMeta.Spec.NeighborAddress),
 		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
 		NfvID:              bgpMeta.Spec.NfvID,
 		NfvPortID:          bgpMeta.Spec.NfvPortID,
@@ -262,14 +267,14 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPUpdate, er
 		LocalPreference:    bgpMeta.Spec.LocalPreference,
 		Multihop:           bgpMeta.Spec.Multihop,
 		Name:               bgpMeta.Spec.BGPName,
-		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
+		NeighborAddress:    stringOrNull(bgpMeta.Spec.NeighborAddress),
 		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
 		NfvID:              bgpMeta.Spec.NfvID,
 		NfvPortID:          bgpMeta.Spec.NfvPortID,
 		Originate:          bgpMeta.Spec.Originate,
 		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
 		PrefixLength:       bgpMeta.Spec.PrefixLength,
-		PrefixLimit:        bgpMeta.Spec.PrefixLimit,
+		PrefixLimit:        strconv.Itoa(bgpMeta.Spec.PrefixLimit),
 		PrefixListInbound:  bgpMeta.Spec.PrefixListInbound,
 		PrefixListOutbound: bgpMeta.Spec.PrefixListOutbound,
 		PrependInbound:     bgpMeta.Spec.PrependInbound,
@@ -330,8 +335,11 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bo
 		return false
 	}
 
+	if bgpMeta.Spec.TerminateOnSwitch != apiBGP.TerminateOnSwitch {
+		return false
+	}
+
 	if bgpMeta.Spec.TerminateOnSwitch != "yes" && bgpMeta.Spec.NfvID != apiBGP.TermSwitchID {
-		fmt.Println("TermSwitchID")
 		return false
 	}
 	// if apiBGP.NfvID != bgpMeta.Spec.NfvID {

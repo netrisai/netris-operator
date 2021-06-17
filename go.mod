@@ -1,12 +1,12 @@
 module github.com/netrisai/netris-operator
 
-go 1.14
+go 1.16
 
 require (
 	github.com/go-logr/logr v0.1.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/netrisai/netrisapi v0.0.0-20210401135324-2d43003b1f89
+	github.com/netrisai/netrisapi v0.0.0-20210610175837-ededc2c4cd4b
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	github.com/prometheus/common v0.4.1
