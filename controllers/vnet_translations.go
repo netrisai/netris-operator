@@ -38,12 +38,12 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 			apiGateways = append(apiGateways, makeGateway(gateway))
 		}
 	}
-	prts, err := getPortsMeta(ports)
+	prts, err := r.getPortsMeta(ports)
 	if err != nil {
 		return nil, err
 	}
 
-	sites := getSites(siteNames)
+	sites := getSites(siteNames, r.NStorage)
 	sitesList := []k8sv1alpha1.VNetMetaSite{}
 
 	for name, id := range sites {
@@ -55,7 +55,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 
 	tenantID := 0
 
-	tenant, ok := NStorage.TenantsStorage.FindByName(vnet.Spec.Owner)
+	tenant, ok := r.NStorage.TenantsStorage.FindByName(vnet.Spec.Owner)
 	if !ok {
 		return nil, fmt.Errorf("Tenant '%s' not found", vnet.Spec.Owner)
 	}
@@ -63,7 +63,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 
 	guestTenants := []int{}
 	for _, guest := range vnet.Spec.GuestTenants {
-		tenant, ok := NStorage.TenantsStorage.FindByName(guest)
+		tenant, ok := r.NStorage.TenantsStorage.FindByName(guest)
 		if !ok {
 			return nil, fmt.Errorf("Guest tenant '%s' not found", guest)
 		}
@@ -115,7 +115,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 }
 
 // VnetMetaToNetris converts the k8s VNet resource to Netris type and used for add the VNet for Netris API.
-func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
+func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 	siteNames := []string{}
 	apiGateways := []api.APIVNetGateway{}
 
@@ -131,7 +131,7 @@ func VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
 		})
 	}
 
-	sites := getSites(siteNames)
+	sites := getSites(siteNames, r.NStorage)
 	siteIDs := []int{}
 	for _, id := range sites {
 		siteIDs = append(siteIDs, id)

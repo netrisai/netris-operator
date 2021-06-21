@@ -24,12 +24,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
+	api "github.com/netrisai/netrisapi"
 )
 
 type uniReconciler struct {
 	client.Client
 	Logger      logr.Logger
 	DebugLogger logr.InfoLogger
+	Cred        *api.HTTPCred
+	NStorage    *netrisstorage.Storage
 }
 
 func (u *uniReconciler) patchVNetStatus(vnet *k8sv1alpha1.VNet, status, message string) (ctrl.Result, error) {

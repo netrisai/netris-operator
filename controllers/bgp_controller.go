@@ -28,14 +28,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
 	api "github.com/netrisai/netrisapi"
 )
 
 // BGPReconciler reconciles a BGP object
 type BGPReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
+	Cred     *api.HTTPCred
+	NStorage *netrisstorage.Storage
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgps,verbs=get;list;watch;create;update;patch;delete
@@ -51,6 +54,8 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		Client:      r.Client,
 		Logger:      logger,
 		DebugLogger: debugLogger,
+		Cred:        r.Cred,
+		NStorage:    r.NStorage,
 	}
 
 	if err := r.Get(context.Background(), req.NamespacedName, bgp); err != nil {
@@ -149,7 +154,7 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 func (r *BGPReconciler) deleteBGP(bgp *k8sv1alpha1.BGP, bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result, error) {
 	if bgpMeta != nil && bgpMeta.Spec.ID > 0 && !bgpMeta.Spec.Reclaim {
-		reply, err := Cred.DeleteEBGP(bgpMeta.Spec.ID)
+		reply, err := r.Cred.DeleteEBGP(bgpMeta.Spec.ID)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteBGP} %s", err)
 		}

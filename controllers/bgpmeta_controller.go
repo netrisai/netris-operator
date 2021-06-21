@@ -32,13 +32,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
 )
 
 // BGPMetaReconciler reconciles a BGPMeta object
 type BGPMetaReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
+	Cred     *api.HTTPCred
+	NStorage *netrisstorage.Storage
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgpmeta,verbs=get;list;watch;create;update;patch;delete
@@ -88,7 +91,7 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if bgpMeta.Spec.Imported {
 			logger.Info("Importing bgp")
 			debugLogger.Info("Imported yaml mode. Finding BGP by name")
-			if bgp, ok := NStorage.BGPStorage.FindByName(bgpMeta.Spec.BGPName); ok {
+			if bgp, ok := r.NStorage.BGPStorage.FindByName(bgpMeta.Spec.BGPName); ok {
 				debugLogger.Info("Imported yaml mode. BGP found")
 				bgpMeta.Spec.ID = bgp.ID
 				bgpCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(bgp.ModifiedDate/1000), 0))
@@ -121,7 +124,7 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		logger.Info("BGP Created")
 	} else {
-		if apiBGP, ok := NStorage.BGPStorage.FindByID(bgpMeta.Spec.ID); ok {
+		if apiBGP, ok := r.NStorage.BGPStorage.FindByID(bgpMeta.Spec.ID); ok {
 			bgpCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiBGP.ModifiedDate/1000), 0))
 			bgpCR.Status.BGPState = fmt.Sprintf("bgp: %s; prefix: %s; time: %s", apiBGP.BgpState, apiBGP.BgpPrefixes, apiBGP.BgpUptime)
 			bgpCR.Status.PortState = apiBGP.PortStatus
@@ -143,7 +146,7 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					logger.Error(fmt.Errorf("{BGPMetaToNetrisUpdate} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", err.Error())
 				}
-				_, err, errMsg := updateBGP(bgpUpdate)
+				_, err, errMsg := updateBGP(bgpUpdate, r.Cred)
 				if err != nil {
 					logger.Error(fmt.Errorf("{updateBGP} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", errMsg.Error())
@@ -174,7 +177,7 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
-	reply, err := Cred.AddEBGP(bgpAdd)
+	reply, err := r.Cred.AddEBGP(bgpAdd)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
@@ -211,8 +214,8 @@ func (r *BGPMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func updateBGP(vnet *api.APIEBGPUpdate) (ctrl.Result, error, error) {
-	reply, err := Cred.UpdateEBGP(vnet)
+func updateBGP(vnet *api.APIEBGPUpdate, cred *api.HTTPCred) (ctrl.Result, error, error) {
+	reply, err := cred.UpdateEBGP(vnet)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateBGP} %s", err), err
 	}

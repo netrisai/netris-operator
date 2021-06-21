@@ -32,14 +32,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
 	api "github.com/netrisai/netrisapi"
 )
 
 // VNetMetaReconciler reconciles a VNetMeta object
 type VNetMetaReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
+	Cred     *api.HTTPCred
+	NStorage *netrisstorage.Storage
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnetmeta,verbs=get;list;watch;create;update;patch;delete
@@ -67,6 +70,8 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		Client:      r.Client,
 		Logger:      logger,
 		DebugLogger: debugLogger,
+		Cred:        r.Cred,
+		NStorage:    r.NStorage,
 	}
 
 	provisionState := "Provisioning"
@@ -90,7 +95,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if vnetMeta.Spec.Imported {
 			logger.Info("Importing vnet")
 			debugLogger.Info("Imported yaml mode. Finding VNet by name")
-			if vnet, ok := NStorage.VNetStorage.FindByName(vnetMeta.Spec.VnetName); ok {
+			if vnet, ok := r.NStorage.VNetStorage.FindByName(vnetMeta.Spec.VnetName); ok {
 				debugLogger.Info("Imported yaml mode. Vnet found")
 				vnetID, err := strconv.Atoi(vnet.ID)
 				if err != nil {
@@ -119,7 +124,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		logger.Info("VNet Created")
 	} else {
-		vnets, err := Cred.GetVNetsByID(vnetMeta.Spec.ID)
+		vnets, err := r.Cred.GetVNetsByID(vnetMeta.Spec.ID)
 		if err != nil {
 			logger.Error(fmt.Errorf("{GetVNetsByID} %s", err), "")
 			return u.patchVNetStatus(vnetCR, "Failure", err.Error())
@@ -154,7 +159,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					logger.Error(fmt.Errorf("{VnetMetaToNetrisUpdate} %s", err), "")
 					return u.patchVNetStatus(vnetCR, "Failure", err.Error())
 				}
-				_, err, errMsg := updateVNet(updateVnet)
+				_, err, errMsg := r.updateVNet(updateVnet)
 				if err != nil {
 					logger.Error(fmt.Errorf("{updateVNet} %s", err), "")
 					return u.patchVNetStatus(vnetCR, "Failure", errMsg.Error())
@@ -179,11 +184,11 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 		"vnetName", vnetMeta.Spec.VnetName,
 	).V(int(zapcore.WarnLevel))
 
-	vnetAdd, err := VnetMetaToNetris(vnetMeta)
+	vnetAdd, err := r.VnetMetaToNetris(vnetMeta)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
-	reply, err := Cred.AddVNet(vnetAdd)
+	reply, err := r.Cred.AddVNet(vnetAdd)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

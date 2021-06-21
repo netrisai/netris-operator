@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 
 	"go.uber.org/zap/zapcore"
@@ -32,12 +33,19 @@ import (
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/controllers"
 	"github.com/netrisai/netris-operator/lbwatcher"
+	"github.com/netrisai/netris-operator/netrisstorage"
+	api "github.com/netrisai/netrisapi"
 	// +kubebuilder:scaffold:imports
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+	// cred stores the Netris API usepoint.
+	cred *api.HTTPCred
+
+	// nStorage is the instance of the Netris API in-memory storage.
+	nStorage *netrisstorage.Storage
 )
 
 func init() {
@@ -62,6 +70,25 @@ func main() {
 		ctrl.SetLogger(zap.New(zap.UseDevMode(false), zap.StacktraceLevel(zapcore.DPanicLevel)))
 	}
 
+	var err error
+	cred, err = api.NewHTTPCredentials(configloader.Root.Controller.Host, configloader.Root.Controller.Login, configloader.Root.Controller.Password, 10)
+	if err != nil {
+		log.Panicf("newHTTPCredentials error %v", err)
+	}
+	cred.InsecureVerify(configloader.Root.Controller.Insecure)
+	err = cred.LoginUser()
+	if err != nil {
+		log.Printf("LoginUser error %v", err)
+	}
+	go cred.CheckAuthWithInterval()
+
+	nStorage = netrisstorage.NewStorage(cred)
+	err = nStorage.Download()
+	if err != nil {
+		log.Printf("Storage.Download() error %v", err)
+	}
+	go nStorage.DownloadWithInterval()
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Namespace:          "",
 		Scheme:             scheme,
@@ -76,50 +103,62 @@ func main() {
 	}
 
 	if err = (&controllers.VNetReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("VNet"),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("VNet"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VNet")
 		os.Exit(1)
 	}
 	if err = (&controllers.VNetMetaReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("VNetMeta"),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("VNetMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VNetMeta")
 		os.Exit(1)
 	}
 
 	if err = (&controllers.BGPReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("BGP"),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("BGP"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "BGP")
 		os.Exit(1)
 	}
 	if err = (&controllers.BGPMetaReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("BGPMeta"),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("BGPMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "BGPMeta")
 		os.Exit(1)
 	}
 	if err = (&controllers.L4LBReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("L4LB"),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("L4LB"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L4LB")
 		os.Exit(1)
 	}
 	if err = (&controllers.L4LBMetaReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("L4LBMeta"),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("L4LBMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L4LBMeta")
 		os.Exit(1)

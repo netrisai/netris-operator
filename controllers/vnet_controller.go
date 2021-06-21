@@ -29,14 +29,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
 	api "github.com/netrisai/netrisapi"
 )
 
 // VNetReconciler reconciles a VNet object
 type VNetReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
+	Cred     *api.HTTPCred
+	NStorage *netrisstorage.Storage
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnets,verbs=get;list;watch;create;update;patch;delete
@@ -53,6 +56,8 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		Client:      r.Client,
 		Logger:      logger,
 		DebugLogger: debugLogger,
+		Cred:        r.Cred,
+		NStorage:    r.NStorage,
 	}
 
 	if err := r.Get(context.Background(), req.NamespacedName, vnet); err != nil {
@@ -155,8 +160,8 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
-func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
-	reply, err := Cred.ValidateVNet(vnet)
+func (r *VNetMetaReconciler) updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
+	reply, err := r.Cred.ValidateVNet(vnet)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
 	}
@@ -168,7 +173,7 @@ func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
 		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
 	}
 
-	reply, err = Cred.UpdateVNet(vnet)
+	reply, err = r.Cred.UpdateVNet(vnet)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
 	}
@@ -185,7 +190,7 @@ func updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
 	if vnetMeta != nil && vnetMeta.Spec.ID > 0 && !vnetMeta.Spec.Reclaim {
-		reply, err := Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
+		reply, err := r.Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", err)
 		}
