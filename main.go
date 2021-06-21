@@ -170,7 +170,12 @@ func main() {
 		watcherLogLevel = "debug"
 	}
 
-	go lbwatcher.Start(mgr, lbwatcher.Options{LogLevel: watcherLogLevel})
+	lbWatcher, err := lbwatcher.NewWatcher(nStorage, mgr, lbwatcher.Options{LogLevel: watcherLogLevel})
+	if err != nil {
+		setupLog.Error(err, "problem running lbwatcher")
+		os.Exit(1)
+	}
+	go lbWatcher.Start()
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

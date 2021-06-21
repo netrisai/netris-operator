@@ -16,6 +16,17 @@ limitations under the License.
 
 package lbwatcher
 
+import (
+	"github.com/netrisai/netris-operator/netrisstorage"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+)
+
+type Watcher struct {
+	Options  Options
+	NStorage *netrisstorage.Storage
+	MGR      manager.Manager
+}
+
 type selector struct {
 	Key   string
 	Value string
