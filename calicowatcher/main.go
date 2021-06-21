@@ -144,6 +144,7 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 	}
 
 	siteName := ""
+	siteID := 0
 	subnet := ""
 	vnet := &api.APIVNet{}
 
@@ -188,13 +189,14 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 		}
 
 		if siteName == "" {
-			siteID, gateway, err := w.findSiteByIP(ip)
+			id, gateway, err := w.findSiteByIP(ip)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			if site, ok := w.NStorage.SitesStorage.FindByID(siteID); ok {
+			if site, ok := w.NStorage.SitesStorage.FindByID(id); ok {
 				siteName = site.Name
+				siteID = site.ID
 			}
 			subnet = gateway
 			if vn, ok := w.NStorage.VNetStorage.FindByGateway(gateway); ok {
@@ -211,6 +213,13 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 
 	if vnet == nil {
 		return fmt.Errorf("Couldn't find vnet")
+	}
+
+	switchName := ""
+	if spine := w.NStorage.HWsStorage.FindSpineBySite(siteID); spine != nil {
+		switchName = spine.SwitchName
+	} else {
+		return fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
 	}
 
 	vnetGW := ""
@@ -247,7 +256,7 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 				NeighborAS: asn,
 				TerminateOnSwitch: k8sv1alpha1.BGPTerminateOnSwitch{
 					Enabled:    true,
-					SwitchName: "", // Swich Name ????????????????????????????
+					SwitchName: switchName,
 				},
 				Transport: v1alpha1.BGPTransport{
 					Type: "vnet",
