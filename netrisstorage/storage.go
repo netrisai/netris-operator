@@ -78,6 +78,9 @@ func (s *Storage) Download() error {
 	if err := s.L4LBStorage.Download(); err != nil {
 		return err
 	}
+	if err := s.SubnetsStorage.Download(); err != nil {
+		return err
+	}
 	return nil
 }
 

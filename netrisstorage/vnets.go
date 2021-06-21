@@ -17,6 +17,8 @@ limitations under the License.
 package netrisstorage
 
 import (
+	"fmt"
+	"net"
 	"strconv"
 	"sync"
 
@@ -35,14 +37,18 @@ func NewVNetStorage() *VNetStorage {
 }
 
 // GetAll .
-func (p *VNetStorage) GetAll() []*api.APIVNet {
+func (p *VNetStorage) GetAll() []api.APIVNet {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *VNetStorage) getAll() []*api.APIVNet {
-	return p.VNets
+func (p *VNetStorage) getAll() []api.APIVNet {
+	vnets := []api.APIVNet{}
+	for _, vnet := range p.VNets {
+		vnets = append(vnets, *vnet)
+	}
+	return vnets
 }
 
 func (p *VNetStorage) storeAll(items []*api.APIVNet) {
@@ -82,6 +88,25 @@ func (p *VNetStorage) findByID(id int) (*api.APIVNet, bool) {
 		vnetID, _ := strconv.Atoi(item.ID)
 		if vnetID == id {
 			return item, true
+		}
+	}
+	return nil, false
+}
+
+// FindByGateway .
+func (p *VNetStorage) FindByGateway(gateway string) (*api.APIVNet, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByGateway(gateway)
+}
+
+func (p *VNetStorage) findByGateway(gateway string) (*api.APIVNet, bool) {
+	for _, item := range p.VNets {
+		for _, gway := range item.Gateways {
+			_, gwNet, _ := net.ParseCIDR(fmt.Sprintf("%s/%d", gway.Gateway, gway.GwLength))
+			if gwNet.String() == gateway {
+				return item, true
+			}
 		}
 	}
 	return nil, false

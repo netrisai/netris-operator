@@ -19,7 +19,9 @@ package calicowatcher
 import (
 	"context"
 	"fmt"
+	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -27,6 +29,7 @@ import (
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/calicowatcher/calico"
 	"github.com/netrisai/netris-operator/netrisstorage"
+	api "github.com/netrisai/netrisapi"
 	"go.uber.org/zap/zapcore"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -136,6 +139,14 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 		return err
 	}
 
+	if len(nodes.Items) == 0 {
+		return fmt.Errorf("Nodes are missing")
+	}
+
+	siteName := ""
+	subnet := ""
+	vnet := &api.APIVNet{}
+
 	nodesMap := make(map[string]*nodeIP)
 	for _, node := range nodes.Items {
 		anns := node.GetAnnotations()
@@ -169,7 +180,45 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 			IPIP: anns["projectcalico.org/IPv4IPIPTunnelAddr"],
 			ASN:  asn,
 		}
+
+		ip := strings.Split(anns["projectcalico.org/IPv4Address"], "/")[0]
+		if net.ParseIP(ip) == nil {
+			fmt.Println("Invalid IP:", anns["projectcalico.org/IPv4Address"])
+			continue
+		}
+
+		if siteName == "" {
+			siteID, gateway, err := w.findSiteByIP(ip)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			if site, ok := w.NStorage.SitesStorage.FindByID(siteID); ok {
+				siteName = site.Name
+			}
+			subnet = gateway
+			if vn, ok := w.NStorage.VNetStorage.FindByGateway(gateway); ok {
+				vnet = vn
+			}
+		}
+
 		nodesMap[node.Name] = tmpNode
+	}
+
+	if siteName == "" {
+		return fmt.Errorf("Couldn't find site")
+	}
+
+	if vnet == nil {
+		return fmt.Errorf("Couldn't find vnet")
+	}
+
+	vnetGW := ""
+	for _, gw := range vnet.Gateways {
+		ip, gwNet, _ := net.ParseCIDR(fmt.Sprintf("%s/%d", gw.Gateway, gw.GwLength))
+		if gwNet.String() == subnet {
+			vnetGW = ip.String()
+		}
 	}
 
 	bgpList := []*k8sv1alpha1.BGP{}
@@ -189,7 +238,7 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 				APIVersion: "k8s.netris.ai/v1alpha1",
 			},
 			Spec: k8sv1alpha1.BGPSpec{
-				Site:       "", // Site ???????????????????????????? Get from Node IP Subnet
+				Site:       siteName,
 				NeighborAS: asn,
 				TerminateOnSwitch: k8sv1alpha1.BGPTerminateOnSwitch{
 					Enabled:    true,
@@ -197,9 +246,9 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 				},
 				Transport: v1alpha1.BGPTransport{
 					Type: "vnet",
-					Name: "", // Vnet Name ???????????????????????????? Get from Node IP subnet
+					Name: vnet.Name,
 				},
-				LocalIP:  "", // Vnet Gateway ????????????????????????????
+				LocalIP:  vnetGW,
 				RemoteIP: node.IP,
 				PrefixListInbound: []string{
 					fmt.Sprintf("permit %s le %d", clusterCIDR, blockSize),
