@@ -124,9 +124,9 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 	}
 
 	var (
-		blockSize   = ipPools[0].Spec.BlockSize
-		clusterCIDR = ipPools[0].Spec.CIDR
-		serviceCIDR = bgpConfs[0].Spec.ServiceClusterIPs[0].CIDR
+		blockSize    = ipPools[0].Spec.BlockSize
+		clusterCIDR  = ipPools[0].Spec.CIDR
+		serviceCIDRs = bgpConfs[0].Spec.ServiceClusterIPs
 	)
 
 	clientset, err := kubernetes.NewForConfig(restClient)
@@ -228,6 +228,11 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 		if err != nil {
 			return err
 		}
+		PrefixListInboundList := []string{fmt.Sprintf("permit %s le %d", clusterCIDR, blockSize)}
+		for _, cidr := range serviceCIDRs {
+			PrefixListInboundList = append(PrefixListInboundList, fmt.Sprintf("permit %s le %d", cidr.CIDR, 32))
+		}
+
 		bgp := &k8sv1alpha1.BGP{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      fmt.Sprintf("%s-%s", name, node.IP),
@@ -248,12 +253,9 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 					Type: "vnet",
 					Name: vnet.Name,
 				},
-				LocalIP:  vnetGW,
-				RemoteIP: node.IP,
-				PrefixListInbound: []string{
-					fmt.Sprintf("permit %s le %d", clusterCIDR, blockSize),
-					fmt.Sprintf("permit %s le %d", serviceCIDR, 32),
-				},
+				LocalIP:           vnetGW,
+				RemoteIP:          node.IP,
+				PrefixListInbound: PrefixListInboundList,
 				PrefixListOutbound: []string{
 					"permit 0.0.0.0/0",
 					fmt.Sprintf("deny %s/%d", node.IPIP, blockSize),
