@@ -40,6 +40,7 @@ type Storage struct {
 	*BGPStorage
 	*L4LBStorage
 	*SubnetsStorage
+	*HWsStorage
 }
 
 // NewStorage .
@@ -53,6 +54,7 @@ func NewStorage(cred *api.HTTPCred) *Storage {
 		BGPStorage:     NewBGPStoragee(),
 		L4LBStorage:    NewL4LBStorage(),
 		SubnetsStorage: NewSubnetsStorage(),
+		HWsStorage:     NewHWsStorage(),
 	}
 }
 
@@ -79,6 +81,9 @@ func (s *Storage) Download() error {
 		return err
 	}
 	if err := s.SubnetsStorage.Download(); err != nil {
+		return err
+	}
+	if err := s.HWsStorage.Download(); err != nil {
 		return err
 	}
 	return nil
