@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/calicowatcher"
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/controllers"
 	"github.com/netrisai/netris-operator/lbwatcher"
@@ -176,6 +177,14 @@ func main() {
 		os.Exit(1)
 	}
 	go lbWatcher.Start()
+
+	// go lbwatcher.Start(mgr, lbwatcher.Options{LogLevel: watcherLogLevel})
+	cWatcher, err := calicowatcher.NewWatcher(nStorage, mgr, calicowatcher.Options{LogLevel: watcherLogLevel})
+	if err != nil {
+		setupLog.Error(err, "problem running calicowatcher")
+		os.Exit(1)
+	}
+	go cWatcher.Start()
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
