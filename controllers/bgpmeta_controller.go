@@ -68,6 +68,8 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		Client:      r.Client,
 		Logger:      logger,
 		DebugLogger: debugLogger,
+		Cred:        r.Cred,
+		NStorage:    r.NStorage,
 	}
 
 	provisionState := "Provisioning"
