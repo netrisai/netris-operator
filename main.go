@@ -178,7 +178,6 @@ func main() {
 	}
 	go lbWatcher.Start()
 
-	// go lbwatcher.Start(mgr, lbwatcher.Options{LogLevel: watcherLogLevel})
 	cWatcher, err := calicowatcher.NewWatcher(nStorage, mgr, calicowatcher.Options{LogLevel: watcherLogLevel})
 	if err != nil {
 		setupLog.Error(err, "problem running calicowatcher")
