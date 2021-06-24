@@ -148,7 +148,39 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 	subnet := ""
 	vnet := &api.APIVNet{}
 
+	asnStart := 4200070000
+	asnEnd := 4200079000
+
 	nodesMap := make(map[string]*nodeIP)
+	asnMap := make(map[string]bool)
+
+	for _, node := range nodes.Items {
+		anns := node.GetAnnotations()
+		if _, ok := anns["projectcalico.org/ASNumber"]; ok {
+			asnMap[anns["projectcalico.org/ASNumber"]] = true
+		}
+	}
+
+	for _, node := range nodes.Items {
+		anns := node.GetAnnotations()
+		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
+			for i := asnStart; i < asnEnd; i++ {
+				asn := strconv.Itoa(i)
+				if !asnMap[asn] {
+					anns["projectcalico.org/ASNumber"] = asn
+					node.SetAnnotations(anns)
+					_, err := clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
+					if err != nil {
+						return err
+					}
+					asnMap[asn] = true
+				}
+			}
+		} else {
+			asnMap[anns["projectcalico.org/ASNumber"]] = true
+		}
+	}
+
 	for _, node := range nodes.Items {
 		anns := node.GetAnnotations()
 
@@ -162,16 +194,7 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 		asn := ""
 
 		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
-			// Get free ASN from calico dedicated range(read in loop already used ASNs from nodesInfo map and take next usable) ?????????????
-			// Get free range from ENV variables and fill empty spaces
-			// Example 4200070000 - 4200079000
-			// ASNs should be unique
-			// asn = ""
-			_, err := clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
-			if err != nil {
-				return err
-			}
-			continue
+			return fmt.Errorf("Couldn't get as number for node %s", node.Name)
 		} else {
 			asn = anns["projectcalico.org/ASNumber"]
 		}
