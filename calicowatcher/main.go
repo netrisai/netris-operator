@@ -18,6 +18,7 @@ package calicowatcher
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
@@ -113,6 +114,10 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 
 	if len(ipPools) == 0 && ipPools[0] != nil {
 		return fmt.Errorf("IPPool is missing")
+	}
+
+	if len(bgpConfs[0].Spec.ServiceClusterIPs) == 0 {
+		return fmt.Errorf("serviceCIDRs are missing")
 	}
 
 	if len(bgpConfs[0].Spec.ServiceClusterIPs) == 0 {
@@ -298,6 +303,12 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 	if err != nil {
 		return err
 	}
+
+	js, _ := json.Marshal(bgpList)
+	fmt.Println(string(js))
+
+	js, _ = json.Marshal(bgps.Items)
+	fmt.Println(string(js))
 
 	// peersProcessing(cl, restClient)
 	return nil
