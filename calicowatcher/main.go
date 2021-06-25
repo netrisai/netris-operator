@@ -18,8 +18,10 @@ package calicowatcher
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -30,6 +32,7 @@ import (
 	"github.com/netrisai/netris-operator/calicowatcher/calico"
 	"github.com/netrisai/netris-operator/netrisstorage"
 	api "github.com/netrisai/netrisapi"
+	"github.com/r3labs/diff/v2"
 	"go.uber.org/zap/zapcore"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -41,9 +44,12 @@ import (
 )
 
 type Watcher struct {
-	Options  Options
-	NStorage *netrisstorage.Storage
-	MGR      manager.Manager
+	Options    Options
+	NStorage   *netrisstorage.Storage
+	MGR        manager.Manager
+	restClient *rest.Config
+	Client     client.Client
+	Clientset  *kubernetes.Clientset
 }
 
 type Options struct {
@@ -62,18 +68,27 @@ func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Op
 	return watcher, nil
 }
 
-var logger logr.Logger // debugLogger logr.InfoLogger
+var (
+	logger      logr.Logger
+	debugLogger logr.InfoLogger
+)
 
 func (w *Watcher) getRestConfig() *rest.Config {
 	return ctrl.GetConfigOrDie()
 }
 
 func (w *Watcher) start() {
-	restClient := w.getRestConfig()
-	cl := w.MGR.GetClient()
+	w.restClient = w.getRestConfig()
+	w.Client = w.MGR.GetClient()
+	clientset, err := kubernetes.NewForConfig(w.restClient)
+	if err != nil {
+		logger.Error(err, "")
+		return
+	}
+	w.Clientset = clientset
 	// recorder, w, _ := eventRecorder(clientset)
 	// defer w.Stop()
-	err := w.mainProcessing(cl, restClient)
+	err = w.mainProcessing()
 	if err != nil {
 		logger.Error(err, "")
 	}
@@ -87,7 +102,7 @@ func (w *Watcher) Start() {
 	}
 
 	logger = ctrl.Log.WithName("CalicoWatcher")
-	// debugLogger = logger.V(int(zapcore.WarnLevel))
+	debugLogger = logger.V(int(zapcore.WarnLevel))
 
 	ticker := time.NewTicker(10 * time.Second)
 	w.start()
@@ -97,8 +112,8 @@ func (w *Watcher) Start() {
 	}
 }
 
-func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) error {
-	bgpConfs, err := calico.GetBGPConfiguration(restClient)
+func (w *Watcher) mainProcessing() error {
+	bgpConfs, err := calico.GetBGPConfiguration(w.restClient)
 	if err != nil {
 		logger.Error(err, "")
 	}
@@ -106,7 +121,7 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 		return fmt.Errorf("Netris annotation is not present")
 	}
 
-	ipPools, err := calico.GetIPPool(restClient)
+	ipPools, err := calico.GetIPPool(w.restClient)
 	if err != nil {
 		logger.Error(err, "")
 	}
@@ -121,12 +136,7 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 		serviceCIDRs = bgpConfs[0].Spec.ServiceClusterIPs
 	)
 
-	clientset, err := kubernetes.NewForConfig(restClient)
-	if err != nil {
-		return err
-	}
-
-	nodes, err := clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	nodes, err := w.Clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -161,7 +171,7 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 				if !asnMap[asn] {
 					anns["projectcalico.org/ASNumber"] = asn
 					node.SetAnnotations(anns)
-					_, err := clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
+					_, err := w.Clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
 					if err != nil {
 						return err
 					}
@@ -239,14 +249,15 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 
 	vnetGW := ""
 	for _, gw := range vnet.Gateways {
-		ip, gwNet, _ := net.ParseCIDR(fmt.Sprintf("%s/%d", gw.Gateway, gw.GwLength))
+		gateway := fmt.Sprintf("%s/%d", gw.Gateway, gw.GwLength)
+		_, gwNet, _ := net.ParseCIDR(gateway)
 		if gwNet.String() == subnet {
-			vnetGW = ip.String()
+			vnetGW = gateway
 		}
 	}
 
-	bgpList := []*k8sv1alpha1.BGP{}
-
+	generatedBGPs := []*k8sv1alpha1.BGP{}
+	nameReg, _ := regexp.Compile("[^a-z0-9.]+")
 	for name, node := range nodesMap {
 		asn, err := strconv.Atoi(node.ASN)
 		if err != nil {
@@ -257,10 +268,12 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 			PrefixListInboundList = append(PrefixListInboundList, fmt.Sprintf("permit %s le %d", cidr.CIDR, 32))
 		}
 
+		name := fmt.Sprintf("%s-%s", name, node.IP)
+
 		bgp := &k8sv1alpha1.BGP{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      fmt.Sprintf("%s-%s", name, node.IP),
-				Namespace: "Default",
+				Name:      nameReg.ReplaceAllString(name, "-"),
+				Namespace: "default",
 			},
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BGP",
@@ -287,26 +300,128 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 				},
 			},
 		}
-		bgpList = append(bgpList, bgp)
+		anns := make(map[string]string)
+		anns["k8s.netris.ai/calicowatcher"] = "true"
+		bgp.SetAnnotations(anns)
+		generatedBGPs = append(generatedBGPs, bgp)
 	}
 
-	bgps, err := getBGPs(cl)
+	bgps, err := w.getBGPs()
 	if err != nil {
 		return err
 	}
 
-	// peersProcessing(cl, restClient)
+	bgpList := []*k8sv1alpha1.BGP{}
+	for _, bgp := range bgps.Items {
+		if ann, ok := bgp.GetAnnotations()["k8s.netris.ai/calicowatcher"]; ok && ann == "true" {
+			bgpList = append(bgpList, bgp.DeepCopy())
+		}
+	}
+
+	bgpsForCreate, bgpsForDelete, bgpsForUpdate := compareBGPs(bgpList, generatedBGPs)
+
+	js, _ := json.Marshal(bgpsForCreate)
+	debugLogger.Info("BGPs for create", "List", string(js))
+	js, _ = json.Marshal(bgpsForDelete)
+	debugLogger.Info("BGPs for update", "List", string(js))
+	js, _ = json.Marshal(bgpsForUpdate)
+	debugLogger.Info("BGPs for delete", "List", string(js))
+
+	var errors []error
+	errors = append(errors, w.deleteBGPs(bgpsForDelete)...)
+	errors = append(errors, w.updateBGPs(bgpsForUpdate)...)
+	errors = append(errors, w.createBGPs(bgpsForCreate)...)
+	if len(errors) > 0 {
+		fmt.Println(errors)
+	}
 	return nil
 }
 
-// func getSiteByIP(ip string) (string, error) {
-// 	controllers.NStorage.SubnetsStorage
-// 	return "", nil
-// }
+func (w *Watcher) createBGPs(BGPs []*k8sv1alpha1.BGP) []error {
+	var errors []error
+	for _, bgp := range BGPs {
+		if err := w.createBGP(bgp); err != nil {
+			errors = append(errors, err)
+		}
+	}
+	return errors
+}
 
-func getBGPs(cl client.Client) (*k8sv1alpha1.BGPList, error) {
+func (w *Watcher) createBGP(bgp *k8sv1alpha1.BGP) error {
+	return w.Client.Create(context.Background(), bgp.DeepCopyObject(), &client.CreateOptions{})
+}
+
+func (w *Watcher) updateBGPs(BGPs []*k8sv1alpha1.BGP) []error {
+	var errors []error
+	for _, bgp := range BGPs {
+		if err := w.updateBGP(bgp); err != nil {
+			errors = append(errors, err)
+		}
+	}
+	return errors
+}
+
+func (w *Watcher) updateBGP(bgp *k8sv1alpha1.BGP) error {
+	return w.Client.Update(context.Background(), bgp.DeepCopyObject(), &client.UpdateOptions{})
+}
+
+func (w *Watcher) deleteBGPs(BGPs []*k8sv1alpha1.BGP) []error {
+	var errors []error
+	for _, bgp := range BGPs {
+		if err := w.deleteBGP(bgp); err != nil {
+			errors = append(errors, err)
+		}
+	}
+	return errors
+}
+
+func (w *Watcher) deleteBGP(bgp *k8sv1alpha1.BGP) error {
+	return w.Client.Delete(context.Background(), bgp.DeepCopyObject(), &client.DeleteAllOfOptions{})
+}
+
+func compareBGPs(BGPs []*k8sv1alpha1.BGP, generatedBGPs []*k8sv1alpha1.BGP) ([]*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP) {
+	genBGPsMap := make(map[string]*k8sv1alpha1.BGP)
+	BGPsMap := make(map[string]*k8sv1alpha1.BGP)
+
+	bgpsForCreate := []*k8sv1alpha1.BGP{}
+	bgpsForDelete := []*k8sv1alpha1.BGP{}
+	bgpsForUpdate := []*k8sv1alpha1.BGP{}
+
+	for _, bgp := range generatedBGPs {
+		genBGPsMap[bgp.Name] = bgp
+	}
+
+	for _, bgp := range BGPs {
+		BGPsMap[bgp.Name] = bgp
+	}
+
+	for _, genBGP := range generatedBGPs {
+		if bgp, ok := BGPsMap[genBGP.Name]; !ok {
+			bgpsForCreate = append(bgpsForCreate, genBGP)
+			// Create
+		} else {
+			changelog, _ := diff.Diff(bgp.Spec, genBGP.Spec)
+			if len(changelog) > 0 {
+				bgp.Spec = genBGP.Spec
+				bgpsForUpdate = append(bgpsForUpdate, bgp)
+			}
+			// Update
+		}
+	}
+
+	for _, bgp := range BGPs {
+		if _, ok := genBGPsMap[bgp.Name]; !ok {
+			bgpsForDelete = append(bgpsForDelete, bgp)
+			// Delete
+		}
+	}
+
+	return bgpsForCreate, bgpsForDelete, bgpsForUpdate
+}
+
+func (w *Watcher) getBGPs() (*k8sv1alpha1.BGPList, error) {
 	bgps := &k8sv1alpha1.BGPList{}
-	err := cl.List(context.Background(), bgps, &client.ListOptions{})
+	err := w.Client.List(context.Background(), bgps, &client.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -318,15 +433,6 @@ type nodeIP struct {
 	IPIP string
 	ASN  string
 }
-
-// func peersProcessing(cl client.Client, restClient *rest.Config) {
-// 	ipPools, err := calico.GetIPPool(restClient)
-// 	if err != nil {
-// 		logger.Error(err, "")
-// 	}
-// 	js, _ := json.Marshal(ipPools)
-// 	fmt.Println(string(js))
-// }
 
 func (w *Watcher) checkBGPConfigurations(configurations []*calico.BGPConfiguration) bool {
 	for _, conf := range configurations {
