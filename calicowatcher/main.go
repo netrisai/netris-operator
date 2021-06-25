@@ -116,10 +116,6 @@ func (w *Watcher) mainProcessing(cl client.Client, restClient *rest.Config) erro
 	}
 
 	if len(bgpConfs[0].Spec.ServiceClusterIPs) == 0 {
-		return fmt.Errorf("serviceCIDRs are missing")
-	}
-
-	if len(bgpConfs[0].Spec.ServiceClusterIPs) == 0 {
 		return fmt.Errorf("ServiceClusterIPs are missing")
 	}
 
