@@ -34,6 +34,7 @@ import (
 	api "github.com/netrisai/netrisapi"
 	"github.com/r3labs/diff/v2"
 	"go.uber.org/zap/zapcore"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -113,147 +114,24 @@ func (w *Watcher) Start() {
 }
 
 func (w *Watcher) mainProcessing() error {
-	bgpConfs, err := calico.GetBGPConfiguration(w.restClient)
-	if err != nil {
-		logger.Error(err, "")
-	}
-	if !w.checkBGPConfigurations(bgpConfs) {
-		return fmt.Errorf("Netris annotation is not present")
-	}
-
-	ipPools, err := calico.GetIPPool(w.restClient)
-	if err != nil {
-		logger.Error(err, "")
-	}
-
-	if len(ipPools) == 0 && ipPools[0] != nil {
-		return fmt.Errorf("IPPool is missing")
-	}
-
-	var (
-		blockSize    = ipPools[0].Spec.BlockSize
-		clusterCIDR  = ipPools[0].Spec.CIDR
-		serviceCIDRs = bgpConfs[0].Spec.ServiceClusterIPs
-	)
-
-	nodes, err := w.clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	blockSize, clusterCIDR, serviceCIDRs, err := w.getIPInfo()
 	if err != nil {
 		return err
 	}
 
-	if len(nodes.Items) == 0 {
-		return fmt.Errorf("Nodes are missing")
+	nodes, err := w.getNodes()
+	if err != nil {
+		return err
 	}
 
-	siteName := ""
-	siteID := 0
-	subnet := ""
-	vnet := &api.APIVNet{}
-
-	asnStart := 4200070000
-	asnEnd := 4200079000
-
-	nodesMap := make(map[string]*nodeIP)
-	asnMap := make(map[string]bool)
-
-	for _, node := range nodes.Items {
-		anns := node.GetAnnotations()
-		if _, ok := anns["projectcalico.org/ASNumber"]; ok {
-			asnMap[anns["projectcalico.org/ASNumber"]] = true
-		}
+	err = w.fillNodesASNs(nodes.Items)
+	if err != nil {
+		return err
 	}
 
-	for _, node := range nodes.Items {
-		anns := node.GetAnnotations()
-		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
-			for i := asnStart; i < asnEnd; i++ {
-				asn := strconv.Itoa(i)
-				if !asnMap[asn] {
-					anns["projectcalico.org/ASNumber"] = asn
-					node.SetAnnotations(anns)
-					_, err := w.clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
-					if err != nil {
-						return err
-					}
-					asnMap[asn] = true
-				}
-			}
-		} else {
-			asnMap[anns["projectcalico.org/ASNumber"]] = true
-		}
-	}
-
-	for _, node := range nodes.Items {
-		anns := node.GetAnnotations()
-
-		if _, ok := anns["projectcalico.org/IPv4Address"]; !ok {
-			continue
-		}
-		if _, ok := anns["projectcalico.org/IPv4IPIPTunnelAddr"]; !ok {
-			continue
-		}
-
-		asn := ""
-
-		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
-			return fmt.Errorf("Couldn't get as number for node %s", node.Name)
-		} else {
-			asn = anns["projectcalico.org/ASNumber"]
-		}
-
-		tmpNode := &nodeIP{
-			IP:   anns["projectcalico.org/IPv4Address"],
-			IPIP: anns["projectcalico.org/IPv4IPIPTunnelAddr"],
-			ASN:  asn,
-		}
-
-		ip := strings.Split(anns["projectcalico.org/IPv4Address"], "/")[0]
-		if net.ParseIP(ip) == nil {
-			fmt.Println("Invalid IP:", anns["projectcalico.org/IPv4Address"])
-			continue
-		}
-
-		if siteName == "" {
-			id, gateway, err := w.findSiteByIP(ip)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			if site, ok := w.NStorage.SitesStorage.FindByID(id); ok {
-				siteName = site.Name
-				siteID = site.ID
-			}
-			subnet = gateway
-			if vn, ok := w.NStorage.VNetStorage.FindByGateway(gateway); ok {
-				vnet = vn
-			}
-		}
-
-		nodesMap[node.Name] = tmpNode
-	}
-
-	if siteName == "" {
-		return fmt.Errorf("Couldn't find site")
-	}
-
-	if vnet == nil {
-		return fmt.Errorf("Couldn't find vnet")
-	}
-
-	switchName := ""
-	if spine := w.NStorage.HWsStorage.FindSpineBySite(siteID); spine != nil {
-		switchName = spine.SwitchName
-	} else {
-		return fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
-	}
-
-	vnetGW := ""
-	for _, gw := range vnet.Gateways {
-		gateway := fmt.Sprintf("%s/%d", gw.Gateway, gw.GwLength)
-		_, gwNet, _ := net.ParseCIDR(gateway)
-		if gwNet.String() == subnet {
-			vnetGW = gateway
-		}
+	nodesMap, siteName, vnetName, vnetGW, switchName, err := w.nodesProcessing(nodes.Items)
+	if err != nil {
+		return err
 	}
 
 	generatedBGPs := []*k8sv1alpha1.BGP{}
@@ -265,7 +143,7 @@ func (w *Watcher) mainProcessing() error {
 		}
 		PrefixListInboundList := []string{fmt.Sprintf("permit %s le %d", clusterCIDR, blockSize)}
 		for _, cidr := range serviceCIDRs {
-			PrefixListInboundList = append(PrefixListInboundList, fmt.Sprintf("permit %s le %d", cidr.CIDR, 32))
+			PrefixListInboundList = append(PrefixListInboundList, fmt.Sprintf("permit %s le %d", cidr, 32))
 		}
 
 		name := fmt.Sprintf("%s-%s", name, node.IP)
@@ -288,7 +166,7 @@ func (w *Watcher) mainProcessing() error {
 				},
 				Transport: v1alpha1.BGPTransport{
 					Type: "vnet",
-					Name: vnet.Name,
+					Name: vnetName,
 				},
 				LocalIP:           vnetGW,
 				RemoteIP:          node.IP,
@@ -443,4 +321,188 @@ func (w *Watcher) checkBGPConfigurations(configurations []*calico.BGPConfigurati
 		}
 	}
 	return false
+}
+
+func (w *Watcher) getBGPConfigurations() ([]*calico.BGPConfiguration, error) {
+	bgpConfs, err := calico.GetBGPConfiguration(w.restClient)
+	if err != nil {
+		return nil, err
+	}
+	if !w.checkBGPConfigurations(bgpConfs) {
+		return nil, fmt.Errorf("Netris annotation is not present")
+	}
+	return bgpConfs, nil
+}
+
+func (w *Watcher) getNodes() (*v1.NodeList, error) {
+	nodes, err := w.clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(nodes.Items) == 0 {
+		return nil, fmt.Errorf("Nodes are missing")
+	}
+	return nodes, nil
+}
+
+func (w *Watcher) getIPPools() ([]*calico.IPPool, error) {
+	ipPools, err := calico.GetIPPool(w.restClient)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ipPools) == 0 && ipPools[0] != nil {
+		return nil, fmt.Errorf("IPPool is missing")
+	}
+	return ipPools, nil
+}
+
+func (w *Watcher) getIPInfo() (int, string, []string, error) {
+	var (
+		blockSize    int
+		clusterCIDR  string
+		serviceCIDRs []string
+	)
+
+	bgpConfs, err := w.getBGPConfigurations()
+	if err != nil {
+		return blockSize, clusterCIDR, serviceCIDRs, err
+	}
+
+	ipPools, err := w.getIPPools()
+	if err != nil {
+		return blockSize, clusterCIDR, serviceCIDRs, err
+	}
+
+	blockSize = ipPools[0].Spec.BlockSize
+	clusterCIDR = ipPools[0].Spec.CIDR
+	for _, c := range bgpConfs[0].Spec.ServiceClusterIPs {
+		serviceCIDRs = append(serviceCIDRs, c.CIDR)
+	}
+
+	return blockSize, clusterCIDR, serviceCIDRs, nil
+}
+
+func (w *Watcher) fillNodesASNs(nodes []v1.Node) error {
+	asnStart := 4200070000
+	asnEnd := 4200079000
+	asnMap := make(map[string]bool)
+
+	for _, node := range nodes {
+		anns := node.GetAnnotations()
+		if _, ok := anns["projectcalico.org/ASNumber"]; ok {
+			asnMap[anns["projectcalico.org/ASNumber"]] = true
+		}
+	}
+
+	for _, node := range nodes {
+		anns := node.GetAnnotations()
+		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
+			for i := asnStart; i < asnEnd; i++ {
+				asn := strconv.Itoa(i)
+				if !asnMap[asn] {
+					anns["projectcalico.org/ASNumber"] = asn
+					node.SetAnnotations(anns)
+					_, err := w.clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
+					if err != nil {
+						return err
+					}
+					asnMap[asn] = true
+				}
+			}
+		} else {
+			asnMap[anns["projectcalico.org/ASNumber"]] = true
+		}
+	}
+	return nil
+}
+
+func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, string, string, string, string, error) {
+	var (
+		siteName   string
+		vnetName   string
+		vnetGW     string
+		switchName string
+	)
+
+	siteID := 0
+	subnet := ""
+	vnet := &api.APIVNet{}
+
+	nodesMap := make(map[string]*nodeIP)
+
+	for _, node := range nodes {
+		anns := node.GetAnnotations()
+
+		if _, ok := anns["projectcalico.org/IPv4Address"]; !ok {
+			continue
+		}
+		if _, ok := anns["projectcalico.org/IPv4IPIPTunnelAddr"]; !ok {
+			continue
+		}
+
+		asn := ""
+
+		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
+			return nodesMap, siteName, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't get as number for node %s", node.Name)
+		} else {
+			asn = anns["projectcalico.org/ASNumber"]
+		}
+
+		tmpNode := &nodeIP{
+			IP:   anns["projectcalico.org/IPv4Address"],
+			IPIP: anns["projectcalico.org/IPv4IPIPTunnelAddr"],
+			ASN:  asn,
+		}
+
+		ip := strings.Split(anns["projectcalico.org/IPv4Address"], "/")[0]
+		if net.ParseIP(ip) == nil {
+			fmt.Println("Invalid IP:", anns["projectcalico.org/IPv4Address"])
+			continue
+		}
+
+		if siteName == "" {
+			id, gateway, err := w.findSiteByIP(ip)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			if site, ok := w.NStorage.SitesStorage.FindByID(id); ok {
+				siteName = site.Name
+				siteID = site.ID
+			}
+			subnet = gateway
+			if vn, ok := w.NStorage.VNetStorage.FindByGateway(gateway); ok {
+				vnet = vn
+			}
+		}
+
+		nodesMap[node.Name] = tmpNode
+	}
+
+	if siteName == "" {
+		return nodesMap, siteName, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find site")
+	}
+
+	if vnet == nil {
+		return nodesMap, siteName, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find vnet")
+	}
+
+	if spine := w.NStorage.HWsStorage.FindSpineBySite(siteID); spine != nil {
+		switchName = spine.SwitchName
+	} else {
+		return nodesMap, siteName, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
+	}
+
+	vnetName = vnet.Name
+	for _, gw := range vnet.Gateways {
+		gateway := fmt.Sprintf("%s/%d", gw.Gateway, gw.GwLength)
+		_, gwNet, _ := net.ParseCIDR(gateway)
+		if gwNet.String() == subnet {
+			vnetGW = gateway
+		}
+	}
+
+	return nodesMap, siteName, vnetName, vnetGW, switchName, nil
 }
