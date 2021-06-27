@@ -48,8 +48,8 @@ type Watcher struct {
 	NStorage   *netrisstorage.Storage
 	MGR        manager.Manager
 	restClient *rest.Config
-	Client     client.Client
-	Clientset  *kubernetes.Clientset
+	client     client.Client
+	clientset  *kubernetes.Clientset
 }
 
 type Options struct {
@@ -79,13 +79,13 @@ func (w *Watcher) getRestConfig() *rest.Config {
 
 func (w *Watcher) start() {
 	w.restClient = w.getRestConfig()
-	w.Client = w.MGR.GetClient()
+	w.client = w.MGR.GetClient()
 	clientset, err := kubernetes.NewForConfig(w.restClient)
 	if err != nil {
 		logger.Error(err, "")
 		return
 	}
-	w.Clientset = clientset
+	w.clientset = clientset
 	// recorder, w, _ := eventRecorder(clientset)
 	// defer w.Stop()
 	err = w.mainProcessing()
@@ -136,7 +136,7 @@ func (w *Watcher) mainProcessing() error {
 		serviceCIDRs = bgpConfs[0].Spec.ServiceClusterIPs
 	)
 
-	nodes, err := w.Clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	nodes, err := w.clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (w *Watcher) mainProcessing() error {
 				if !asnMap[asn] {
 					anns["projectcalico.org/ASNumber"] = asn
 					node.SetAnnotations(anns)
-					_, err := w.Clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
+					_, err := w.clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
 					if err != nil {
 						return err
 					}
@@ -348,7 +348,7 @@ func (w *Watcher) createBGPs(BGPs []*k8sv1alpha1.BGP) []error {
 }
 
 func (w *Watcher) createBGP(bgp *k8sv1alpha1.BGP) error {
-	return w.Client.Create(context.Background(), bgp.DeepCopyObject(), &client.CreateOptions{})
+	return w.client.Create(context.Background(), bgp.DeepCopyObject(), &client.CreateOptions{})
 }
 
 func (w *Watcher) updateBGPs(BGPs []*k8sv1alpha1.BGP) []error {
@@ -362,7 +362,7 @@ func (w *Watcher) updateBGPs(BGPs []*k8sv1alpha1.BGP) []error {
 }
 
 func (w *Watcher) updateBGP(bgp *k8sv1alpha1.BGP) error {
-	return w.Client.Update(context.Background(), bgp.DeepCopyObject(), &client.UpdateOptions{})
+	return w.client.Update(context.Background(), bgp.DeepCopyObject(), &client.UpdateOptions{})
 }
 
 func (w *Watcher) deleteBGPs(BGPs []*k8sv1alpha1.BGP) []error {
@@ -376,7 +376,7 @@ func (w *Watcher) deleteBGPs(BGPs []*k8sv1alpha1.BGP) []error {
 }
 
 func (w *Watcher) deleteBGP(bgp *k8sv1alpha1.BGP) error {
-	return w.Client.Delete(context.Background(), bgp.DeepCopyObject(), &client.DeleteAllOfOptions{})
+	return w.client.Delete(context.Background(), bgp.DeepCopyObject(), &client.DeleteAllOfOptions{})
 }
 
 func compareBGPs(BGPs []*k8sv1alpha1.BGP, generatedBGPs []*k8sv1alpha1.BGP) ([]*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP) {
@@ -421,7 +421,7 @@ func compareBGPs(BGPs []*k8sv1alpha1.BGP, generatedBGPs []*k8sv1alpha1.BGP) ([]*
 
 func (w *Watcher) getBGPs() (*k8sv1alpha1.BGPList, error) {
 	bgps := &k8sv1alpha1.BGPList{}
-	err := w.Client.List(context.Background(), bgps, &client.ListOptions{})
+	err := w.client.List(context.Background(), bgps, &client.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
