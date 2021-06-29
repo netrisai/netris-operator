@@ -201,9 +201,9 @@ func (w *Watcher) mainProcessing() error {
 	js, _ := json.Marshal(bgpsForCreate)
 	debugLogger.Info("BGPs for create", "List", string(js))
 	js, _ = json.Marshal(bgpsForDelete)
-	debugLogger.Info("BGPs for update", "List", string(js))
-	js, _ = json.Marshal(bgpsForUpdate)
 	debugLogger.Info("BGPs for delete", "List", string(js))
+	js, _ = json.Marshal(bgpsForUpdate)
+	debugLogger.Info("BGPs for update", "List", string(js))
 
 	var errors []error
 	errors = append(errors, w.deleteBGPs(bgpsForDelete)...)
