@@ -146,7 +146,7 @@ func (w *Watcher) mainProcessing() error {
 			PrefixListInboundList = append(PrefixListInboundList, fmt.Sprintf("permit %s le %d", cidr, 32))
 		}
 
-		name := fmt.Sprintf("%s-%s", name, node.IP)
+		name := fmt.Sprintf("%s-%s", name, strings.Split(node.IP, "/")[0])
 
 		bgp := &k8sv1alpha1.BGP{
 			ObjectMeta: metav1.ObjectMeta{
