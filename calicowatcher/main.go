@@ -114,32 +114,81 @@ func (w *Watcher) Start() {
 }
 
 func (w *Watcher) mainProcessing() error {
-	blockSize, clusterCIDR, serviceCIDRs, err := w.getIPInfo()
+	deleteMode := false
+	generatedBGPs := []*k8sv1alpha1.BGP{}
+	bgpConfs, err := calico.GetBGPConfiguration(w.restClient)
+	if err != nil {
+		return err
+	}
+	if !w.checkBGPConfigurations(bgpConfs) {
+		deleteMode = true
+	}
+
+	blockSize, clusterCIDR, serviceCIDRs, err := w.getIPInfo(bgpConfs)
 	if err != nil {
 		return err
 	}
 
-	nodes, err := w.getNodes()
+	if !deleteMode {
+		generatedBGPs, err = w.generateBGPs(blockSize, clusterCIDR, serviceCIDRs)
+		if err != nil {
+			return err
+		}
+	}
+
+	bgps, err := w.getBGPs()
 	if err != nil {
 		return err
+	}
+
+	bgpList := []*k8sv1alpha1.BGP{}
+	for _, bgp := range bgps.Items {
+		if ann, ok := bgp.GetAnnotations()["k8s.netris.ai/calicowatcher"]; ok && ann == "true" {
+			bgpList = append(bgpList, bgp.DeepCopy())
+		}
+	}
+
+	bgpsForCreate, bgpsForDelete, bgpsForUpdate := compareBGPs(bgpList, generatedBGPs)
+
+	js, _ := json.Marshal(bgpsForCreate)
+	debugLogger.Info("BGPs for create", "List", string(js))
+	js, _ = json.Marshal(bgpsForDelete)
+	debugLogger.Info("BGPs for delete", "List", string(js))
+	js, _ = json.Marshal(bgpsForUpdate)
+	debugLogger.Info("BGPs for update", "List", string(js))
+
+	var errors []error
+	errors = append(errors, w.deleteBGPs(bgpsForDelete)...)
+	errors = append(errors, w.updateBGPs(bgpsForUpdate)...)
+	errors = append(errors, w.createBGPs(bgpsForCreate)...)
+	if len(errors) > 0 {
+		fmt.Println(errors)
+	}
+	return nil
+}
+
+func (w *Watcher) generateBGPs(blockSize int, clusterCIDR string, serviceCIDRs []string) ([]*k8sv1alpha1.BGP, error) {
+	generatedBGPs := []*k8sv1alpha1.BGP{}
+	nodes, err := w.getNodes()
+	if err != nil {
+		return generatedBGPs, err
 	}
 
 	err = w.fillNodesASNs(nodes.Items)
 	if err != nil {
-		return err
+		return generatedBGPs, err
 	}
 
 	nodesMap, siteName, vnetName, vnetGW, switchName, err := w.nodesProcessing(nodes.Items)
 	if err != nil {
-		return err
+		return generatedBGPs, err
 	}
 
-	generatedBGPs := []*k8sv1alpha1.BGP{}
 	nameReg, _ := regexp.Compile("[^a-z0-9.]+")
 	for name, node := range nodesMap {
 		asn, err := strconv.Atoi(node.ASN)
 		if err != nil {
-			return err
+			return generatedBGPs, err
 		}
 		PrefixListInboundList := []string{fmt.Sprintf("permit %s le %d", clusterCIDR, blockSize)}
 		for _, cidr := range serviceCIDRs {
@@ -183,36 +232,7 @@ func (w *Watcher) mainProcessing() error {
 		bgp.SetAnnotations(anns)
 		generatedBGPs = append(generatedBGPs, bgp)
 	}
-
-	bgps, err := w.getBGPs()
-	if err != nil {
-		return err
-	}
-
-	bgpList := []*k8sv1alpha1.BGP{}
-	for _, bgp := range bgps.Items {
-		if ann, ok := bgp.GetAnnotations()["k8s.netris.ai/calicowatcher"]; ok && ann == "true" {
-			bgpList = append(bgpList, bgp.DeepCopy())
-		}
-	}
-
-	bgpsForCreate, bgpsForDelete, bgpsForUpdate := compareBGPs(bgpList, generatedBGPs)
-
-	js, _ := json.Marshal(bgpsForCreate)
-	debugLogger.Info("BGPs for create", "List", string(js))
-	js, _ = json.Marshal(bgpsForDelete)
-	debugLogger.Info("BGPs for delete", "List", string(js))
-	js, _ = json.Marshal(bgpsForUpdate)
-	debugLogger.Info("BGPs for update", "List", string(js))
-
-	var errors []error
-	errors = append(errors, w.deleteBGPs(bgpsForDelete)...)
-	errors = append(errors, w.updateBGPs(bgpsForUpdate)...)
-	errors = append(errors, w.createBGPs(bgpsForCreate)...)
-	if len(errors) > 0 {
-		fmt.Println(errors)
-	}
-	return nil
+	return generatedBGPs, nil
 }
 
 func (w *Watcher) createBGPs(BGPs []*k8sv1alpha1.BGP) []error {
@@ -323,17 +343,6 @@ func (w *Watcher) checkBGPConfigurations(configurations []*calico.BGPConfigurati
 	return false
 }
 
-func (w *Watcher) getBGPConfigurations() ([]*calico.BGPConfiguration, error) {
-	bgpConfs, err := calico.GetBGPConfiguration(w.restClient)
-	if err != nil {
-		return nil, err
-	}
-	if !w.checkBGPConfigurations(bgpConfs) {
-		return nil, fmt.Errorf("Netris annotation is not present")
-	}
-	return bgpConfs, nil
-}
-
 func (w *Watcher) getNodes() (*v1.NodeList, error) {
 	nodes, err := w.clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
@@ -358,17 +367,12 @@ func (w *Watcher) getIPPools() ([]*calico.IPPool, error) {
 	return ipPools, nil
 }
 
-func (w *Watcher) getIPInfo() (int, string, []string, error) {
+func (w *Watcher) getIPInfo(bgpConfs []*calico.BGPConfiguration) (int, string, []string, error) {
 	var (
 		blockSize    int
 		clusterCIDR  string
 		serviceCIDRs []string
 	)
-
-	bgpConfs, err := w.getBGPConfigurations()
-	if err != nil {
-		return blockSize, clusterCIDR, serviceCIDRs, err
-	}
 
 	ipPools, err := w.getIPPools()
 	if err != nil {
