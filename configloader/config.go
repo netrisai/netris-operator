@@ -10,7 +10,7 @@ type config struct {
 	Controller      controller `yaml:"controller"`
 	LogDevMode      bool       `yaml:"logdevmode" envconfig:"NOPERATOR_DEV_MODE"`
 	RequeueInterval int        `yaml:"requeueinterval" envconfig:"NOPERATOR_REQUEUE_INTERVAL"`
-	CalicoASNRange  string		 `yaml:"calicoasnrange" envconfig:"NOPERATOR_CALICO_ASN_RANGE"`
+	CalicoASNRange  string     `yaml:"calicoasnrange" envconfig:"NOPERATOR_CALICO_ASN_RANGE"`
 }
 
 type controller struct {

@@ -30,6 +30,7 @@ import (
 	"github.com/netrisai/netris-operator/api/v1alpha1"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/calicowatcher/calico"
+	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/netrisstorage"
 	api "github.com/netrisai/netrisapi"
 	"github.com/r3labs/diff/v2"
@@ -64,6 +65,8 @@ type data struct {
 	blockSize     int
 	clusterCIDR   string
 	serviceCIDRs  []string
+	asnStart      int
+	asnEnd        int
 }
 
 type Options struct {
@@ -103,6 +106,18 @@ func (w *Watcher) start() {
 	// recorder, w, _ := eventRecorder(clientset)
 	// defer w.Stop()
 	w.data = data{}
+	if len(configloader.Root.CalicoASNRange) > 0 {
+		a, b, err := w.validateASNRange(configloader.Root.CalicoASNRange)
+		if err != nil {
+			logger.Error(err, "")
+			return
+		}
+		w.data.asnStart = a
+		w.data.asnEnd = b
+	} else {
+		w.data.asnStart = 4200070000
+		w.data.asnEnd = 4200079999
+	}
 	err = w.mainProcessing()
 	if err != nil {
 		logger.Error(err, "")
@@ -435,8 +450,6 @@ func (w *Watcher) getIPInfo() error {
 }
 
 func (w *Watcher) fillNodesASNs(nodes []v1.Node) error {
-	asnStart := 4200070000
-	asnEnd := 4200079000
 	asnMap := make(map[string]bool)
 
 	for _, node := range nodes {
@@ -449,7 +462,7 @@ func (w *Watcher) fillNodesASNs(nodes []v1.Node) error {
 	for _, node := range nodes {
 		anns := node.GetAnnotations()
 		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
-			for i := asnStart; i < asnEnd; i++ {
+			for i := w.data.asnStart; i < w.data.asnEnd; i++ {
 				asn := strconv.Itoa(i)
 				if !asnMap[asn] {
 					anns["projectcalico.org/ASNumber"] = asn
@@ -557,4 +570,35 @@ func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, *api.API
 	}
 
 	return nodesMap, site, vnetName, vnetGW, switchName, nil
+}
+
+func (w *Watcher) validateASNRange(asns string) (int, int, error) {
+	s := strings.Split(asns, "-")
+	a := 0
+	b := 0
+	var err error
+	if len(s) == 2 {
+		a, err = strconv.Atoi(s[0])
+		if err != nil {
+			return a, b, err
+		}
+		if !(a > 0 && a <= 4294967294) {
+			return a, b, fmt.Errorf("invalid ASN  range")
+		}
+		b, err = strconv.Atoi(s[1])
+		if err != nil {
+			return a, b, err
+		}
+		if !(b > 0 && b <= 4294967294) {
+			return a, b, fmt.Errorf("invalid ASN  range")
+		}
+
+		if !(a < b) {
+			return a, b, fmt.Errorf("invalid ASN  range")
+		}
+	} else {
+		return a, b, fmt.Errorf("invalid ASN  range")
+	}
+
+	return a, b, nil
 }
