@@ -60,13 +60,20 @@ type data struct {
 	generatedBGPs []*k8sv1alpha1.BGP
 	bgpList       []*k8sv1alpha1.BGP
 	bgpConfs      []*calico.BGPConfiguration
-	site          *api.APISite
-	vnetGW        string
-	blockSize     int
-	clusterCIDR   string
-	serviceCIDRs  []string
-	asnStart      int
-	asnEnd        int
+
+	nodesMap   map[string]*nodeIP
+	vnetName   string
+	switchName string
+
+	nodes        *v1.NodeList
+	site         *api.APISite
+	vnetGW       string
+	vnetGWIP     string
+	blockSize    int
+	clusterCIDR  string
+	serviceCIDRs []string
+	asnStart     int
+	asnEnd       int
 }
 
 type Options struct {
@@ -161,6 +168,18 @@ func (w *Watcher) mainProcessing() error {
 		return err
 	}
 
+	if err := w.getNodes(); err != nil {
+		return err
+	}
+
+	if err := w.fillNodesASNs(); err != nil {
+		return err
+	}
+
+	if err := w.nodesProcessing(); err != nil {
+		return err
+	}
+
 	if !w.data.deleteMode {
 		if err = w.generateBGPs(); err != nil {
 			return err
@@ -200,7 +219,7 @@ func (w *Watcher) mainProcessing() error {
 		return err
 	}
 
-	peer := calico.GenerateBGPPeer("netris-controller", "", w.data.vnetGW, w.data.site.ASN)
+	peer := calico.GenerateBGPPeer("netris-controller", "", w.data.vnetGWIP, w.data.site.ASN)
 
 	if netrisPeer == nil {
 		if !w.data.deleteMode {
@@ -259,26 +278,9 @@ func (w *Watcher) updateBGPConfMesh(enabled bool) error {
 
 func (w *Watcher) generateBGPs() error {
 	generatedBGPs := []*k8sv1alpha1.BGP{}
-	nodes, err := w.getNodes()
-	if err != nil {
-		return err
-	}
-
-	err = w.fillNodesASNs(nodes.Items)
-	if err != nil {
-		return err
-	}
-
-	nodesMap, site, vnetName, vnetGW, switchName, err := w.nodesProcessing(nodes.Items)
-	if err != nil {
-		return err
-	}
-
-	w.data.site = site
-	w.data.vnetGW = vnetGW
 
 	nameReg, _ := regexp.Compile("[^a-z0-9.]+")
-	for name, node := range nodesMap {
+	for name, node := range w.data.nodesMap {
 		asn, err := strconv.Atoi(node.ASN)
 		if err != nil {
 			return err
@@ -300,17 +302,17 @@ func (w *Watcher) generateBGPs() error {
 				APIVersion: "k8s.netris.ai/v1alpha1",
 			},
 			Spec: k8sv1alpha1.BGPSpec{
-				Site:       site.Name,
+				Site:       w.data.site.Name,
 				NeighborAS: asn,
 				TerminateOnSwitch: k8sv1alpha1.BGPTerminateOnSwitch{
 					Enabled:    true,
-					SwitchName: switchName,
+					SwitchName: w.data.switchName,
 				},
 				Transport: v1alpha1.BGPTransport{
 					Type: "vnet",
-					Name: vnetName,
+					Name: w.data.vnetName,
 				},
-				LocalIP:           vnetGW,
+				LocalIP:           w.data.vnetGW,
 				RemoteIP:          node.IP,
 				PrefixListInbound: PrefixListInboundList,
 				PrefixListOutbound: []string{
@@ -390,21 +392,18 @@ func (w *Watcher) compareBGPs() ([]*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP, []*k8sv
 	for _, genBGP := range w.data.generatedBGPs {
 		if bgp, ok := BGPsMap[genBGP.Name]; !ok {
 			bgpsForCreate = append(bgpsForCreate, genBGP)
-			// Create
 		} else {
 			changelog, _ := diff.Diff(bgp.Spec, genBGP.Spec)
 			if len(changelog) > 0 {
 				bgp.Spec = genBGP.Spec
 				bgpsForUpdate = append(bgpsForUpdate, bgp)
 			}
-			// Update
 		}
 	}
 
 	for _, bgp := range w.data.bgpList {
 		if _, ok := genBGPsMap[bgp.Name]; !ok {
 			bgpsForDelete = append(bgpsForDelete, bgp)
-			// Delete
 		}
 	}
 
@@ -437,16 +436,17 @@ func (w *Watcher) checkBGPConfigurations() bool {
 	return false
 }
 
-func (w *Watcher) getNodes() (*v1.NodeList, error) {
+func (w *Watcher) getNodes() error {
 	nodes, err := w.clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if len(nodes.Items) == 0 {
-		return nil, fmt.Errorf("Nodes are missing")
+		return fmt.Errorf("Nodes are missing")
 	}
-	return nodes, nil
+	w.data.nodes = nodes
+	return nil
 }
 
 func (w *Watcher) getIPPools() ([]*calico.IPPool, error) {
@@ -484,17 +484,17 @@ func (w *Watcher) getIPInfo() error {
 	return nil
 }
 
-func (w *Watcher) fillNodesASNs(nodes []v1.Node) error {
+func (w *Watcher) fillNodesASNs() error {
 	asnMap := make(map[string]bool)
 
-	for _, node := range nodes {
+	for _, node := range w.data.nodes.Items {
 		anns := node.GetAnnotations()
 		if _, ok := anns["projectcalico.org/ASNumber"]; ok {
 			asnMap[anns["projectcalico.org/ASNumber"]] = true
 		}
 	}
 
-	for _, node := range nodes {
+	for _, node := range w.data.nodes.Items {
 		anns := node.GetAnnotations()
 		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
 			for i := w.data.asnStart; i < w.data.asnEnd; i++ {
@@ -516,13 +516,14 @@ func (w *Watcher) fillNodesASNs(nodes []v1.Node) error {
 	return nil
 }
 
-func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, *api.APISite, string, string, string, error) {
+func (w *Watcher) nodesProcessing() error {
 	var (
 		siteName   string
 		site       *api.APISite
 		vnetName   string
 		vnetGW     string
 		switchName string
+		vnetGWIP   string
 	)
 
 	siteID := 0
@@ -531,7 +532,7 @@ func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, *api.API
 
 	nodesMap := make(map[string]*nodeIP)
 
-	for _, node := range nodes {
+	for _, node := range w.data.nodes.Items {
 		anns := node.GetAnnotations()
 
 		if _, ok := anns["projectcalico.org/IPv4Address"]; !ok {
@@ -544,7 +545,7 @@ func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, *api.API
 		asn := ""
 
 		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
-			return nodesMap, site, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't get as number for node %s", node.Name)
+			return fmt.Errorf("Couldn't get as number for node %s", node.Name)
 		} else {
 			asn = anns["projectcalico.org/ASNumber"]
 		}
@@ -582,17 +583,17 @@ func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, *api.API
 	}
 
 	if siteName == "" {
-		return nodesMap, site, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find site")
+		return fmt.Errorf("Couldn't find site")
 	}
 
 	if vnet == nil {
-		return nodesMap, site, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find vnet")
+		return fmt.Errorf("Couldn't find vnet")
 	}
 
 	if spine := w.NStorage.HWsStorage.FindSpineBySite(siteID); spine != nil {
 		switchName = spine.SwitchName
 	} else {
-		return nodesMap, site, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
+		return fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
 	}
 
 	vnetName = vnet.Name
@@ -601,10 +602,17 @@ func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, *api.API
 		_, gwNet, _ := net.ParseCIDR(gateway)
 		if gwNet.String() == subnet {
 			vnetGW = gateway
+			vnetGWIP = gw.Gateway
 		}
 	}
+	w.data.nodesMap = nodesMap
+	w.data.site = site
+	w.data.vnetName = vnetName
+	w.data.vnetGW = vnetGW
+	w.data.vnetGWIP = vnetGWIP
+	w.data.switchName = switchName
 
-	return nodesMap, site, vnetName, vnetGW, switchName, nil
+	return nil
 }
 
 func (w *Watcher) validateASNRange(asns string) (int, int, error) {

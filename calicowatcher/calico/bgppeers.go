@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -101,6 +102,9 @@ func GetBGPPeer(name string, config *rest.Config) (*BGPPeer, error) {
 
 	peer, err := dynClient.Resource(bgpPeerResource).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("{GetBGPPeer} %s", err)
 	}
 
