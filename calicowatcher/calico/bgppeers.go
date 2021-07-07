@@ -84,3 +84,23 @@ func GetBGPPeer(config *rest.Config) ([]*BGPPeer, error) {
 	}
 	return bgpPeers, nil
 }
+
+// DeleteBGPPeer .
+func DeleteBGPPeer(peer *BGPPeer, config *rest.Config) error {
+	dynClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("{DeleteBGPPeer} %s", err)
+	}
+
+	bgpPeerResource := schema.GroupVersionResource{
+		Group:    "crd.projectcalico.org",
+		Version:  "v1",
+		Resource: "bgppeers",
+	}
+
+	err = dynClient.Resource(bgpPeerResource).Delete(context.Background(), peer.Name, metav1.DeleteOptions{})
+	if err != nil {
+		return fmt.Errorf("{DeleteBGPPeer} %s", err)
+	}
+	return nil
+}
