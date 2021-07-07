@@ -28,5 +28,7 @@ spec:
               value: "false"
             - name: NOPERATOR_DEV_MODE
               value: "false"
-            - name: NOPERATOR_REQUEUE_OPERATOR
+            - name: NOPERATOR_REQUEUE_INTERVAL
               value: "15"
+            - name: NOPERATOR_CALICO_ASN_RANGE
+              value: "4200070000-4200079999"
