@@ -36,6 +36,8 @@ type BGPStatus struct {
 	PortState         string      `json:"portstate,omitempty"`
 	TerminateOnSwitch string      `json:"terminateOnSwitch,omitempty"`
 	VLANID            string      `json:"vlanID,omitempty"`
+	BGPStatus         string      `json:"bgpstatus,omitempty"`
+	BGPPrefixes       int         `json:"bgpprefixes,omitempty"`
 }
 
 // BGPSpec defines the desired state of BGP

@@ -98,6 +98,9 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				bgpMeta.Spec.ID = bgp.ID
 				bgpCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(bgp.ModifiedDate/1000), 0))
 				bgpCR.Status.BGPState = fmt.Sprintf("bgp: %s; prefix: %s; time: %s", bgp.BgpState, bgp.BgpPrefixes, bgp.BgpUptime)
+				bgpCR.Status.BGPStatus = bgp.BgpState
+				prefixCount, _ := strconv.Atoi(bgp.BgpPrefixes)
+				bgpCR.Status.BGPPrefixes = prefixCount
 				bgpCR.Status.PortState = bgp.PortStatus
 				bgpCR.Status.TerminateOnSwitch = bgp.TermSwName
 				if bgp.Vlan > 1 {
@@ -129,6 +132,9 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if apiBGP, ok := r.NStorage.BGPStorage.FindByID(bgpMeta.Spec.ID); ok {
 			bgpCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiBGP.ModifiedDate/1000), 0))
 			bgpCR.Status.BGPState = fmt.Sprintf("bgp: %s; prefix: %s; time: %s", apiBGP.BgpState, apiBGP.BgpPrefixes, apiBGP.BgpUptime)
+			bgpCR.Status.BGPStatus = apiBGP.BgpState
+			prefixCount, _ := strconv.Atoi(apiBGP.BgpPrefixes)
+			bgpCR.Status.BGPPrefixes = prefixCount
 			bgpCR.Status.PortState = apiBGP.PortStatus
 			bgpCR.Status.TerminateOnSwitch = apiBGP.TermSwName
 			if apiBGP.Vlan > 1 {
