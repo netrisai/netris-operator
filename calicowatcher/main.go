@@ -151,6 +151,12 @@ func (w *Watcher) mainProcessing() error {
 		w.data.deleteMode = true
 	}
 
+	if w.data.deleteMode {
+		if err := w.updateBGPConfMesh(true); err != nil {
+			return err
+		}
+	}
+
 	if err := w.getIPInfo(); err != nil {
 		return err
 	}
@@ -219,7 +225,36 @@ func (w *Watcher) mainProcessing() error {
 		}
 	}
 
+	if !w.data.deleteMode {
+		bgpActive := true
+		for _, bgp := range w.data.bgpList {
+			if !((bgp.Status.BGPStatus == "Active" || bgp.Status.BGPStatus == "Established") && bgp.Status.BGPPrefixes > 0) {
+				bgpActive = false
+				break
+			}
+		}
+
+		if bgpActive {
+			if err := w.updateBGPConfMesh(false); err != nil {
+				return err
+			}
+		} else {
+			if err := w.updateBGPConfMesh(true); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
+}
+
+func (w *Watcher) updateBGPConfMesh(enabled bool) error {
+	if len(w.data.bgpConfs) > 0 {
+		bgpConf := w.data.bgpConfs[0]
+		bgpConf.Spec.NodeToNodeMeshEnabled = &enabled
+		return calico.UpdateBGPConfiguration(bgpConf, w.restClient)
+	}
+	return fmt.Errorf("BGPConfiguration is missing in calico")
 }
 
 func (w *Watcher) generateBGPs() error {

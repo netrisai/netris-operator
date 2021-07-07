@@ -22,6 +22,8 @@ import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
@@ -103,4 +105,33 @@ func GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, error) {
 		bgpConfigurations = append(bgpConfigurations, bgpConfiguration)
 	}
 	return bgpConfigurations, nil
+}
+
+// UpdateBGPConfiguration .
+func UpdateBGPConfiguration(bgpConf *BGPConfiguration, config *rest.Config) error {
+	dynClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("{UpdateBGPConfiguration} %s", err)
+	}
+
+	bgpPeerResource := schema.GroupVersionResource{
+		Group:    "crd.projectcalico.org",
+		Version:  "v1",
+		Resource: "bgpconfigurations",
+	}
+
+	m, err := runtime.DefaultUnstructuredConverter.ToUnstructured(bgpConf)
+	if err != nil {
+		return fmt.Errorf("{UpdateBGPConfiguration} %s", err)
+	}
+
+	obj := &unstructured.Unstructured{
+		Object: m,
+	}
+
+	_, err = dynClient.Resource(bgpPeerResource).Update(context.Background(), obj, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("{UpdateBGPConfiguration} %s", err)
+	}
+	return nil
 }
