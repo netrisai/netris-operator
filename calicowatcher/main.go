@@ -324,6 +324,7 @@ func (w *Watcher) generateBGPs() error {
 		}
 		anns := make(map[string]string)
 		anns["k8s.netris.ai/calicowatcher"] = "true"
+		anns["resource.k8s.netris.ai/import"] = "true"
 		bgp.SetAnnotations(anns)
 		generatedBGPs = append(generatedBGPs, bgp)
 	}
