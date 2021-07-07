@@ -20,9 +20,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
@@ -46,11 +47,11 @@ type BGPPeerSpec struct {
 	// The AS Number of the peer.
 	ASNumber int `json:"asNumber"`
 	// The IP address of the peer.
-	PeerIP net.IP `json:"peerIP" validate:"omitempty"`
+	PeerIP string `json:"peerIP" validate:"omitempty"`
 }
 
-// GetBGPConfiguration .
-func GetBGPPeer(config *rest.Config) ([]*BGPPeer, error) {
+// GetBGPPeers .
+func GetBGPPeers(config *rest.Config) ([]*BGPPeer, error) {
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("{GetBGPPeer} %s", err)
@@ -85,6 +86,38 @@ func GetBGPPeer(config *rest.Config) ([]*BGPPeer, error) {
 	return bgpPeers, nil
 }
 
+// GetBGPPeer .
+func GetBGPPeer(name string, config *rest.Config) (*BGPPeer, error) {
+	dynClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("{GetBGPPeer} %s", err)
+	}
+
+	bgpPeerResource := schema.GroupVersionResource{
+		Group:    "crd.projectcalico.org",
+		Version:  "v1",
+		Resource: "bgppeers",
+	}
+
+	peer, err := dynClient.Resource(bgpPeerResource).Get(context.Background(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("{GetBGPPeer} %s", err)
+	}
+
+	js, err := peer.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("{GetBGPPeer} %s", err)
+	}
+	var bgpPeer *BGPPeer
+	err = json.Unmarshal(js, &bgpPeer)
+	if err != nil {
+		return nil, fmt.Errorf("{GetBGPPeer} %s", err)
+	}
+	bgpPeer.Name = bgpPeer.Metadata.Name
+
+	return bgpPeer, nil
+}
+
 // DeleteBGPPeer .
 func DeleteBGPPeer(peer *BGPPeer, config *rest.Config) error {
 	dynClient, err := dynamic.NewForConfig(config)
@@ -103,4 +136,84 @@ func DeleteBGPPeer(peer *BGPPeer, config *rest.Config) error {
 		return fmt.Errorf("{DeleteBGPPeer} %s", err)
 	}
 	return nil
+}
+
+// CreateBGPPeer .
+func CreateBGPPeer(peer *BGPPeer, config *rest.Config) error {
+	dynClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("{CreateBGPPeer} %s", err)
+	}
+
+	bgpPeerResource := schema.GroupVersionResource{
+		Group:    "crd.projectcalico.org",
+		Version:  "v1",
+		Resource: "bgppeers",
+	}
+
+	m, err := runtime.DefaultUnstructuredConverter.ToUnstructured(peer)
+	if err != nil {
+		return fmt.Errorf("{CreateBGPPeer} %s", err)
+	}
+
+	obj := &unstructured.Unstructured{
+		Object: m,
+	}
+
+	_, err = dynClient.Resource(bgpPeerResource).Create(context.Background(), obj, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("{CreateBGPPeer} %s", err)
+	}
+	return nil
+}
+
+// UpdateBGPPeer .
+func UpdateBGPPeer(peer *BGPPeer, config *rest.Config) error {
+	dynClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("{UpdateBGPPeer} %s", err)
+	}
+
+	bgpPeerResource := schema.GroupVersionResource{
+		Group:    "crd.projectcalico.org",
+		Version:  "v1",
+		Resource: "bgppeers",
+	}
+
+	m, err := runtime.DefaultUnstructuredConverter.ToUnstructured(peer)
+	if err != nil {
+		return fmt.Errorf("{UpdateBGPPeer} %s", err)
+	}
+
+	obj := &unstructured.Unstructured{
+		Object: m,
+	}
+
+	_, err = dynClient.Resource(bgpPeerResource).Update(context.Background(), obj, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("{UpdateBGPPeer} %s", err)
+	}
+	return nil
+}
+
+// GenerateBGPPeer .
+func GenerateBGPPeer(name, namespace, ip string, asn int) *BGPPeer {
+	nmspace := "default"
+	if len(namespace) > 0 {
+		nmspace = namespace
+	}
+	return &BGPPeer{
+		Metadata: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: nmspace,
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "BGPPeer",
+			APIVersion: "crd.projectcalico.org/v1",
+		},
+		Spec: BGPPeerSpec{
+			ASNumber: asn,
+			PeerIP:   ip,
+		},
+	}
 }

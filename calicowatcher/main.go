@@ -59,6 +59,8 @@ type data struct {
 	generatedBGPs []*k8sv1alpha1.BGP
 	bgpList       []*k8sv1alpha1.BGP
 	bgpConfs      []*calico.BGPConfiguration
+	site          *api.APISite
+	vnetGW        string
 	blockSize     int
 	clusterCIDR   string
 	serviceCIDRs  []string
@@ -172,6 +174,36 @@ func (w *Watcher) mainProcessing() error {
 		fmt.Println(errors)
 	}
 
+	netrisPeer, err := calico.GetBGPPeer("netris-controller", w.restClient)
+	if err != nil {
+		return err
+	}
+
+	peer := calico.GenerateBGPPeer("netris-controller", "", w.data.vnetGW, w.data.site.ASN)
+
+	if netrisPeer == nil {
+		if !w.data.deleteMode {
+			if err := calico.CreateBGPPeer(peer, w.restClient); err != nil {
+				return err
+			}
+		}
+	} else {
+		if w.data.deleteMode {
+			if err := calico.DeleteBGPPeer(netrisPeer, w.restClient); err != nil {
+				return err
+			}
+		} else {
+			changelog, _ := diff.Diff(netrisPeer.Spec, peer.Spec)
+			if len(changelog) > 0 {
+				netrisPeer.Spec = peer.Spec
+				if err := calico.UpdateBGPPeer(netrisPeer, w.restClient); err != nil {
+					return err
+				}
+			}
+
+		}
+	}
+
 	return nil
 }
 
@@ -187,10 +219,13 @@ func (w *Watcher) generateBGPs() error {
 		return err
 	}
 
-	nodesMap, siteName, vnetName, vnetGW, switchName, err := w.nodesProcessing(nodes.Items)
+	nodesMap, site, vnetName, vnetGW, switchName, err := w.nodesProcessing(nodes.Items)
 	if err != nil {
 		return err
 	}
+
+	w.data.site = site
+	w.data.vnetGW = vnetGW
 
 	nameReg, _ := regexp.Compile("[^a-z0-9.]+")
 	for name, node := range nodesMap {
@@ -215,7 +250,7 @@ func (w *Watcher) generateBGPs() error {
 				APIVersion: "k8s.netris.ai/v1alpha1",
 			},
 			Spec: k8sv1alpha1.BGPSpec{
-				Site:       siteName,
+				Site:       site.Name,
 				NeighborAS: asn,
 				TerminateOnSwitch: k8sv1alpha1.BGPTerminateOnSwitch{
 					Enabled:    true,
@@ -433,9 +468,10 @@ func (w *Watcher) fillNodesASNs(nodes []v1.Node) error {
 	return nil
 }
 
-func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, string, string, string, string, error) {
+func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, *api.APISite, string, string, string, error) {
 	var (
 		siteName   string
+		site       *api.APISite
 		vnetName   string
 		vnetGW     string
 		switchName string
@@ -460,7 +496,7 @@ func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, string, 
 		asn := ""
 
 		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
-			return nodesMap, siteName, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't get as number for node %s", node.Name)
+			return nodesMap, site, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't get as number for node %s", node.Name)
 		} else {
 			asn = anns["projectcalico.org/ASNumber"]
 		}
@@ -483,7 +519,8 @@ func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, string, 
 				fmt.Println(err)
 				continue
 			}
-			if site, ok := w.NStorage.SitesStorage.FindByID(id); ok {
+			var ok bool
+			if site, ok = w.NStorage.SitesStorage.FindByID(id); ok {
 				siteName = site.Name
 				siteID = site.ID
 			}
@@ -497,17 +534,17 @@ func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, string, 
 	}
 
 	if siteName == "" {
-		return nodesMap, siteName, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find site")
+		return nodesMap, site, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find site")
 	}
 
 	if vnet == nil {
-		return nodesMap, siteName, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find vnet")
+		return nodesMap, site, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find vnet")
 	}
 
 	if spine := w.NStorage.HWsStorage.FindSpineBySite(siteID); spine != nil {
 		switchName = spine.SwitchName
 	} else {
-		return nodesMap, siteName, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
+		return nodesMap, site, vnetName, vnetGW, switchName, fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
 	}
 
 	vnetName = vnet.Name
@@ -519,5 +556,5 @@ func (w *Watcher) nodesProcessing(nodes []v1.Node) (map[string]*nodeIP, string, 
 		}
 	}
 
-	return nodesMap, siteName, vnetName, vnetGW, switchName, nil
+	return nodesMap, site, vnetName, vnetGW, switchName, nil
 }
