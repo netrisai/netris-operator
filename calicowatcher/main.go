@@ -150,26 +150,32 @@ func (w *Watcher) Start() {
 }
 
 func (w *Watcher) process() error {
+	debugLogger.Info("Getting IP information", "deleteMode", w.data.deleteMode)
 	if err := w.getIPInfo(); err != nil {
 		return err
 	}
 
+	debugLogger.Info("Getting Nodes", "deleteMode", w.data.deleteMode)
 	if err := w.getNodes(); err != nil {
 		return err
 	}
 
+	debugLogger.Info("Filling Nodes AS numbers", "deleteMode", w.data.deleteMode)
 	if err := w.fillNodesASNs(); err != nil {
 		return err
 	}
 
+	debugLogger.Info("Nodes Processing", "deleteMode", w.data.deleteMode)
 	if err := w.nodesProcessing(); err != nil {
 		return err
 	}
 
+	debugLogger.Info("Generating BGPs", "deleteMode", w.data.deleteMode)
 	if err := w.generateBGPs(); err != nil {
 		return err
 	}
 
+	debugLogger.Info("Getting BGP list from k8s", "deleteMode", w.data.deleteMode)
 	bgps, err := w.getBGPs()
 	if err != nil {
 		return err
@@ -184,11 +190,11 @@ func (w *Watcher) process() error {
 	bgpsForCreate, bgpsForDelete, bgpsForUpdate := w.compareBGPs()
 
 	js, _ := json.Marshal(bgpsForCreate)
-	debugLogger.Info("BGPs for create", "List", string(js))
+	debugLogger.Info("BGPs for create", "List", string(js), "deleteMode", w.data.deleteMode)
 	js, _ = json.Marshal(bgpsForDelete)
-	debugLogger.Info("BGPs for delete", "List", string(js))
+	debugLogger.Info("BGPs for delete", "List", string(js), "deleteMode", w.data.deleteMode)
 	js, _ = json.Marshal(bgpsForUpdate)
-	debugLogger.Info("BGPs for update", "List", string(js))
+	debugLogger.Info("BGPs for update", "List", string(js), "deleteMode", w.data.deleteMode)
 
 	var errors []error
 	errors = append(errors, w.deleteBGPs(bgpsForDelete)...)
@@ -198,25 +204,30 @@ func (w *Watcher) process() error {
 		fmt.Println(errors)
 	}
 
+	debugLogger.Info("Getting netris-controller peer", "deleteMode", w.data.deleteMode)
 	netrisPeer, err := calico.GetBGPPeer("netris-controller", w.restClient)
 	if err != nil {
 		return err
 	}
 
+	debugLogger.Info("Generating netris-controller peer", "deleteMode", w.data.deleteMode)
 	peer := calico.GenerateBGPPeer("netris-controller", "", w.data.vnetGWIP, w.data.site.ASN)
 
 	if netrisPeer == nil {
+		debugLogger.Info("Creating netris-controller peer", "deleteMode", w.data.deleteMode)
 		if err := calico.CreateBGPPeer(peer, w.restClient); err != nil {
 			return err
 		}
+		logger.Info("netris-controller peer created", "deleteMode", w.data.deleteMode)
 	} else {
-
 		changelog, _ := diff.Diff(netrisPeer.Spec, peer.Spec)
 		if len(changelog) > 0 {
+			debugLogger.Info("Updating netris-controller peer", "deleteMode", w.data.deleteMode)
 			netrisPeer.Spec = peer.Spec
 			if err := calico.UpdateBGPPeer(netrisPeer, w.restClient); err != nil {
 				return err
 			}
+			logger.Info("netris-controller peer updated", "deleteMode", w.data.deleteMode)
 		}
 	}
 
@@ -230,17 +241,21 @@ func (w *Watcher) process() error {
 
 	if bgpActive {
 		if *w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled {
+			debugLogger.Info("All BGPs are established", "deleteMode", w.data.deleteMode)
+			debugLogger.Info("Disabling NodeToNodeMesh in BGP Configuration", "deleteMode", w.data.deleteMode)
 			if err := w.updateBGPConfMesh(false); err != nil {
 				return err
 			}
-			logger.Info("NodeToNodeMesh disabled in BGP Configuration")
+			logger.Info("NodeToNodeMesh disabled in BGP Configuration", "deleteMode", w.data.deleteMode)
 		}
 	} else {
 		if !*w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled {
+			debugLogger.Info("BGPs are not established", "deleteMode", w.data.deleteMode)
+			debugLogger.Info("Enabling NodeToNodeMesh in BGP Configuration", "deleteMode", w.data.deleteMode)
 			if err := w.updateBGPConfMesh(true); err != nil {
 				return err
 			}
-			logger.Info("NodeToNodeMesh enabled in BGP Configuration")
+			logger.Info("NodeToNodeMesh enabled in BGP Configuration", "deleteMode", w.data.deleteMode)
 		}
 	}
 
@@ -248,10 +263,12 @@ func (w *Watcher) process() error {
 }
 
 func (w *Watcher) deleteNodesProcessing() error {
+	debugLogger.Info("Getting Nodes", "deleteMode", w.data.deleteMode)
 	if err := w.getNodes(); err != nil {
 		return err
 	}
 
+	debugLogger.Info("Deleting Nodes ASN annotation", "deleteMode", w.data.deleteMode)
 	if err := w.deleteNodesASNs(); err != nil {
 		return err
 	}
@@ -277,11 +294,11 @@ func (w *Watcher) deleteNodesASNs() error {
 }
 
 func (w *Watcher) deleteProcess() error {
-	if *w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled {
+	if !*w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled {
 		if err := w.updateBGPConfMesh(true); err != nil {
 			return err
 		}
-		logger.Info("NodeToNodeMesh enabled in BGP Configuration")
+		logger.Info("NodeToNodeMesh enabled in BGP Configuration", "deleteMode", w.data.deleteMode)
 	}
 
 	if err := w.deleteNodesProcessing(); err != nil {
@@ -290,6 +307,7 @@ func (w *Watcher) deleteProcess() error {
 
 	w.data.generatedBGPs = []*k8sv1alpha1.BGP{}
 
+	debugLogger.Info("Geting BGPs from k8s", "deleteMode", w.data.deleteMode)
 	bgps, err := w.getBGPs()
 	if err != nil {
 		return err
@@ -301,32 +319,29 @@ func (w *Watcher) deleteProcess() error {
 		}
 	}
 
-	bgpsForCreate, bgpsForDelete, bgpsForUpdate := w.compareBGPs()
+	_, bgpsForDelete, _ := w.compareBGPs()
 
-	js, _ := json.Marshal(bgpsForCreate)
-	debugLogger.Info("BGPs for create", "List", string(js))
-	js, _ = json.Marshal(bgpsForDelete)
-	debugLogger.Info("BGPs for delete", "List", string(js))
-	js, _ = json.Marshal(bgpsForUpdate)
-	debugLogger.Info("BGPs for update", "List", string(js))
+	js, _ := json.Marshal(bgpsForDelete)
+	debugLogger.Info("BGPs for delete", "List", string(js), "deleteMode", w.data.deleteMode)
 
 	var errors []error
 	errors = append(errors, w.deleteBGPs(bgpsForDelete)...)
-	errors = append(errors, w.updateBGPs(bgpsForUpdate)...)
-	errors = append(errors, w.createBGPs(bgpsForCreate)...)
 	if len(errors) > 0 {
 		fmt.Println(errors)
 	}
 
+	debugLogger.Info("Geting netris-controller peer", "deleteMode", w.data.deleteMode)
 	netrisPeer, err := calico.GetBGPPeer("netris-controller", w.restClient)
 	if err != nil {
 		return err
 	}
 
 	if netrisPeer != nil {
+		debugLogger.Info("Deleting netris-controller peer", "deleteMode", w.data.deleteMode)
 		if err := calico.DeleteBGPPeer(netrisPeer, w.restClient); err != nil {
 			return err
 		}
+		logger.Info("netris-controller pee deleted", "deleteMode", w.data.deleteMode)
 	}
 
 	return nil
@@ -342,8 +357,12 @@ func (w *Watcher) mainProcessing() error {
 	}
 
 	if w.data.deleteMode {
+		debugLogger.Info("manage.k8s.netris.ai/calico is missing in BGP Configuration", "deleteMode", w.data.deleteMode)
+		debugLogger.Info("Clearing Netris staff", "deleteMode", w.data.deleteMode)
 		return w.deleteProcess()
 	} else {
+		debugLogger.Info("manage.k8s.netris.ai/calico is present in BGP Configuration", "deleteMode", w.data.deleteMode)
+		debugLogger.Info("Creating Netris staff", "deleteMode", w.data.deleteMode)
 		return w.process()
 	}
 }
