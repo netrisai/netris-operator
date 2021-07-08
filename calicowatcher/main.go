@@ -149,21 +149,7 @@ func (w *Watcher) Start() {
 	}
 }
 
-func (w *Watcher) mainProcessing() error {
-	var err error
-	if w.data.bgpConfs, err = calico.GetBGPConfiguration(w.restClient); err != nil {
-		return err
-	}
-	if !w.checkBGPConfigurations() {
-		w.data.deleteMode = true
-	}
-
-	if w.data.deleteMode {
-		if err := w.updateBGPConfMesh(true); err != nil {
-			return err
-		}
-	}
-
+func (w *Watcher) process() error {
 	if err := w.getIPInfo(); err != nil {
 		return err
 	}
@@ -180,10 +166,8 @@ func (w *Watcher) mainProcessing() error {
 		return err
 	}
 
-	if !w.data.deleteMode {
-		if err = w.generateBGPs(); err != nil {
-			return err
-		}
+	if err := w.generateBGPs(); err != nil {
+		return err
 	}
 
 	bgps, err := w.getBGPs()
@@ -222,49 +206,134 @@ func (w *Watcher) mainProcessing() error {
 	peer := calico.GenerateBGPPeer("netris-controller", "", w.data.vnetGWIP, w.data.site.ASN)
 
 	if netrisPeer == nil {
-		if !w.data.deleteMode {
-			if err := calico.CreateBGPPeer(peer, w.restClient); err != nil {
-				return err
-			}
+		if err := calico.CreateBGPPeer(peer, w.restClient); err != nil {
+			return err
 		}
 	} else {
-		if w.data.deleteMode {
-			if err := calico.DeleteBGPPeer(netrisPeer, w.restClient); err != nil {
+
+		changelog, _ := diff.Diff(netrisPeer.Spec, peer.Spec)
+		if len(changelog) > 0 {
+			netrisPeer.Spec = peer.Spec
+			if err := calico.UpdateBGPPeer(netrisPeer, w.restClient); err != nil {
 				return err
 			}
-		} else {
-			changelog, _ := diff.Diff(netrisPeer.Spec, peer.Spec)
-			if len(changelog) > 0 {
-				netrisPeer.Spec = peer.Spec
-				if err := calico.UpdateBGPPeer(netrisPeer, w.restClient); err != nil {
-					return err
-				}
-			}
-
 		}
 	}
 
-	if !w.data.deleteMode {
-		bgpActive := true
-		for _, bgp := range w.data.bgpList {
-			if !((bgp.Status.BGPStatus == "Active" || bgp.Status.BGPStatus == "Established") && bgp.Status.BGPPrefixes > 0) {
-				bgpActive = false
-				break
-			}
+	bgpActive := true
+	for _, bgp := range w.data.bgpList {
+		if !((bgp.Status.BGPStatus == "Active" || bgp.Status.BGPStatus == "Established") && bgp.Status.BGPPrefixes > 0) {
+			bgpActive = false
+			break
 		}
+	}
 
-		if bgpActive {
-			if err := w.updateBGPConfMesh(false); err != nil {
-				return err
-			}
-		} else {
-			if err := w.updateBGPConfMesh(true); err != nil {
-				return err
-			}
+	if bgpActive {
+		if err := w.updateBGPConfMesh(false); err != nil {
+			return err
+		}
+	} else {
+		if err := w.updateBGPConfMesh(true); err != nil {
+			return err
 		}
 	}
 
 	return nil
+}
+
+func (w *Watcher) deleteNodesProcessing() error {
+	if err := w.getNodes(); err != nil {
+		return err
+	}
+
+	if err := w.deleteNodesASNs(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (w *Watcher) deleteNodesASNs() error {
+	for _, node := range w.data.nodes.Items {
+		anns := node.GetAnnotations()
+		if _, ok := anns["projectcalico.org/ASNumber"]; ok {
+			delete(anns, "projectcalico.org/ASNumber")
+			node.SetAnnotations(anns)
+			_, err := w.clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (w *Watcher) deleteProcess() error {
+	if err := w.updateBGPConfMesh(true); err != nil {
+		return err
+	}
+
+	if err := w.deleteNodesProcessing(); err != nil {
+		return err
+	}
+
+	w.data.generatedBGPs = []*k8sv1alpha1.BGP{}
+
+	bgps, err := w.getBGPs()
+	if err != nil {
+		return err
+	}
+
+	for _, bgp := range bgps.Items {
+		if ann, ok := bgp.GetAnnotations()["k8s.netris.ai/calicowatcher"]; ok && ann == "true" {
+			w.data.bgpList = append(w.data.bgpList, bgp.DeepCopy())
+		}
+	}
+
+	bgpsForCreate, bgpsForDelete, bgpsForUpdate := w.compareBGPs()
+
+	js, _ := json.Marshal(bgpsForCreate)
+	debugLogger.Info("BGPs for create", "List", string(js))
+	js, _ = json.Marshal(bgpsForDelete)
+	debugLogger.Info("BGPs for delete", "List", string(js))
+	js, _ = json.Marshal(bgpsForUpdate)
+	debugLogger.Info("BGPs for update", "List", string(js))
+
+	var errors []error
+	errors = append(errors, w.deleteBGPs(bgpsForDelete)...)
+	errors = append(errors, w.updateBGPs(bgpsForUpdate)...)
+	errors = append(errors, w.createBGPs(bgpsForCreate)...)
+	if len(errors) > 0 {
+		fmt.Println(errors)
+	}
+
+	netrisPeer, err := calico.GetBGPPeer("netris-controller", w.restClient)
+	if err != nil {
+		return err
+	}
+
+	if netrisPeer != nil {
+		if err := calico.DeleteBGPPeer(netrisPeer, w.restClient); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (w *Watcher) mainProcessing() error {
+	var err error
+	if w.data.bgpConfs, err = calico.GetBGPConfiguration(w.restClient); err != nil {
+		return err
+	}
+	if !w.checkBGPConfigurations() {
+		w.data.deleteMode = true
+	}
+
+	if w.data.deleteMode {
+		return w.deleteProcess()
+	} else {
+		return w.process()
+	}
 }
 
 func (w *Watcher) updateBGPConfMesh(enabled bool) error {
