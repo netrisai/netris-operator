@@ -255,12 +255,15 @@ func (w *Watcher) deleteNodesProcessing() error {
 func (w *Watcher) deleteNodesASNs() error {
 	for _, node := range w.data.nodes.Items {
 		anns := node.GetAnnotations()
-		if _, ok := anns["projectcalico.org/ASNumber"]; ok {
-			delete(anns, "projectcalico.org/ASNumber")
-			node.SetAnnotations(anns)
-			_, err := w.clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
-			if err != nil {
-				return err
+		if asn, ok := anns["projectcalico.org/ASNumber"]; ok {
+			as, _ := strconv.Atoi(asn)
+			if as >= w.data.asnStart && as <= w.data.asnEnd {
+				delete(anns, "projectcalico.org/ASNumber")
+				node.SetAnnotations(anns)
+				_, err := w.clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
