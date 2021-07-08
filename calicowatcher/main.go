@@ -229,12 +229,18 @@ func (w *Watcher) process() error {
 	}
 
 	if bgpActive {
-		if err := w.updateBGPConfMesh(false); err != nil {
-			return err
+		if *w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled {
+			if err := w.updateBGPConfMesh(false); err != nil {
+				return err
+			}
+			logger.Info("NodeToNodeMesh disabled in BGP Configuration")
 		}
 	} else {
-		if err := w.updateBGPConfMesh(true); err != nil {
-			return err
+		if !*w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled {
+			if err := w.updateBGPConfMesh(true); err != nil {
+				return err
+			}
+			logger.Info("NodeToNodeMesh enabled in BGP Configuration")
 		}
 	}
 
@@ -271,8 +277,11 @@ func (w *Watcher) deleteNodesASNs() error {
 }
 
 func (w *Watcher) deleteProcess() error {
-	if err := w.updateBGPConfMesh(true); err != nil {
-		return err
+	if *w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled {
+		if err := w.updateBGPConfMesh(true); err != nil {
+			return err
+		}
+		logger.Info("NodeToNodeMesh enabled in BGP Configuration")
 	}
 
 	if err := w.deleteNodesProcessing(); err != nil {
