@@ -72,7 +72,7 @@ type ServiceClusterIPBlock struct {
 }
 
 // GetBGPConfiguration .
-func GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, error) {
+func (c *Calico) GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
@@ -110,7 +110,7 @@ func GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, error) {
 }
 
 // UpdateBGPConfiguration .
-func UpdateBGPConfiguration(bgpConf *BGPConfiguration, config *rest.Config) error {
+func (c *Calico) UpdateBGPConfiguration(bgpConf *BGPConfiguration, config *rest.Config) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)

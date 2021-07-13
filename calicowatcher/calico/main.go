@@ -25,3 +25,20 @@ var (
 	cntxt          = context.Background()
 	contextTimeout = time.Duration(10 * time.Second)
 )
+
+type Calico struct {
+	options Options
+}
+
+type Options struct {
+	ContextTimeout int
+}
+
+func New(options Options) *Calico {
+	if options.ContextTimeout > 0 {
+		contextTimeout = time.Duration(time.Duration(options.ContextTimeout) * time.Second)
+	}
+	return &Calico{
+		options: options,
+	}
+}

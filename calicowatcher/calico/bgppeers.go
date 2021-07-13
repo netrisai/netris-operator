@@ -52,7 +52,7 @@ type BGPPeerSpec struct {
 }
 
 // GetBGPPeers .
-func GetBGPPeers(config *rest.Config) ([]*BGPPeer, error) {
+func (c *Calico) GetBGPPeers(config *rest.Config) ([]*BGPPeer, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
@@ -90,7 +90,7 @@ func GetBGPPeers(config *rest.Config) ([]*BGPPeer, error) {
 }
 
 // GetBGPPeer .
-func GetBGPPeer(name string, config *rest.Config) (*BGPPeer, error) {
+func (c *Calico) GetBGPPeer(name string, config *rest.Config) (*BGPPeer, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
@@ -127,7 +127,7 @@ func GetBGPPeer(name string, config *rest.Config) (*BGPPeer, error) {
 }
 
 // DeleteBGPPeer .
-func DeleteBGPPeer(peer *BGPPeer, config *rest.Config) error {
+func (c *Calico) DeleteBGPPeer(peer *BGPPeer, config *rest.Config) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
@@ -149,7 +149,7 @@ func DeleteBGPPeer(peer *BGPPeer, config *rest.Config) error {
 }
 
 // CreateBGPPeer .
-func CreateBGPPeer(peer *BGPPeer, config *rest.Config) error {
+func (c *Calico) CreateBGPPeer(peer *BGPPeer, config *rest.Config) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
@@ -180,7 +180,7 @@ func CreateBGPPeer(peer *BGPPeer, config *rest.Config) error {
 }
 
 // UpdateBGPPeer .
-func UpdateBGPPeer(peer *BGPPeer, config *rest.Config) error {
+func (c *Calico) UpdateBGPPeer(peer *BGPPeer, config *rest.Config) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
@@ -211,7 +211,7 @@ func UpdateBGPPeer(peer *BGPPeer, config *rest.Config) error {
 }
 
 // GenerateBGPPeer .
-func GenerateBGPPeer(name, namespace, ip string, asn int) *BGPPeer {
+func (c *Calico) GenerateBGPPeer(name, namespace, ip string, asn int) *BGPPeer {
 	nmspace := "default"
 	if len(namespace) > 0 {
 		nmspace = namespace

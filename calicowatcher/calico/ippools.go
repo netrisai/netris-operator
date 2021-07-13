@@ -89,7 +89,7 @@ type VXLANMode string
 type IPIPMode string
 
 // GetIPPool .
-func GetIPPool(config *rest.Config) ([]*IPPool, error) {
+func (c *Calico) GetIPPool(config *rest.Config) ([]*IPPool, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
