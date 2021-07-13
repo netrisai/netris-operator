@@ -50,12 +50,13 @@ type VNetMetaReconciler struct {
 
 // Reconcile .
 func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	vnetMeta := &k8sv1alpha1.VNetMeta{}
 	vnetCR := &k8sv1alpha1.VNet{}
-	if err := r.Get(context.Background(), req.NamespacedName, vnetMeta); err != nil {
+	vnetMetaCtx, vnetMetaCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer vnetMetaCancel()
+	if err := r.Get(vnetMetaCtx, req.NamespacedName, vnetMeta); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -78,7 +79,9 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	vnetNN := req.NamespacedName
 	vnetNN.Name = vnetMeta.Spec.VnetName
-	if err := r.Get(context.Background(), vnetNN, vnetCR); err != nil {
+	vnetNNCtx, vnetNNCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer vnetNNCancel()
+	if err := r.Get(vnetNNCtx, vnetNN, vnetCR); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -104,7 +107,9 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				}
 				vnetMeta.Spec.ID = vnetID
 				vnetCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(vnet.ModifiedDate/1000), 0))
-				err = r.Patch(context.Background(), vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				vnetMetaPatchCtx, vnetMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
+				defer vnetMetaPatchCancel()
+				err = r.Patch(vnetMetaPatchCtx, vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch vnetmeta.Spec.ID} %s", err), "")
 					return u.patchVNetStatus(vnetCR, "Failure", err.Error())
@@ -210,7 +215,9 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 
 	vnetMeta.Spec.ID = idStruct.CircuitID
 
-	err = r.Patch(context.Background(), vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err = r.Patch(ctx, vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

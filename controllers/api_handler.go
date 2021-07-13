@@ -26,11 +26,10 @@ import (
 	api "github.com/netrisai/netrisapi"
 )
 
-var requeueInterval = time.Duration(10 * time.Second)
-
 func init() {
 	if configloader.Root.RequeueInterval > 0 {
 		requeueInterval = time.Duration(time.Duration(configloader.Root.RequeueInterval) * time.Second)
+		contextTimeout = requeueInterval
 	}
 }
 

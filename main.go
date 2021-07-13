@@ -72,7 +72,7 @@ func main() {
 	}
 
 	var err error
-	cred, err = api.NewHTTPCredentials(configloader.Root.Controller.Host, configloader.Root.Controller.Login, configloader.Root.Controller.Password, 10)
+	cred, err = api.NewHTTPCredentials(configloader.Root.Controller.Host, configloader.Root.Controller.Login, configloader.Root.Controller.Password, configloader.Root.RequeueInterval)
 	if err != nil {
 		log.Panicf("newHTTPCredentials error %v", err)
 	}
@@ -171,14 +171,14 @@ func main() {
 		watcherLogLevel = "debug"
 	}
 
-	lbWatcher, err := lbwatcher.NewWatcher(nStorage, mgr, lbwatcher.Options{LogLevel: watcherLogLevel})
+	lbWatcher, err := lbwatcher.NewWatcher(nStorage, mgr, lbwatcher.Options{LogLevel: watcherLogLevel, RequeueInterval: configloader.Root.RequeueInterval})
 	if err != nil {
 		setupLog.Error(err, "problem running lbwatcher")
 		os.Exit(1)
 	}
 	go lbWatcher.Start()
 
-	cWatcher, err := calicowatcher.NewWatcher(nStorage, mgr, calicowatcher.Options{LogLevel: watcherLogLevel})
+	cWatcher, err := calicowatcher.NewWatcher(nStorage, mgr, calicowatcher.Options{LogLevel: watcherLogLevel, RequeueInterval: configloader.Root.RequeueInterval})
 	if err != nil {
 		setupLog.Error(err, "problem running calicowatcher")
 		os.Exit(1)

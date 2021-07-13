@@ -26,7 +26,9 @@ import (
 )
 
 func getPods(clientset *kubernetes.Clientset, namespace string) (*v1.PodList, error) {
-	pods, err := clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return pods, fmt.Errorf("{getPods} %s", err)
 	}

@@ -19,7 +19,6 @@ package lbwatcher
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -33,7 +32,9 @@ import (
 )
 
 func getServices(clientset *kubernetes.Clientset, namespace string) (*v1.ServiceList, error) {
-	services, err := clientset.CoreV1().Services(namespace).List(context.Background(), metav1.ListOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	services, err := clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return services, fmt.Errorf("{getServices} %s", err)
 	}
@@ -41,7 +42,7 @@ func getServices(clientset *kubernetes.Clientset, namespace string) (*v1.Service
 }
 
 func assignIngress(clientset *kubernetes.Clientset, ips []string, namespace string, name string) (*v1.Service, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 
 	var ingressList []v1.LoadBalancerIngress
@@ -84,7 +85,9 @@ func eventRecorder(kubeClient *kubernetes.Clientset) (record.EventRecorder, watc
 }
 
 func createEvent(clientset *kubernetes.Clientset, recorder record.EventRecorder, namespace, name, reason, message string) error {
-	service, err := clientset.CoreV1().Services(namespace).Get(context.Background(), name, metav1.GetOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	service, err := clientset.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("{createEvent} %s", err)
 	}

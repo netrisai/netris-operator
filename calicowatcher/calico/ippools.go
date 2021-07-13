@@ -90,6 +90,8 @@ type IPIPMode string
 
 // GetIPPool .
 func GetIPPool(config *rest.Config) ([]*IPPool, error) {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("{GetIPPool} %s", err)
@@ -101,7 +103,7 @@ func GetIPPool(config *rest.Config) ([]*IPPool, error) {
 		Resource: "ippools",
 	}
 
-	list, err := dynClient.Resource(bgpConfigurationResource).List(context.Background(), metav1.ListOptions{})
+	list, err := dynClient.Resource(bgpConfigurationResource).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("{GetIPPool} %s", err)
 	}

@@ -15,3 +15,13 @@ limitations under the License.
 */
 
 package calico
+
+import (
+	"context"
+	"time"
+)
+
+var (
+	cntxt          = context.Background()
+	contextTimeout = time.Duration(10 * time.Second)
+)

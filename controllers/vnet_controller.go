@@ -47,7 +47,6 @@ type VNetReconciler struct {
 
 // Reconcile vnet events
 func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	vnet := &k8sv1alpha1.VNet{}
@@ -60,7 +59,9 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		NStorage:    r.NStorage,
 	}
 
-	if err := r.Get(context.Background(), req.NamespacedName, vnet); err != nil {
+	vnetCtx, vnetCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer vnetCancel()
+	if err := r.Get(vnetCtx, req.NamespacedName, vnet); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -72,7 +73,9 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	vnetMetaNamespaced.Name = string(vnet.GetUID())
 	vnetMeta := &k8sv1alpha1.VNetMeta{}
 	metaFound := true
-	if err := r.Get(context.Background(), vnetMetaNamespaced, vnetMeta); err != nil {
+	vnetMetaCtx, vnetMetaCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer vnetMetaCancel()
+	if err := r.Get(vnetMetaCtx, vnetMetaNamespaced, vnetMeta); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			metaFound = false
@@ -96,7 +99,9 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if vnetMustUpdateAnnotations(vnet) {
 		debugLogger.Info("Setting default annotations")
 		vnetUpdateDefaultAnnotations(vnet)
-		err := r.Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		vnetUpdateCtx, vnetUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer vnetUpdateCancel()
+		err := r.Patch(vnetUpdateCtx, vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch VNet default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -125,7 +130,9 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			vnetMeta.Spec.ID = vnetID
 			vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
 
-			err = r.Update(context.Background(), vnetMeta.DeepCopyObject(), &client.UpdateOptions{})
+			vnetMetaUpdateCtx, vnetMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
+			defer vnetMetaUpdateCancel()
+			err = r.Update(vnetMetaUpdateCtx, vnetMeta.DeepCopyObject(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{vnetMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -135,7 +142,9 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		debugLogger.Info("Meta not found")
 		if vnet.GetFinalizers() == nil {
 			vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
-			err := r.Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			vnetPatchCtx, vnetPatchCancel := context.WithTimeout(cntxt, contextTimeout)
+			defer vnetPatchCancel()
+			err := r.Patch(vnetPatchCtx, vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch VNet Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -151,7 +160,9 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		vnetMeta.Spec.VnetCRGeneration = vnet.GetGeneration()
 
-		if err := r.Create(context.Background(), vnetMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		vnetMetaCreateCtx, vnetMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer vnetMetaCreateCancel()
+		if err := r.Create(vnetMetaCreateCtx, vnetMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{vnetMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -219,9 +230,11 @@ func (r *VNetReconciler) deleteCRs(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1
 }
 
 func (r *VNetReconciler) deleteVnetCR(vnet *k8sv1alpha1.VNet) (ctrl.Result, error) {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	vnet.ObjectMeta.SetFinalizers(nil)
 	vnet.SetFinalizers(nil)
-	if err := r.Update(context.Background(), vnet.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, vnet.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteVnetCR} %s", err)
 	}
 
@@ -229,7 +242,9 @@ func (r *VNetReconciler) deleteVnetCR(vnet *k8sv1alpha1.VNet) (ctrl.Result, erro
 }
 
 func (r *VNetReconciler) deleteVnetMetaCR(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
-	if err := r.Delete(context.Background(), vnetMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	if err := r.Delete(ctx, vnetMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteVnetMetaCR} %s", err)
 	}
 

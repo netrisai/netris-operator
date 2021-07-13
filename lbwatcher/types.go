@@ -42,5 +42,6 @@ type lbIP struct {
 }
 
 type Options struct {
-	LogLevel string
+	LogLevel        string
+	RequeueInterval int
 }

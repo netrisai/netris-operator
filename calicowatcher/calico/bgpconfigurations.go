@@ -73,6 +73,8 @@ type ServiceClusterIPBlock struct {
 
 // GetBGPConfiguration .
 func GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, error) {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("{getBGPConfiguration} %s", err)
@@ -84,7 +86,7 @@ func GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, error) {
 		Resource: "bgpconfigurations",
 	}
 
-	list, err := dynClient.Resource(bgpConfigurationResource).List(context.Background(), metav1.ListOptions{})
+	list, err := dynClient.Resource(bgpConfigurationResource).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("{getBGPConfiguration} %s", err)
 	}
@@ -109,6 +111,8 @@ func GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, error) {
 
 // UpdateBGPConfiguration .
 func UpdateBGPConfiguration(bgpConf *BGPConfiguration, config *rest.Config) error {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return fmt.Errorf("{UpdateBGPConfiguration} %s", err)
@@ -129,7 +133,7 @@ func UpdateBGPConfiguration(bgpConf *BGPConfiguration, config *rest.Config) erro
 		Object: m,
 	}
 
-	_, err = dynClient.Resource(bgpPeerResource).Update(context.Background(), obj, metav1.UpdateOptions{})
+	_, err = dynClient.Resource(bgpPeerResource).Update(ctx, obj, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("{UpdateBGPConfiguration} %s", err)
 	}

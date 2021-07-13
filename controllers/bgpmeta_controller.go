@@ -48,12 +48,13 @@ type BGPMetaReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgpmeta/status,verbs=get;update;patch
 
 func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	bgpMeta := &k8sv1alpha1.BGPMeta{}
 	bgpCR := &k8sv1alpha1.BGP{}
-	if err := r.Get(context.Background(), req.NamespacedName, bgpMeta); err != nil {
+	bgpMetaCtx, bgpMetaCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer bgpMetaCancel()
+	if err := r.Get(bgpMetaCtx, req.NamespacedName, bgpMeta); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -76,7 +77,9 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	bgpNN := req.NamespacedName
 	bgpNN.Name = bgpMeta.Spec.BGPName
-	if err := r.Get(context.Background(), bgpNN, bgpCR); err != nil {
+	bgpNNCtx, bgpNNCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer bgpNNCancel()
+	if err := r.Get(bgpNNCtx, bgpNN, bgpCR); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -109,7 +112,9 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					bgpCR.Status.VLANID = "untagged"
 				}
 
-				err := r.Patch(context.Background(), bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				bgpMetaPatchCtx, bgpMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
+				defer bgpMetaPatchCancel()
+				err := r.Patch(bgpMetaPatchCtx, bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch bgpmeta.Spec.ID} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", err.Error())
@@ -207,7 +212,9 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 
 	bgpMeta.Spec.ID = idStruct.ID
 
-	err = r.Patch(context.Background(), bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err = r.Patch(ctx, bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

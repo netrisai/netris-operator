@@ -45,6 +45,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
+var (
+	requeueInterval = time.Duration(10 * time.Second)
+	logger          logr.Logger
+	debugLogger     logr.InfoLogger
+	cntxt           = context.Background()
+	contextTimeout  = requeueInterval
+)
+
 type Watcher struct {
 	Options    Options
 	NStorage   *netrisstorage.Storage
@@ -77,7 +85,8 @@ type data struct {
 }
 
 type Options struct {
-	LogLevel string
+	RequeueInterval int
+	LogLevel        string
 }
 
 func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Options) (*Watcher, error) {
@@ -91,11 +100,6 @@ func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Op
 	}
 	return watcher, nil
 }
-
-var (
-	logger      logr.Logger
-	debugLogger logr.InfoLogger
-)
 
 func (w *Watcher) getRestConfig() *rest.Config {
 	return ctrl.GetConfigOrDie()
@@ -141,7 +145,12 @@ func (w *Watcher) Start() {
 	logger = ctrl.Log.WithName("CalicoWatcher")
 	debugLogger = logger.V(int(zapcore.WarnLevel))
 
-	ticker := time.NewTicker(10 * time.Second)
+	if w.Options.RequeueInterval > 0 {
+		requeueInterval = time.Duration(time.Duration(w.Options.RequeueInterval) * time.Second)
+		contextTimeout = requeueInterval
+	}
+
+	ticker := time.NewTicker(requeueInterval)
 	w.start()
 	for {
 		<-ticker.C
@@ -276,6 +285,8 @@ func (w *Watcher) deleteNodesProcessing() error {
 }
 
 func (w *Watcher) deleteNodesASNs() error {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	for _, node := range w.data.nodes.Items {
 		anns := node.GetAnnotations()
 		if asn, ok := anns["projectcalico.org/ASNumber"]; ok {
@@ -283,7 +294,7 @@ func (w *Watcher) deleteNodesASNs() error {
 			if as >= w.data.asnStart && as <= w.data.asnEnd {
 				delete(anns, "projectcalico.org/ASNumber")
 				node.SetAnnotations(anns)
-				_, err := w.clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
+				_, err := w.clientset.CoreV1().Nodes().Update(ctx, node.DeepCopy(), metav1.UpdateOptions{})
 				if err != nil {
 					return err
 				}
@@ -443,7 +454,9 @@ func (w *Watcher) createBGPs(BGPs []*k8sv1alpha1.BGP) []error {
 }
 
 func (w *Watcher) createBGP(bgp *k8sv1alpha1.BGP) error {
-	return w.client.Create(context.Background(), bgp.DeepCopyObject(), &client.CreateOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	return w.client.Create(ctx, bgp.DeepCopyObject(), &client.CreateOptions{})
 }
 
 func (w *Watcher) updateBGPs(BGPs []*k8sv1alpha1.BGP) []error {
@@ -457,7 +470,9 @@ func (w *Watcher) updateBGPs(BGPs []*k8sv1alpha1.BGP) []error {
 }
 
 func (w *Watcher) updateBGP(bgp *k8sv1alpha1.BGP) error {
-	return w.client.Update(context.Background(), bgp.DeepCopyObject(), &client.UpdateOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	return w.client.Update(ctx, bgp.DeepCopyObject(), &client.UpdateOptions{})
 }
 
 func (w *Watcher) deleteBGPs(BGPs []*k8sv1alpha1.BGP) []error {
@@ -471,7 +486,9 @@ func (w *Watcher) deleteBGPs(BGPs []*k8sv1alpha1.BGP) []error {
 }
 
 func (w *Watcher) deleteBGP(bgp *k8sv1alpha1.BGP) error {
-	return w.client.Delete(context.Background(), bgp.DeepCopyObject(), &client.DeleteAllOfOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	return w.client.Delete(ctx, bgp.DeepCopyObject(), &client.DeleteAllOfOptions{})
 }
 
 func (w *Watcher) compareBGPs() ([]*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP) {
@@ -512,8 +529,10 @@ func (w *Watcher) compareBGPs() ([]*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP, []*k8sv
 }
 
 func (w *Watcher) getBGPs() (*k8sv1alpha1.BGPList, error) {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	bgps := &k8sv1alpha1.BGPList{}
-	err := w.client.List(context.Background(), bgps, &client.ListOptions{})
+	err := w.client.List(ctx, bgps, &client.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -538,7 +557,9 @@ func (w *Watcher) checkBGPConfigurations() bool {
 }
 
 func (w *Watcher) getNodes() error {
-	nodes, err := w.clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	nodes, err := w.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -603,10 +624,13 @@ func (w *Watcher) fillNodesASNs() error {
 				if !asnMap[asn] {
 					anns["projectcalico.org/ASNumber"] = asn
 					node.SetAnnotations(anns)
-					_, err := w.clientset.CoreV1().Nodes().Update(context.Background(), node.DeepCopy(), metav1.UpdateOptions{})
+					ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+					_, err := w.clientset.CoreV1().Nodes().Update(ctx, node.DeepCopy(), metav1.UpdateOptions{})
 					if err != nil {
+						cancel()
 						return err
 					}
+					cancel()
 					asnMap[asn] = true
 				}
 			}

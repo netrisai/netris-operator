@@ -40,8 +40,11 @@ import (
 )
 
 var (
-	logger      logr.Logger
-	debugLogger logr.InfoLogger
+	requeueInterval = time.Duration(10 * time.Second)
+	logger          logr.Logger
+	debugLogger     logr.InfoLogger
+	cntxt           = context.Background()
+	contextTimeout  = requeueInterval
 )
 
 func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Options) (*Watcher, error) {
@@ -77,7 +80,12 @@ func (w *Watcher) Start() {
 	logger = ctrl.Log.WithName("LBWatcher")
 	debugLogger = logger.V(int(zapcore.WarnLevel))
 
-	ticker := time.NewTicker(10 * time.Second)
+	if w.Options.RequeueInterval > 0 {
+		requeueInterval = time.Duration(time.Duration(w.Options.RequeueInterval) * time.Second)
+		contextTimeout = requeueInterval
+	}
+
+	ticker := time.NewTicker(requeueInterval)
 	w.start()
 	for {
 		<-ticker.C
@@ -192,7 +200,9 @@ func deleteL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB) []error {
 }
 
 func deleteL4LB(cl client.Client, lb k8sv1alpha1.L4LB) error {
-	return cl.Delete(context.Background(), lb.DeepCopyObject(), &client.DeleteOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	return cl.Delete(ctx, lb.DeepCopyObject(), &client.DeleteOptions{})
 }
 
 func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
@@ -228,7 +238,9 @@ func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB, ipAuto map[string]str
 }
 
 func createL4LB(cl client.Client, lb *k8sv1alpha1.L4LB) error {
-	return cl.Create(context.Background(), lb.DeepCopyObject(), &client.CreateOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	return cl.Create(ctx, lb.DeepCopyObject(), &client.CreateOptions{})
 }
 
 func createL4LBs(cl client.Client, lbs []*k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
@@ -264,7 +276,9 @@ func createL4LBs(cl client.Client, lbs []*k8sv1alpha1.L4LB, ipAuto map[string]st
 }
 
 func updateL4LB(cl client.Client, lb k8sv1alpha1.L4LB) error {
-	return cl.Update(context.Background(), lb.DeepCopyObject(), &client.UpdateOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	return cl.Update(ctx, lb.DeepCopyObject(), &client.UpdateOptions{})
 }
 
 func compareLoadBalancers(LBs []k8sv1alpha1.L4LB, serviceLBs []*k8sv1alpha1.L4LB) ([]*k8sv1alpha1.L4LB, []k8sv1alpha1.L4LB, []k8sv1alpha1.L4LB, map[string]map[string]int) {
@@ -386,7 +400,9 @@ func compareBackends(lbBackends []k8sv1alpha1.L4LBBackend, serviceLBBackends []k
 func getL4LBs(cl client.Client) (*k8sv1alpha1.L4LBList, error) {
 	l4lb := &k8sv1alpha1.L4LBList{}
 
-	err := cl.List(context.Background(), l4lb, &client.ListOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := cl.List(ctx, l4lb, &client.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("{getL4LBs} %s", err)
 	}

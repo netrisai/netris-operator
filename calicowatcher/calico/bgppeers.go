@@ -53,6 +53,8 @@ type BGPPeerSpec struct {
 
 // GetBGPPeers .
 func GetBGPPeers(config *rest.Config) ([]*BGPPeer, error) {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("{GetBGPPeer} %s", err)
@@ -64,7 +66,7 @@ func GetBGPPeers(config *rest.Config) ([]*BGPPeer, error) {
 		Resource: "bgppeers",
 	}
 
-	list, err := dynClient.Resource(bgpPeerResource).List(context.Background(), metav1.ListOptions{})
+	list, err := dynClient.Resource(bgpPeerResource).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("{GetBGPPeer} %s", err)
 	}
@@ -89,6 +91,8 @@ func GetBGPPeers(config *rest.Config) ([]*BGPPeer, error) {
 
 // GetBGPPeer .
 func GetBGPPeer(name string, config *rest.Config) (*BGPPeer, error) {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("{GetBGPPeer} %s", err)
@@ -100,7 +104,7 @@ func GetBGPPeer(name string, config *rest.Config) (*BGPPeer, error) {
 		Resource: "bgppeers",
 	}
 
-	peer, err := dynClient.Resource(bgpPeerResource).Get(context.Background(), name, metav1.GetOptions{})
+	peer, err := dynClient.Resource(bgpPeerResource).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, nil
@@ -124,6 +128,8 @@ func GetBGPPeer(name string, config *rest.Config) (*BGPPeer, error) {
 
 // DeleteBGPPeer .
 func DeleteBGPPeer(peer *BGPPeer, config *rest.Config) error {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return fmt.Errorf("{DeleteBGPPeer} %s", err)
@@ -135,7 +141,7 @@ func DeleteBGPPeer(peer *BGPPeer, config *rest.Config) error {
 		Resource: "bgppeers",
 	}
 
-	err = dynClient.Resource(bgpPeerResource).Delete(context.Background(), peer.Name, metav1.DeleteOptions{})
+	err = dynClient.Resource(bgpPeerResource).Delete(ctx, peer.Name, metav1.DeleteOptions{})
 	if err != nil {
 		return fmt.Errorf("{DeleteBGPPeer} %s", err)
 	}
@@ -144,6 +150,8 @@ func DeleteBGPPeer(peer *BGPPeer, config *rest.Config) error {
 
 // CreateBGPPeer .
 func CreateBGPPeer(peer *BGPPeer, config *rest.Config) error {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return fmt.Errorf("{CreateBGPPeer} %s", err)
@@ -164,7 +172,7 @@ func CreateBGPPeer(peer *BGPPeer, config *rest.Config) error {
 		Object: m,
 	}
 
-	_, err = dynClient.Resource(bgpPeerResource).Create(context.Background(), obj, metav1.CreateOptions{})
+	_, err = dynClient.Resource(bgpPeerResource).Create(ctx, obj, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("{CreateBGPPeer} %s", err)
 	}
@@ -173,6 +181,8 @@ func CreateBGPPeer(peer *BGPPeer, config *rest.Config) error {
 
 // UpdateBGPPeer .
 func UpdateBGPPeer(peer *BGPPeer, config *rest.Config) error {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return fmt.Errorf("{UpdateBGPPeer} %s", err)
@@ -193,7 +203,7 @@ func UpdateBGPPeer(peer *BGPPeer, config *rest.Config) error {
 		Object: m,
 	}
 
-	_, err = dynClient.Resource(bgpPeerResource).Update(context.Background(), obj, metav1.UpdateOptions{})
+	_, err = dynClient.Resource(bgpPeerResource).Update(ctx, obj, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("{UpdateBGPPeer} %s", err)
 	}
