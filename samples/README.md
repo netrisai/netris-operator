@@ -167,3 +167,13 @@ Name                                   | Default      |Values              | Des
 -------------------------------------- | ------------ | ------------------ | ----------------
 `resource.k8s.netris.ai/import`        | "false"      |"true" or "false"   | Allow importing existing resources. 
 `resource.k8s.netris.ai/reclaimPolicy` | "delete"     |"retain" or "delete"| Resources reclaim policy.
+
+
+# Calico Integration
+
+Calico nodes exchange routing information over BGP to enable reachability for Calico networked workloads. Netris can also integrate with you Calico CNI. It will create BGP peers with your cluster's nodes, then will disable Calico Node to Node mesh. For more details, get familiar with [calico docs](https://docs.projectcalico.org/networking/bgp).
+
+Add this annotation to enable Netris-Calico Integration.
+```
+kubectl annotate bgpconfigurations default manage.k8s.netris.ai/calico='true'
+```

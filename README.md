@@ -31,5 +31,11 @@ Netris Operator managing resources samples are available in the `samples/` [fold
 ## Features
 * Managing Netris Controller via CRD
 * Automatically creating `L4LB` resource for `type: load-balancer` services
-* *Integration with CNI - In progress*
+* Integration with CNI:
+  |            |                      |
+  | -----------| ---------------------|
+  | `Calico`   | `Ready`              |
+  | `Cilium`   | *`In progress`*      |
+  | `Flannel`  | *`In progress`*      |
+  
 
