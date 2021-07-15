@@ -37,6 +37,9 @@ logLevel: info
 # Set the requeue interval in seconds for the netris-operator.
 requeueInterval: 15
 
+# Set Nodes asn range. Used when Netris-Operator manages Calico CNI 
+calicoASNRange: 4200070000-4200079999
+
 rbac:
   # Specifies whether RBAC resources should be created
   create: true

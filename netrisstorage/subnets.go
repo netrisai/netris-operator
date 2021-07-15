@@ -35,14 +35,18 @@ func NewSubnetsStorage() *SubnetsStorage {
 }
 
 // GetAll .
-func (p *SubnetsStorage) GetAll() []*api.APISubnet {
+func (p *SubnetsStorage) GetAll() []api.APISubnet {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *SubnetsStorage) getAll() []*api.APISubnet {
-	return p.Subnets
+func (p *SubnetsStorage) getAll() []api.APISubnet {
+	subnets := []api.APISubnet{}
+	for _, subnet := range p.Subnets {
+		subnets = append(subnets, *subnet)
+	}
+	return subnets
 }
 
 func (p *SubnetsStorage) storeAll(items []*api.APISubnet) {

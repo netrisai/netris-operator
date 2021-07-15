@@ -21,6 +21,7 @@ COPY api/ api/
 COPY controllers/ controllers/
 COPY configloader/ configloader/
 COPY lbwatcher/ lbwatcher/
+COPY calicowatcher/ calicowatcher/
 COPY netrisstorage/ netrisstorage/
 
 # Build

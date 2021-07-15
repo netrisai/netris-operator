@@ -14,34 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package lbwatcher
+package calico
 
 import (
-	"github.com/netrisai/netris-operator/netrisstorage"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"context"
+	"time"
 )
 
-type Watcher struct {
-	Options  Options
-	NStorage *netrisstorage.Storage
-	MGR      manager.Manager
-}
+var (
+	cntxt          = context.Background()
+	contextTimeout = time.Duration(10 * time.Second)
+)
 
-type selector struct {
-	Key   string
-	Value string
-}
-
-type lbIP struct {
-	Name      string
-	IP        string
-	Port      int
-	NodePort  int
-	Protocol  string
-	Automatic bool
+type Calico struct {
+	options Options
 }
 
 type Options struct {
-	LogLevel        string
-	RequeueInterval int
+	ContextTimeout int
+}
+
+func New(options Options) *Calico {
+	if options.ContextTimeout > 0 {
+		contextTimeout = time.Duration(time.Duration(options.ContextTimeout) * time.Second)
+	}
+	return &Calico{
+		options: options,
+	}
 }

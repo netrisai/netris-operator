@@ -32,25 +32,29 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
 )
 
 // BGPMetaReconciler reconciles a BGPMeta object
 type BGPMetaReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
+	Cred     *api.HTTPCred
+	NStorage *netrisstorage.Storage
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgpmeta,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgpmeta/status,verbs=get;update;patch
 
 func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	bgpMeta := &k8sv1alpha1.BGPMeta{}
 	bgpCR := &k8sv1alpha1.BGP{}
-	if err := r.Get(context.Background(), req.NamespacedName, bgpMeta); err != nil {
+	bgpMetaCtx, bgpMetaCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer bgpMetaCancel()
+	if err := r.Get(bgpMetaCtx, req.NamespacedName, bgpMeta); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -65,13 +69,17 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		Client:      r.Client,
 		Logger:      logger,
 		DebugLogger: debugLogger,
+		Cred:        r.Cred,
+		NStorage:    r.NStorage,
 	}
 
 	provisionState := "Provisioning"
 
 	bgpNN := req.NamespacedName
 	bgpNN.Name = bgpMeta.Spec.BGPName
-	if err := r.Get(context.Background(), bgpNN, bgpCR); err != nil {
+	bgpNNCtx, bgpNNCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer bgpNNCancel()
+	if err := r.Get(bgpNNCtx, bgpNN, bgpCR); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -88,11 +96,14 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if bgpMeta.Spec.Imported {
 			logger.Info("Importing bgp")
 			debugLogger.Info("Imported yaml mode. Finding BGP by name")
-			if bgp, ok := NStorage.BGPStorage.FindByName(bgpMeta.Spec.BGPName); ok {
+			if bgp, ok := r.NStorage.BGPStorage.FindByName(bgpMeta.Spec.BGPName); ok {
 				debugLogger.Info("Imported yaml mode. BGP found")
 				bgpMeta.Spec.ID = bgp.ID
 				bgpCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(bgp.ModifiedDate/1000), 0))
 				bgpCR.Status.BGPState = fmt.Sprintf("bgp: %s; prefix: %s; time: %s", bgp.BgpState, bgp.BgpPrefixes, bgp.BgpUptime)
+				bgpCR.Status.BGPStatus = bgp.BgpState
+				prefixCount, _ := strconv.Atoi(bgp.BgpPrefixes)
+				bgpCR.Status.BGPPrefixes = prefixCount
 				bgpCR.Status.PortState = bgp.PortStatus
 				bgpCR.Status.TerminateOnSwitch = bgp.TermSwName
 				if bgp.Vlan > 1 {
@@ -101,7 +112,9 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					bgpCR.Status.VLANID = "untagged"
 				}
 
-				err := r.Patch(context.Background(), bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				bgpMetaPatchCtx, bgpMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
+				defer bgpMetaPatchCancel()
+				err := r.Patch(bgpMetaPatchCtx, bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch bgpmeta.Spec.ID} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", err.Error())
@@ -121,9 +134,12 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		logger.Info("BGP Created")
 	} else {
-		if apiBGP, ok := NStorage.BGPStorage.FindByID(bgpMeta.Spec.ID); ok {
+		if apiBGP, ok := r.NStorage.BGPStorage.FindByID(bgpMeta.Spec.ID); ok {
 			bgpCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiBGP.ModifiedDate/1000), 0))
 			bgpCR.Status.BGPState = fmt.Sprintf("bgp: %s; prefix: %s; time: %s", apiBGP.BgpState, apiBGP.BgpPrefixes, apiBGP.BgpUptime)
+			bgpCR.Status.BGPStatus = apiBGP.BgpState
+			prefixCount, _ := strconv.Atoi(apiBGP.BgpPrefixes)
+			bgpCR.Status.BGPPrefixes = prefixCount
 			bgpCR.Status.PortState = apiBGP.PortStatus
 			bgpCR.Status.TerminateOnSwitch = apiBGP.TermSwName
 			if apiBGP.Vlan > 1 {
@@ -143,7 +159,7 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					logger.Error(fmt.Errorf("{BGPMetaToNetrisUpdate} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", err.Error())
 				}
-				_, err, errMsg := updateBGP(bgpUpdate)
+				_, err, errMsg := updateBGP(bgpUpdate, r.Cred)
 				if err != nil {
 					logger.Error(fmt.Errorf("{updateBGP} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", errMsg.Error())
@@ -174,7 +190,7 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
-	reply, err := Cred.AddEBGP(bgpAdd)
+	reply, err := r.Cred.AddEBGP(bgpAdd)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
@@ -196,7 +212,9 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 
 	bgpMeta.Spec.ID = idStruct.ID
 
-	err = r.Patch(context.Background(), bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err = r.Patch(ctx, bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
@@ -211,8 +229,8 @@ func (r *BGPMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func updateBGP(vnet *api.APIEBGPUpdate) (ctrl.Result, error, error) {
-	reply, err := Cred.UpdateEBGP(vnet)
+func updateBGP(vnet *api.APIEBGPUpdate, cred *api.HTTPCred) (ctrl.Result, error, error) {
+	reply, err := cred.UpdateEBGP(vnet)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateBGP} %s", err), err
 	}

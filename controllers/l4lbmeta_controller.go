@@ -32,26 +32,30 @@ import (
 
 	"github.com/netrisai/netris-operator/api/v1alpha1"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
 	api "github.com/netrisai/netrisapi"
 )
 
 // L4LBMetaReconciler reconciles a L4LBMeta object
 type L4LBMetaReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
+	Cred     *api.HTTPCred
+	NStorage *netrisstorage.Storage
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta/status,verbs=get;update;patch
 
 func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	l4lbMeta := &k8sv1alpha1.L4LBMeta{}
 	l4lbCR := &k8sv1alpha1.L4LB{}
-	if err := r.Get(context.Background(), req.NamespacedName, l4lbMeta); err != nil {
+	l4lbMetaCtx, l4lbMetaCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer l4lbMetaCancel()
+	if err := r.Get(l4lbMetaCtx, req.NamespacedName, l4lbMeta); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -66,13 +70,17 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		Client:      r.Client,
 		Logger:      logger,
 		DebugLogger: debugLogger,
+		Cred:        r.Cred,
+		NStorage:    r.NStorage,
 	}
 
 	provisionState := ""
 
 	l4lbNN := req.NamespacedName
 	l4lbNN.Name = l4lbMeta.Spec.L4LBName
-	if err := r.Get(context.Background(), l4lbNN, l4lbCR); err != nil {
+	l4lbNNCtx, l4lbNNCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer l4lbNNCancel()
+	if err := r.Get(l4lbNNCtx, l4lbNN, l4lbCR); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -89,12 +97,14 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if l4lbMeta.Spec.Imported {
 			logger.Info("Importing l4lb")
 			debugLogger.Info("Imported yaml mode. Finding L4LB by name")
-			if l4lb, ok := NStorage.L4LBStorage.FindByName(l4lbMeta.Spec.L4LBName); ok {
+			if l4lb, ok := r.NStorage.L4LBStorage.FindByName(l4lbMeta.Spec.L4LBName); ok {
 				debugLogger.Info("Imported yaml mode. L4LB found")
 				l4lbMeta.Spec.ID = l4lb.ID
 				l4lbMeta.Spec.IP = l4lb.IP
 				l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(l4lb.ModifiedDate/1000), 0))
-				err := r.Patch(context.Background(), l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				l4lbMetaPatchCtx, l4lbMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
+				defer l4lbMetaPatchCancel()
+				err := r.Patch(l4lbMetaPatchCtx, l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch l4lbMeta.Spec.ID} %s", err), "")
 					return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
@@ -114,7 +124,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		logger.Info("L4LB Created")
 	} else {
-		apiL4LB, ok := NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID)
+		apiL4LB, ok := r.NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID)
 		if !ok {
 			debugLogger.Info("L4LB not found in Netris")
 			debugLogger.Info("Going to create L4LB")
@@ -138,7 +148,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					logger.Error(fmt.Errorf("{VnetMetaToNetrisUpdate} %s", err), "")
 					return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
 				}
-				if _, err, errMsg := updateL4LB(l4lbUpdate); err != nil {
+				if _, err, errMsg := r.updateL4LB(l4lbUpdate); err != nil {
 					logger.Error(fmt.Errorf("{updateL4LB} %s", err), "")
 					return u.patchL4LBStatus(l4lbCR, "Failure", errMsg.Error())
 				}
@@ -167,7 +177,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
-	reply, err := Cred.AddLB4(l4lbAdd)
+	reply, err := r.Cred.AddLB4(l4lbAdd)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
@@ -201,7 +211,9 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 
 	debugLogger.Info("L4LB Created", "id", id)
 
-	err = r.Patch(context.Background(), l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err = r.Patch(ctx, l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
@@ -210,13 +222,13 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	return ctrl.Result{}, nil, nil
 }
 
-func updateL4LB(l4lb *api.APIUpdateLoadBalancer) (ctrl.Result, error, error) {
+func (r *L4LBMetaReconciler) updateL4LB(l4lb *api.APIUpdateLoadBalancer) (ctrl.Result, error, error) {
 	js, err := json.Marshal(l4lb)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateL4LB} %s", err), err
 	}
 
-	reply, err := Cred.UpdateLB4(js)
+	reply, err := r.Cred.UpdateLB4(js)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateL4LB} %s", err), err
 	}
@@ -244,7 +256,7 @@ func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *v1alpha1.L4LB, l4lbMeta v
 		shouldUpdateCR = true
 	}
 	if l4lbCR.Spec.OwnerTenant == "" || l4lbCR.Spec.Site == "" {
-		if updatedL4LB, ok := NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID); ok {
+		if updatedL4LB, ok := u.NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID); ok {
 			l4lbCR.Spec.OwnerTenant = updatedL4LB.TenantName
 			l4lbCR.Spec.Site = updatedL4LB.SiteName
 			if l4lbCR.Spec.Frontend.IP == "" {

@@ -57,7 +57,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	}
 
 	if l4lb.Spec.OwnerTenant == "" {
-		tenantid, err := findTenantByIP(ipForTenant)
+		tenantid, err := r.findTenantByIP(ipForTenant)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +65,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	}
 
 	if tenantID == 0 {
-		tenant, ok := NStorage.TenantsStorage.FindByName(l4lb.Spec.OwnerTenant)
+		tenant, ok := r.NStorage.TenantsStorage.FindByName(l4lb.Spec.OwnerTenant)
 		if !ok {
 			return nil, fmt.Errorf("Tenant '%s' not found", l4lb.Spec.OwnerTenant)
 		}
@@ -73,7 +73,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	}
 
 	if l4lb.Spec.Site == "" {
-		siteid, err := findSiteByIP(ipForTenant)
+		siteid, err := r.findSiteByIP(ipForTenant)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +81,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	}
 
 	if siteID == 0 {
-		if site, ok := NStorage.SitesStorage.FindByName(l4lb.Spec.Site); ok {
+		if site, ok := r.NStorage.SitesStorage.FindByName(l4lb.Spec.Site); ok {
 			siteID = site.ID
 		} else {
 			return nil, fmt.Errorf("'%s' site not found", l4lb.Spec.Site)
@@ -383,9 +383,9 @@ func l4lbUpdateDefaultAnnotations(l4lb *k8sv1alpha1.L4LB) {
 	l4lb.SetAnnotations(annotations)
 }
 
-func findTenantByIP(ip string) (int, error) {
+func (r *L4LBReconciler) findTenantByIP(ip string) (int, error) {
 	tenantID := 0
-	subnets, err := Cred.GetSubnets()
+	subnets, err := r.Cred.GetSubnets()
 	if err != nil {
 		return tenantID, err
 	}
@@ -409,9 +409,9 @@ func findTenantByIP(ip string) (int, error) {
 	return tenantID, fmt.Errorf("There are no subnets for specified IP address %s", ip)
 }
 
-func findSiteByIP(ip string) (int, error) {
+func (r *L4LBReconciler) findSiteByIP(ip string) (int, error) {
 	siteID := 0
-	subnets, err := Cred.GetSubnets()
+	subnets, err := r.Cred.GetSubnets()
 	if err != nil {
 		return siteID, err
 	}

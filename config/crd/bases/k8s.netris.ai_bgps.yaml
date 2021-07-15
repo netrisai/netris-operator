@@ -173,7 +173,11 @@ spec:
         status:
           description: BGPStatus defines the observed state of BGP
           properties:
+            bgpprefixes:
+              type: integer
             bgpstate:
+              type: string
+            bgpstatus:
               type: string
             message:
               type: string

@@ -18,18 +18,29 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
+	api "github.com/netrisai/netrisapi"
+)
+
+var (
+	requeueInterval = time.Duration(10 * time.Second)
+	cntxt           = context.Background()
+	contextTimeout  = requeueInterval
 )
 
 type uniReconciler struct {
 	client.Client
 	Logger      logr.Logger
 	DebugLogger logr.InfoLogger
+	Cred        *api.HTTPCred
+	NStorage    *netrisstorage.Storage
 }
 
 func (u *uniReconciler) patchVNetStatus(vnet *k8sv1alpha1.VNet, status, message string) (ctrl.Result, error) {
@@ -44,7 +55,9 @@ func (u *uniReconciler) patchVNetStatus(vnet *k8sv1alpha1.VNet, status, message 
 	vnet.Status.Gateways = vnet.GatewaysString()
 	vnet.Status.Sites = vnet.SitesString()
 
-	err := u.Status().Patch(context.Background(), vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -63,7 +76,9 @@ func (u *uniReconciler) patchBGPStatus(bgp *k8sv1alpha1.BGP, status, message str
 	bgp.Status.State = state
 	bgp.Status.Message = message
 
-	err := u.Status().Patch(context.Background(), bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -82,7 +97,9 @@ func (u *uniReconciler) patchL4LBStatus(l4lb *k8sv1alpha1.L4LB, status, message 
 	l4lb.Status.State = state
 	l4lb.Status.Message = message
 
-	err := u.Status().Patch(context.Background(), l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -91,8 +108,9 @@ func (u *uniReconciler) patchL4LBStatus(l4lb *k8sv1alpha1.L4LB, status, message 
 
 func (u *uniReconciler) patchL4LB(l4lb *k8sv1alpha1.L4LB) (ctrl.Result, error) {
 	u.DebugLogger.Info("Patching")
-
-	err := u.Patch(context.Background(), l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Patch(ctx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Patch()}", "error", err)
 	}

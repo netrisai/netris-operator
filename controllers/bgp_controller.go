@@ -28,21 +28,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
 	api "github.com/netrisai/netrisapi"
 )
 
 // BGPReconciler reconciles a BGP object
 type BGPReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
+	Cred     *api.HTTPCred
+	NStorage *netrisstorage.Storage
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgps/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=crd.projectcalico.org,resources=bgppeers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=crd.projectcalico.org,resources=bgpconfigurations,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=crd.projectcalico.org,resources=ippools,verbs=get;list;watch
 
 func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	bgp := &k8sv1alpha1.BGP{}
@@ -51,9 +57,13 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		Client:      r.Client,
 		Logger:      logger,
 		DebugLogger: debugLogger,
+		Cred:        r.Cred,
+		NStorage:    r.NStorage,
 	}
 
-	if err := r.Get(context.Background(), req.NamespacedName, bgp); err != nil {
+	bgpCtx, bgpCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer bgpCancel()
+	if err := r.Get(bgpCtx, req.NamespacedName, bgp); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -66,7 +76,9 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	bgpMeta := &k8sv1alpha1.BGPMeta{}
 	metaFound := true
 
-	if err := r.Get(context.Background(), bgpMetaNamespaced, bgpMeta); err != nil {
+	bgpMetaCtx, bgpMetaCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer bgpMetaCancel()
+	if err := r.Get(bgpMetaCtx, bgpMetaNamespaced, bgpMeta); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			metaFound = false
@@ -90,7 +102,9 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if bgpMustUpdateAnnotations(bgp) {
 		debugLogger.Info("Setting default annotations")
 		bgpUpdateDefaultAnnotations(bgp)
-		err := r.Patch(context.Background(), bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		bgpPatchCtx, bgpPatchCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer bgpPatchCancel()
+		err := r.Patch(bgpPatchCtx, bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch BGP default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -112,7 +126,9 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			bgpMeta.Spec.ID = bgpID
 			bgpMeta.Spec.BGPCRGeneration = bgp.GetGeneration()
 
-			err = r.Update(context.Background(), bgpMeta.DeepCopyObject(), &client.UpdateOptions{})
+			bgpMetaUpdateCtx, bgpMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
+			defer bgpMetaUpdateCancel()
+			err = r.Update(bgpMetaUpdateCtx, bgpMeta.DeepCopyObject(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{bgpMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -122,7 +138,10 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		debugLogger.Info("Meta not found")
 		if bgp.GetFinalizers() == nil {
 			bgp.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
-			err := r.Patch(context.Background(), bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+
+			bgpPatchCtx, bgpPatchCancel := context.WithTimeout(cntxt, contextTimeout)
+			defer bgpPatchCancel()
+			err := r.Patch(bgpPatchCtx, bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch BGP Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -138,7 +157,9 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		bgpMeta.Spec.BGPCRGeneration = bgp.GetGeneration()
 
-		if err := r.Create(context.Background(), bgpMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		bgpMetaCreateCtx, bgpMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer bgpMetaCreateCancel()
+		if err := r.Create(bgpMetaCreateCtx, bgpMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{bgpMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -149,7 +170,7 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 func (r *BGPReconciler) deleteBGP(bgp *k8sv1alpha1.BGP, bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result, error) {
 	if bgpMeta != nil && bgpMeta.Spec.ID > 0 && !bgpMeta.Spec.Reclaim {
-		reply, err := Cred.DeleteEBGP(bgpMeta.Spec.ID)
+		reply, err := r.Cred.DeleteEBGP(bgpMeta.Spec.ID)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteBGP} %s", err)
 		}
@@ -178,7 +199,9 @@ func (r *BGPReconciler) deleteCRs(bgp *k8sv1alpha1.BGP, bgpMeta *k8sv1alpha1.BGP
 func (r *BGPReconciler) deleteBGPCR(bgp *k8sv1alpha1.BGP) (ctrl.Result, error) {
 	bgp.ObjectMeta.SetFinalizers(nil)
 	bgp.SetFinalizers(nil)
-	if err := r.Update(context.Background(), bgp.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	if err := r.Update(ctx, bgp.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteBGPCR} %s", err)
 	}
 
@@ -186,7 +209,9 @@ func (r *BGPReconciler) deleteBGPCR(bgp *k8sv1alpha1.BGP) (ctrl.Result, error) {
 }
 
 func (r *BGPReconciler) deleteBGPMetaCR(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result, error) {
-	if err := r.Delete(context.Background(), bgpMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	if err := r.Delete(ctx, bgpMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteBGPMetaCR} %s", err)
 	}
 

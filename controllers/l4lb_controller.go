@@ -28,14 +28,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/netrisstorage"
 	api "github.com/netrisai/netrisapi"
 )
 
 // L4LBReconciler reconciles a L4LB object
 type L4LBReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
+	Cred     *api.HTTPCred
+	NStorage *netrisstorage.Storage
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbs,verbs=get;list;watch;create;update;patch;delete
@@ -46,7 +49,6 @@ type L4LBReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch
 
 func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	l4lb := &k8sv1alpha1.L4LB{}
@@ -55,9 +57,13 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		Client:      r.Client,
 		Logger:      logger,
 		DebugLogger: debugLogger,
+		Cred:        r.Cred,
+		NStorage:    r.NStorage,
 	}
 
-	if err := r.Get(context.Background(), req.NamespacedName, l4lb); err != nil {
+	l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer l4lbCancel()
+	if err := r.Get(l4lbCtx, req.NamespacedName, l4lb); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			return ctrl.Result{}, nil
@@ -69,7 +75,9 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	l4lbMetaNamespaced.Name = string(l4lb.GetUID())
 	l4lbMeta := &k8sv1alpha1.L4LBMeta{}
 	metaFound := true
-	if err := r.Get(context.Background(), l4lbMetaNamespaced, l4lbMeta); err != nil {
+	l4lbMetaCtx, l4lbMetaCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer l4lbMetaCancel()
+	if err := r.Get(l4lbMetaCtx, l4lbMetaNamespaced, l4lbMeta); err != nil {
 		if errors.IsNotFound(err) {
 			debugLogger.Info(err.Error())
 			metaFound = false
@@ -93,7 +101,9 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if l4lbMustUpdateAnnotations(l4lb) {
 		debugLogger.Info("Setting default annotations")
 		l4lbUpdateDefaultAnnotations(l4lb)
-		err := r.Patch(context.Background(), l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		l4lbPatchCtx, l4lbPatchCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer l4lbPatchCancel()
+		err := r.Patch(l4lbPatchCtx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch L4LB default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -115,7 +125,9 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			l4lbMeta.Spec.ID = l4lbID
 			l4lbMeta.Spec.L4LBCRGeneration = l4lb.GetGeneration()
 
-			err = r.Update(context.Background(), l4lbMeta.DeepCopyObject(), &client.UpdateOptions{})
+			l4lbMetaUpdateCtx, l4lbMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
+			defer l4lbMetaUpdateCancel()
+			err = r.Update(l4lbMetaUpdateCtx, l4lbMeta.DeepCopyObject(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{l4lbMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -125,7 +137,9 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		debugLogger.Info("Meta not found")
 		if l4lb.GetFinalizers() == nil {
 			l4lb.SetFinalizers([]string{"l4lb.k8s.netris.ai/delete"})
-			err := r.Patch(context.Background(), l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
+			defer l4lbCancel()
+			err := r.Patch(l4lbCtx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch L4LB Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -141,7 +155,9 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		l4lbMeta.Spec.L4LBCRGeneration = l4lb.GetGeneration()
 
-		if err := r.Create(context.Background(), l4lbMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		l4lbCreateCtx, l4lbCreateCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer l4lbCreateCancel()
+		if err := r.Create(l4lbCreateCtx, l4lbMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{l4lbMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -152,7 +168,7 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 func (r *L4LBReconciler) deleteL4LB(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Result, error) {
 	if l4lbMeta != nil && l4lbMeta.Spec.ID > 0 && !l4lbMeta.Spec.Reclaim {
-		reply, err := Cred.DeleteLB4(l4lbMeta.Spec.ID)
+		reply, err := r.Cred.DeleteLB4(l4lbMeta.Spec.ID)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteL4LB} %s", err)
 		}
@@ -179,9 +195,11 @@ func (r *L4LBReconciler) deleteCRs(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1
 }
 
 func (r *L4LBReconciler) deleteL4LBCR(l4lb *k8sv1alpha1.L4LB) (ctrl.Result, error) {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
 	l4lb.ObjectMeta.SetFinalizers(nil)
 	l4lb.SetFinalizers(nil)
-	if err := r.Update(context.Background(), l4lb.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, l4lb.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteL4LBCR} %s", err)
 	}
 
@@ -189,10 +207,11 @@ func (r *L4LBReconciler) deleteL4LBCR(l4lb *k8sv1alpha1.L4LB) (ctrl.Result, erro
 }
 
 func (r *L4LBReconciler) deleteL4LBMetaCR(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Result, error) {
-	if err := r.Delete(context.Background(), l4lbMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	if err := r.Delete(ctx, l4lbMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteL4LBMetaCR} %s", err)
 	}
-
 	return ctrl.Result{}, nil
 }
 

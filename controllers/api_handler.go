@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
@@ -27,43 +26,14 @@ import (
 	api "github.com/netrisai/netrisapi"
 )
 
-var (
-	// Cred stores the Netris API usepoint.
-	Cred            *api.HTTPCred
-	requeueInterval = time.Duration(10 * time.Second)
-
-	// NStorage is the instance of the Netris API in-memory storage.
-	NStorage *netrisstorage.Storage
-)
-
 func init() {
 	if configloader.Root.RequeueInterval > 0 {
 		requeueInterval = time.Duration(time.Duration(configloader.Root.RequeueInterval) * time.Second)
+		contextTimeout = requeueInterval
 	}
-
-	var err error
-	Cred, err = api.NewHTTPCredentials(configloader.Root.Controller.Host, configloader.Root.Controller.Login, configloader.Root.Controller.Password, 10)
-	if err != nil {
-		log.Panicf("newHTTPCredentials error %v", err)
-	}
-	Cred.InsecureVerify(configloader.Root.Controller.Insecure)
-	err = Cred.LoginUser()
-	if err != nil {
-		log.Printf("LoginUser error %v", err)
-	}
-	go Cred.CheckAuthWithInterval()
-
-	fmt.Println("Requeue interval", requeueInterval)
-
-	NStorage = netrisstorage.NewStorage(Cred)
-	err = NStorage.Download()
-	if err != nil {
-		log.Printf("Storage.Download() error %v", err)
-	}
-	go NStorage.DownloadWithInterval()
 }
 
-func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([]k8sv1alpha1.VNetMetaMember, error) {
+func (r *VNetReconciler) getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([]k8sv1alpha1.VNetMetaMember, error) {
 	members := []k8sv1alpha1.VNetMetaMember{}
 	hwPorts := make(map[string]*api.APIVNetMember)
 	portIsUntagged := false
@@ -91,7 +61,7 @@ func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([]k8sv1alpha1.VNetMet
 
 	}
 	for portName := range hwPorts {
-		if port, yes := NStorage.PortsStorage.FindByName(portName); yes {
+		if port, yes := r.NStorage.PortsStorage.FindByName(portName); yes {
 			hwPorts[portName].PortID = port.ID
 			hwPorts[portName].PortName = portName
 			hwPorts[portName].TenantID = port.TenantID
@@ -119,13 +89,13 @@ func getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([]k8sv1alpha1.VNetMet
 	return members, nil
 }
 
-func getSites(names []string) map[string]int {
+func getSites(names []string, nStorage *netrisstorage.Storage) map[string]int {
 	siteList := map[string]int{}
 	for _, name := range names {
 		siteList[name] = 0
 	}
 	for siteName := range siteList {
-		if site, ok := NStorage.SitesStorage.FindByName(siteName); ok {
+		if site, ok := nStorage.SitesStorage.FindByName(siteName); ok {
 			siteList[siteName] = site.ID
 		}
 	}

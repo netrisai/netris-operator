@@ -113,6 +113,8 @@ Create netris-opeator controller envs
 {{- else }}
   value: "false"
 {{- end }}
-- name: NOPERATOR_REQUEUE_OPERATOR
+- name: NOPERATOR_REQUEUE_INTERVAL
   value: {{ .Values.requeueInterval | default 15 | quote }}
+- name: NOPERATOR_CALICO_ASN_RANGE
+  value: {{ .Values.calicoASNRange | default "4200070000-4200079999" }}
 {{- end -}}

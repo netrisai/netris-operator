@@ -14,34 +14,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package lbwatcher
-
-import (
-	"github.com/netrisai/netris-operator/netrisstorage"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-)
-
-type Watcher struct {
-	Options  Options
-	NStorage *netrisstorage.Storage
-	MGR      manager.Manager
-}
-
-type selector struct {
-	Key   string
-	Value string
-}
-
-type lbIP struct {
-	Name      string
-	IP        string
-	Port      int
-	NodePort  int
-	Protocol  string
-	Automatic bool
-}
-
-type Options struct {
-	LogLevel        string
-	RequeueInterval int
-}
+package calicowatcher

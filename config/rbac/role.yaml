@@ -13,6 +13,8 @@ rules:
   verbs:
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - ""
@@ -38,6 +40,36 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - crd.projectcalico.org
+  resources:
+  - bgpconfigurations
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - crd.projectcalico.org
+  resources:
+  - bgppeers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - crd.projectcalico.org
+  resources:
+  - ippools
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - k8s.netris.ai
   resources:

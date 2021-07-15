@@ -27,7 +27,7 @@ import (
 
 	"github.com/go-logr/logr"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
-	"github.com/netrisai/netris-operator/controllers"
+	"github.com/netrisai/netris-operator/netrisstorage"
 	"go.uber.org/zap/zapcore"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,30 +40,38 @@ import (
 )
 
 var (
-	logger      logr.Logger
-	debugLogger logr.InfoLogger
+	requeueInterval = time.Duration(10 * time.Second)
+	logger          logr.Logger
+	debugLogger     logr.InfoLogger
+	cntxt           = context.Background()
+	contextTimeout  = requeueInterval
 )
 
-func init() {
+func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Options) (*Watcher, error) {
+	if nStorage == nil {
+		return nil, fmt.Errorf("Please provide NStorage")
+	}
+	watcher := &Watcher{
+		NStorage: nStorage,
+		MGR:      mgr,
+		Options:  options,
+	}
+	return watcher, nil
 }
 
-func getClientset() (*kubernetes.Clientset, error) {
-	return kubernetes.NewForConfig(ctrl.GetConfigOrDie())
-}
-
-func start(mgr manager.Manager) {
+func (w *Watcher) start() {
 	clientset, err := getClientset()
 	if err != nil {
 		logger.Error(err, "")
 	}
-	cl := mgr.GetClient()
-	recorder, w, _ := eventRecorder(clientset)
-	defer w.Stop()
-	loadBalancerProcess(clientset, cl, recorder)
+	cl := w.MGR.GetClient()
+	recorder, wtch, _ := eventRecorder(clientset)
+	defer wtch.Stop()
+	w.loadBalancerProcess(clientset, cl, recorder)
 }
 
-func Start(mgr manager.Manager, options Options) {
-	if options.LogLevel == "debug" {
+func (w *Watcher) Start() {
+	if w.Options.LogLevel == "debug" {
 		logger = zap.New(zap.Level(zapcore.DebugLevel), zap.UseDevMode(false))
 	} else {
 		logger = zap.New(zap.UseDevMode(false), zap.StacktraceLevel(zapcore.DPanicLevel))
@@ -72,12 +80,21 @@ func Start(mgr manager.Manager, options Options) {
 	logger = ctrl.Log.WithName("LBWatcher")
 	debugLogger = logger.V(int(zapcore.WarnLevel))
 
-	ticker := time.NewTicker(10 * time.Second)
-	start(mgr)
+	if w.Options.RequeueInterval > 0 {
+		requeueInterval = time.Duration(time.Duration(w.Options.RequeueInterval) * time.Second)
+		contextTimeout = requeueInterval
+	}
+
+	ticker := time.NewTicker(requeueInterval)
+	w.start()
 	for {
 		<-ticker.C
-		start(mgr)
+		w.start()
 	}
+}
+
+func getClientset() (*kubernetes.Clientset, error) {
+	return kubernetes.NewForConfig(ctrl.GetConfigOrDie())
 }
 
 func filterL4LBs(LBs []k8sv1alpha1.L4LB) []k8sv1alpha1.L4LB {
@@ -90,11 +107,11 @@ func filterL4LBs(LBs []k8sv1alpha1.L4LB) []k8sv1alpha1.L4LB {
 	return lbList
 }
 
-func loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client, recorder record.EventRecorder) {
+func (w *Watcher) loadBalancerProcess(clientset *kubernetes.Clientset, cl client.Client, recorder record.EventRecorder) {
 	debugLogger.Info("Generating load balancers from k8s...")
 	var errors []error = nil
 	lbTimeout := "2000"
-	serviceLBs, err := generateLoadBalancers(clientset, lbTimeout)
+	serviceLBs, err := w.generateLoadBalancers(clientset, lbTimeout)
 	if err != nil {
 		logger.Error(err, "")
 	}
@@ -183,7 +200,9 @@ func deleteL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB) []error {
 }
 
 func deleteL4LB(cl client.Client, lb k8sv1alpha1.L4LB) error {
-	return cl.Delete(context.Background(), lb.DeepCopyObject(), &client.DeleteOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	return cl.Delete(ctx, lb.DeepCopyObject(), &client.DeleteOptions{})
 }
 
 func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
@@ -219,7 +238,9 @@ func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB, ipAuto map[string]str
 }
 
 func createL4LB(cl client.Client, lb *k8sv1alpha1.L4LB) error {
-	return cl.Create(context.Background(), lb.DeepCopyObject(), &client.CreateOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	return cl.Create(ctx, lb.DeepCopyObject(), &client.CreateOptions{})
 }
 
 func createL4LBs(cl client.Client, lbs []*k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
@@ -255,7 +276,9 @@ func createL4LBs(cl client.Client, lbs []*k8sv1alpha1.L4LB, ipAuto map[string]st
 }
 
 func updateL4LB(cl client.Client, lb k8sv1alpha1.L4LB) error {
-	return cl.Update(context.Background(), lb.DeepCopyObject(), &client.UpdateOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	return cl.Update(ctx, lb.DeepCopyObject(), &client.UpdateOptions{})
 }
 
 func compareLoadBalancers(LBs []k8sv1alpha1.L4LB, serviceLBs []*k8sv1alpha1.L4LB) ([]*k8sv1alpha1.L4LB, []k8sv1alpha1.L4LB, []k8sv1alpha1.L4LB, map[string]map[string]int) {
@@ -377,7 +400,9 @@ func compareBackends(lbBackends []k8sv1alpha1.L4LBBackend, serviceLBBackends []k
 func getL4LBs(cl client.Client) (*k8sv1alpha1.L4LBList, error) {
 	l4lb := &k8sv1alpha1.L4LBList{}
 
-	err := cl.List(context.Background(), l4lb, &client.ListOptions{})
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := cl.List(ctx, l4lb, &client.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("{getL4LBs} %s", err)
 	}
@@ -385,7 +410,7 @@ func getL4LBs(cl client.Client) (*k8sv1alpha1.L4LBList, error) {
 	return l4lb, nil
 }
 
-func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([]*k8sv1alpha1.L4LB, error) {
+func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([]*k8sv1alpha1.L4LB, error) {
 	lbList := []*k8sv1alpha1.L4LB{}
 	serviceList, err := getServices(clientset, "")
 	if err != nil {
@@ -403,7 +428,7 @@ func generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([
 		return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)
 	}
 
-	site, ok := controllers.NStorage.SitesStorage.FindByID(1)
+	site, ok := w.NStorage.SitesStorage.FindByID(1)
 	if !ok {
 		return lbList, fmt.Errorf("{generateLoadBalancers} Default site not found")
 	}

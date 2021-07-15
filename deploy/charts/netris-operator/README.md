@@ -109,3 +109,4 @@ The following table lists the configurable parameters of the netris-operator cha
 | `controllerCreds.password.key`        | Netris controller password key in existing secret. Ignored if `controller.password` is set                | `password`                 |
 | `logLevel`                            | Log level of netris-operator. Allowed values: `info` or `debug`                                           | `info`                     |
 | `requeueInterval`                     | Requeue interval in seconds for the netris-operator                                                       | `15`                       |
+| `calicoASNRange`                      | Set Nodes ASN range. Used when Netris-Operator manages Calico CNI                                         | `4200070000-4200079999`    |
