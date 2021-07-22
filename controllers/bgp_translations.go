@@ -81,6 +81,10 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		terminateOnSwitch = "yes"
 	}
 
+	if bgp.Spec.Transport.Type == "" {
+		bgp.Spec.Transport.Type = "port"
+	}
+
 	if bgp.Spec.Transport.Type == "port" {
 		if port, ok := r.NStorage.BGPStorage.FindPort(siteID, bgp.Spec.Transport.Name); ok {
 			portID = port.PortID
