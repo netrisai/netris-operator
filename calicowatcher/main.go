@@ -37,6 +37,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -297,7 +298,13 @@ func (w *Watcher) deleteNodesASNs() error {
 			if as >= w.data.asnStart && as <= w.data.asnEnd {
 				delete(anns, "projectcalico.org/ASNumber")
 				node.SetAnnotations(anns)
-				_, err := w.clientset.CoreV1().Nodes().Update(ctx, node.DeepCopy(), metav1.UpdateOptions{})
+				payload := []patchStringValue{{
+					Op:    "remove",
+					Path:  "/metadata/annotations/projectcalico.org~1ASNumber",
+					Value: asn,
+				}}
+				payloadBytes, _ := json.Marshal(payload)
+				_, err := w.clientset.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, payloadBytes, metav1.PatchOptions{})
 				if err != nil {
 					return err
 				}
@@ -627,14 +634,21 @@ func (w *Watcher) fillNodesASNs() error {
 				if !asnMap[asn] {
 					anns["projectcalico.org/ASNumber"] = asn
 					node.SetAnnotations(anns)
+					payload := []patchStringValue{{
+						Op:    "replace",
+						Path:  "/metadata/annotations/projectcalico.org~1ASNumber",
+						Value: asn,
+					}}
+					payloadBytes, _ := json.Marshal(payload)
 					ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
-					_, err := w.clientset.CoreV1().Nodes().Update(ctx, node.DeepCopy(), metav1.UpdateOptions{})
+					_, err := w.clientset.CoreV1().Nodes().Patch(ctx, node.Name, types.JSONPatchType, payloadBytes, metav1.PatchOptions{})
 					if err != nil {
 						cancel()
 						return err
 					}
-					cancel()
 					asnMap[asn] = true
+					cancel()
+					break
 				}
 			}
 		} else {
@@ -772,4 +786,11 @@ func (w *Watcher) validateASNRange(asns string) (int, int, error) {
 	}
 
 	return a, b, nil
+}
+
+//  patchStringValue specifies a patch operation for a string.
+type patchStringValue struct {
+	Op    string `json:"op"`
+	Path  string `json:"path"`
+	Value string `json:"value"`
 }
