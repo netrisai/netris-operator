@@ -3,24 +3,48 @@ layout: go.kubebuilder.io/v2
 projectName: netris-operator
 repo: github.com/netrisai/netris-operator
 resources:
-- group: k8s
+-
+  controller: true
+  domain: netris.ai
+  group: k8s
   kind: VNet
+  path: github.com/netrisai/netris-operator/api/v1alpha1
   version: v1alpha1
-- group: k8s
+-
+  controller: true
+  domain: netris.ai
+  group: k8s
   kind: VNetMeta
+  path: github.com/netrisai/netris-operator/api/v1alpha1
   version: v1alpha1
-- group: k8s
+-
+  controller: true
+  domain: netris.ai
+  group: k8s
   kind: BGP
+  path: github.com/netrisai/netris-operator/api/v1alpha1
   version: v1alpha1
-- group: k8s
+-
+  controller: true
+  domain: netris.ai
+  group: k8s
   kind: BGPMeta
+  path: github.com/netrisai/netris-operator/api/v1alpha1
   version: v1alpha1
-- group: k8s
+-
+  controller: true
+  domain: netris.ai
+  group: k8s
   kind: L4LB
+  path: github.com/netrisai/netris-operator/api/v1alpha1
   version: v1alpha1
-- group: k8s
+-
+  controller: true
+  domain: netris.ai
+  group: k8s
   kind: L4LBMeta
+  path: github.com/netrisai/netris-operator/api/v1alpha1
   version: v1alpha1
-version: 3-alpha
+version: "3"
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}
