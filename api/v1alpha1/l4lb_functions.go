@@ -20,6 +20,12 @@ func (l *L4LB) GetServiceName() string {
 	return l.GetAnnotations()["servicename"]
 }
 
+func (l *L4LB) SetImportFlag(s string) {
+	anns := l.GetAnnotations()
+	anns["resource.k8s.netris.ai/import"] = s
+	l.SetAnnotations(anns)
+}
+
 func (l *L4LB) SetServiceName(s string) {
 	anns := l.GetAnnotations()
 	anns["servicename"] = s

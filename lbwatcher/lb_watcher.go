@@ -522,6 +522,7 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeo
 					lb.SetServiceNamespace(svc.GetNamespace())
 					lb.SetServiceUID(string(svc.GetUID()))
 					lb.SetServiceIngressIPs(ingressIPsString)
+					lb.SetImportFlag("true")
 
 					lbList = append(lbList, lb)
 				}
