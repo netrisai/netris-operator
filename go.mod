@@ -9,7 +9,6 @@ require (
 	github.com/netrisai/netrisapi v0.0.0-20210610175837-ededc2c4cd4b
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
-	github.com/prometheus/common v0.4.1
 	github.com/r3labs/diff/v2 v2.9.1
 	github.com/sirupsen/logrus v1.8.1
 	go.uber.org/zap v1.10.0

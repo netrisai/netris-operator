@@ -29,13 +29,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	api "github.com/netrisai/netrisapi"
+
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/calicowatcher"
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/controllers"
 	"github.com/netrisai/netris-operator/lbwatcher"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	api "github.com/netrisai/netrisapi"
 	// +kubebuilder:scaffold:imports
 )
 
