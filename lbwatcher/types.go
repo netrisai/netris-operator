@@ -27,11 +27,6 @@ type Watcher struct {
 	MGR      manager.Manager
 }
 
-type selector struct {
-	Key   string
-	Value string
-}
-
 type lbIP struct {
 	Name      string
 	IP        string

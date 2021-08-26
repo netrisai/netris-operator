@@ -25,24 +25,15 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func getPods(clientset *kubernetes.Clientset, namespace string) (*v1.PodList, error) {
+func getPodsByLabelSeector(clientset *kubernetes.Clientset, namespace, selectors string) (*v1.PodList, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
+	listOptions := metav1.ListOptions{
+		LabelSelector: selectors,
+	}
+	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, listOptions)
 	if err != nil {
 		return pods, fmt.Errorf("{getPods} %s", err)
 	}
 	return pods, nil
-}
-
-func filterPodsBySelector(pods *v1.PodList, selectorKey, selectorValue string) []v1.Pod {
-	filteredPods := []v1.Pod{}
-	for _, pod := range pods.Items {
-		for labelKey, labelValue := range pod.Labels {
-			if labelKey == selectorKey && labelValue == selectorValue {
-				filteredPods = append(filteredPods, pod)
-			}
-		}
-	}
-	return filteredPods
 }

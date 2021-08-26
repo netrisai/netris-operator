@@ -29,7 +29,6 @@ import (
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
 	"go.uber.org/zap/zapcore"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
@@ -417,12 +416,6 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeo
 		return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)
 	}
 
-	debugLogger.Info("Getting k8s pods...")
-	podList, err := getPods(clientset, "")
-	if err != nil {
-		return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)
-	}
-
 	timeout, err := strconv.Atoi(lbTimeout)
 	if err != nil {
 		return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)
@@ -435,21 +428,19 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeo
 
 	for _, svc := range serviceList.Items {
 		if svc.Spec.Type == "LoadBalancer" {
-			selectors := []selector{}
+			selectors := []string{}
 			hostIPs := map[string]int{}
 			for key, value := range svc.Spec.Selector {
-				selectors = append(selectors, selector{
-					Key:   key,
-					Value: value,
-				})
+				selectors = append(selectors, fmt.Sprintf("%s=%s", key, value))
 			}
 
-			pods := []v1.Pod{}
-			for _, sel := range selectors {
-				pods = append(pods, filterPodsBySelector(podList, sel.Key, sel.Value)...)
+			debugLogger.Info("Getting k8s pods...", "service", svc.Name, "namespace", svc.Namespace)
+			podList, err := getPodsByLabelSeector(clientset, svc.Namespace, strings.Join(selectors, ","))
+			if err != nil {
+				return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)
 			}
 
-			for _, pod := range pods {
+			for _, pod := range podList.Items {
 				hostIPs[pod.Status.HostIP] = 1
 			}
 
