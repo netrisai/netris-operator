@@ -110,10 +110,6 @@ func (w *Watcher) loadBalancerProcess(clientset *kubernetes.Clientset, cl client
 	debugLogger.Info("Generating load balancers from k8s...")
 	var errors []error = nil
 	lbTimeout := "2000"
-	serviceLBs, err := w.generateLoadBalancers(clientset, lbTimeout)
-	if err != nil {
-		logger.Error(err, "")
-	}
 
 	l4lbs, err := getL4LBs(cl)
 	if err != nil {
@@ -132,6 +128,11 @@ func (w *Watcher) loadBalancerProcess(clientset *kubernetes.Clientset, cl client
 		if uid := lb.GetServiceUID(); uid != "" && lb.IPRole() == "main" {
 			ipAuto[uid] = lb.Spec.Frontend.IP
 		}
+	}
+
+	serviceLBs, err := w.generateLoadBalancers(clientset, ipAuto, lbTimeout)
+	if err != nil {
+		logger.Error(err, "")
 	}
 
 	lbsToCreate, lbsToUpdate, lbsToDelete, ingressIPsMap := compareLoadBalancers(filteerdL4LBs, serviceLBs)
@@ -207,30 +208,9 @@ func deleteL4LB(cl client.Client, lb k8sv1alpha1.L4LB) error {
 func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
 	var errors []error
 	for _, lb := range lbs {
-		if ip, ok := ipAuto[lb.GetServiceUID()]; ok && lb.Spec.Frontend.IP == "" {
-			if ip == "" {
-				break
-			} else {
-				lb.Spec.Frontend.IP = ip
-				lb.SetIPRole("child")
-				err := updateL4LB(cl, lb)
-				if err != nil {
-					errors = append(errors, fmt.Errorf("{updateL4LB} %s", err))
-				}
-			}
-		} else {
-			if lb.Spec.Frontend.IP == "" {
-				lb.SetIPRole("main")
-			} else {
-				lb.SetIPRole("standard")
-			}
-			err := updateL4LB(cl, lb)
-			if err != nil {
-				errors = append(errors, fmt.Errorf("{updateL4LB} %s", err))
-			}
-			if lb.Spec.Frontend.IP == "" {
-				break
-			}
+		err := updateL4LB(cl, lb)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("{updateL4LB} %s", err))
 		}
 	}
 	return errors
@@ -310,8 +290,6 @@ func compareLoadBalancers(LBs []k8sv1alpha1.L4LB, serviceLBs []*k8sv1alpha1.L4LB
 		}
 	}
 
-	autoIPs := make(map[string]string)
-
 	if len(serviceLBsMap) > 0 {
 		for _, serviceLB := range serviceLBsMap {
 			if lb, ok := LBsMap[serviceLB.Name]; ok {
@@ -326,19 +304,8 @@ func compareLoadBalancers(LBs []k8sv1alpha1.L4LB, serviceLBs []*k8sv1alpha1.L4LB
 
 				lbIngressMap[serviceLB.GetServiceUID()][lb.Spec.Frontend.IP] = 1
 
-				if serviceLB.Spec.Frontend.IP != "" || (lb.IPRole() != "child" && lb.IPRole() != "main") {
-					if serviceLB.Spec.Frontend.IP != lb.Spec.Frontend.IP {
-						lb.Spec.Frontend.IP = serviceLB.Spec.Frontend.IP
-						update = true
-					}
-				}
-
-				if lb.IPRole() == "main" && lb.Spec.Frontend.IP != "" {
-					autoIPs[lb.GetServiceUID()] = lb.Spec.Frontend.IP
-				}
-
-				if ip, ok := autoIPs[lb.GetServiceUID()]; ok && lb.IPRole() == "child" && ip != lb.Spec.Frontend.IP && !update {
-					lb.Spec.Frontend.IP = ip
+				if serviceLB.Spec.Frontend.IP != lb.Spec.Frontend.IP {
+					lb.Spec.Frontend.IP = serviceLB.Spec.Frontend.IP
 					update = true
 				}
 
@@ -409,7 +376,7 @@ func getL4LBs(cl client.Client) (*k8sv1alpha1.L4LBList, error) {
 	return l4lb, nil
 }
 
-func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeout string) ([]*k8sv1alpha1.L4LB, error) {
+func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, autoIPs map[string]string, lbTimeout string) ([]*k8sv1alpha1.L4LB, error) {
 	lbList := []*k8sv1alpha1.L4LB{}
 	serviceList, err := getServices(clientset, "")
 	if err != nil {
@@ -476,7 +443,15 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeo
 			}
 
 			if len(lbIPs) > 0 && len(hostIPS) > 0 {
-				for _, lbIP := range lbIPs {
+				for i, lbIP := range lbIPs {
+					frontendIP := lbIP.IP
+					if lbIP.IP == "" {
+						if ip, ok := autoIPs[string(svc.GetUID())]; ok && ip != "" {
+							frontendIP = ip
+						} else if i > 0 {
+							break
+						}
+					}
 					backends := []k8sv1alpha1.L4LBBackend{}
 					for _, hostIP := range hostIPS {
 						backend := fmt.Sprintf("%s:%d", hostIP, lbIP.NodePort)
@@ -498,7 +473,7 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, lbTimeo
 							Protocol: strings.ToLower(lbIP.Protocol),
 							Frontend: k8sv1alpha1.L4LBFrontend{
 								Port: lbIP.Port,
-								IP:   lbIP.IP,
+								IP:   frontendIP,
 							},
 							State: "active",
 							Check: k8sv1alpha1.L4LBCheck{
