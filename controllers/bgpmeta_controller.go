@@ -104,7 +104,11 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				bgpCR.Status.BGPStatus = bgp.BgpState
 				prefixCount, _ := strconv.Atoi(bgp.BgpPrefixes)
 				bgpCR.Status.BGPPrefixes = prefixCount
-				bgpCR.Status.PortState = bgp.PortStatus
+				portStatus := bgp.PortStatus
+				if bgpCR.Spec.Transport.Type == "vnet" {
+					portStatus = "N/A"
+				}
+				bgpCR.Status.PortState = portStatus
 				bgpCR.Status.TerminateOnSwitch = bgp.TermSwName
 				if bgp.Vlan > 1 {
 					bgpCR.Status.VLANID = strconv.Itoa(bgp.Vlan)
@@ -140,7 +144,11 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			bgpCR.Status.BGPStatus = apiBGP.BgpState
 			prefixCount, _ := strconv.Atoi(apiBGP.BgpPrefixes)
 			bgpCR.Status.BGPPrefixes = prefixCount
-			bgpCR.Status.PortState = apiBGP.PortStatus
+			portStatus := apiBGP.PortStatus
+			if bgpCR.Spec.Transport.Type == "vnet" {
+				portStatus = "N/A"
+			}
+			bgpCR.Status.PortState = portStatus
 			bgpCR.Status.TerminateOnSwitch = apiBGP.TermSwName
 			if apiBGP.Vlan > 1 {
 				bgpCR.Status.VLANID = strconv.Itoa(apiBGP.Vlan)
