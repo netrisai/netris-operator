@@ -125,7 +125,7 @@ func (w *Watcher) loadBalancerProcess(clientset *kubernetes.Clientset, cl client
 
 	ipAuto := make(map[string]string)
 	for _, lb := range filteerdL4LBs {
-		if uid := lb.GetServiceUID(); uid != "" && lb.IPRole() == "main" {
+		if uid := lb.GetServiceUID(); uid != "" {
 			ipAuto[uid] = lb.Spec.Frontend.IP
 		}
 	}
@@ -225,30 +225,9 @@ func createL4LB(cl client.Client, lb *k8sv1alpha1.L4LB) error {
 func createL4LBs(cl client.Client, lbs []*k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
 	var errors []error
 	for _, lb := range lbs {
-		if ip, ok := ipAuto[lb.GetServiceUID()]; ok && lb.Spec.Frontend.IP == "" {
-			if ip == "" {
-				break
-			} else {
-				lb.Spec.Frontend.IP = ip
-				lb.SetIPRole("child")
-				err := createL4LB(cl, lb)
-				if err != nil {
-					errors = append(errors, fmt.Errorf("{createL4LB} %s", err))
-				}
-			}
-		} else {
-			if lb.Spec.Frontend.IP == "" {
-				lb.SetIPRole("main")
-			} else {
-				lb.SetIPRole("standard")
-			}
-			err := createL4LB(cl, lb)
-			if err != nil {
-				errors = append(errors, fmt.Errorf("{createL4LB} %s", err))
-			}
-			if lb.Spec.Frontend.IP == "" {
-				break
-			}
+		err := createL4LB(cl, lb)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("{createL4LB} %s", err))
 		}
 	}
 	return errors

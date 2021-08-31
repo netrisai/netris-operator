@@ -61,13 +61,3 @@ func (l *L4LB) SetServiceIngressIPs(s string) {
 	anns["serviceingressips"] = s
 	l.SetAnnotations(anns)
 }
-
-func (l *L4LB) IPRole() string {
-	return l.GetAnnotations()["resource.k8s.netris.ai/iprole"]
-}
-
-func (l *L4LB) SetIPRole(s string) {
-	anns := l.GetAnnotations()
-	anns["resource.k8s.netris.ai/iprole"] = s
-	l.SetAnnotations(anns)
-}
