@@ -251,6 +251,8 @@ github.com/netrisai/netriswebapi v0.0.0-20210908175815-0e11296e95d2 h1:zY4+vM5DF
 github.com/netrisai/netriswebapi v0.0.0-20210908175815-0e11296e95d2/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
 github.com/netrisai/netriswebapi v0.0.0-20210908180135-6a525ba4fe04 h1:hMJedpxDO2guzfXXC2mR+pbeZ6E0QEKGBgnsJx14Wys=
 github.com/netrisai/netriswebapi v0.0.0-20210908180135-6a525ba4fe04/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
+github.com/netrisai/netriswebapi v0.0.0-20210910080135-ca373ebf6eec h1:zDX2rfVP100ktParcPY9DzrwBnPSURnsCsIEgOmAdPs=
+github.com/netrisai/netriswebapi v0.0.0-20210910080135-ca373ebf6eec/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
 github.com/nxadm/tail v1.4.4 h1:DQuhQpB1tVlglWS2hLQ5OV6B5r8aGxSrPc5Qo6uTN78=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
