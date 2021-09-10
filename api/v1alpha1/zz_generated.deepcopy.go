@@ -745,7 +745,7 @@ func (in *VNetMetaSpec) DeepCopyInto(out *VNetMetaSpec) {
 	}
 	if in.Tenants != nil {
 		in, out := &in.Tenants, &out.Tenants
-		*out = make([]int, len(*in))
+		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
 }

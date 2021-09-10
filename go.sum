@@ -239,6 +239,18 @@ github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRW
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
 github.com/netrisai/netrisapi v0.0.0-20210610175837-ededc2c4cd4b h1:Esz09GWT+Gf6HJxEeVuHk9SQkjhVaZLs2AiMeG+3JFA=
 github.com/netrisai/netrisapi v0.0.0-20210610175837-ededc2c4cd4b/go.mod h1:IqkB+A4amKw4jG8dgAWjcWE0W7rvIbSl4K+E3v332ZM=
+github.com/netrisai/netriswebapi v0.0.0-20210902083222-942ba77048f6 h1:iTYikykFFmJdqsI/aQuhxDByKbw5OaQpH/4D1DRT25U=
+github.com/netrisai/netriswebapi v0.0.0-20210902083222-942ba77048f6/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
+github.com/netrisai/netriswebapi v0.0.0-20210903121124-6ed34c4c0616 h1:tPRGqm0qQvLdQUyFgj+RfPoJoEemk+9jUqp2Sm23gfc=
+github.com/netrisai/netriswebapi v0.0.0-20210903121124-6ed34c4c0616/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
+github.com/netrisai/netriswebapi v0.0.0-20210903122845-577dfaf6e841 h1:4MCy4qVZMIcf9/zrrcOSgdM+xJIuGGFl+1YBOs0BsXc=
+github.com/netrisai/netriswebapi v0.0.0-20210903122845-577dfaf6e841/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
+github.com/netrisai/netriswebapi v0.0.0-20210903123701-710ff86f8987 h1:i4rEmKcfm096kw2kfbgRsOEtYAnKX7FCg0Y8IzoJ2Bw=
+github.com/netrisai/netriswebapi v0.0.0-20210903123701-710ff86f8987/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
+github.com/netrisai/netriswebapi v0.0.0-20210908175815-0e11296e95d2 h1:zY4+vM5DFiCdVBHqvjDgRedKVpifebKDxHn4mVeL8kk=
+github.com/netrisai/netriswebapi v0.0.0-20210908175815-0e11296e95d2/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
+github.com/netrisai/netriswebapi v0.0.0-20210908180135-6a525ba4fe04 h1:hMJedpxDO2guzfXXC2mR+pbeZ6E0QEKGBgnsJx14Wys=
+github.com/netrisai/netriswebapi v0.0.0-20210908180135-6a525ba4fe04/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
 github.com/nxadm/tail v1.4.4 h1:DQuhQpB1tVlglWS2hLQ5OV6B5r8aGxSrPc5Qo6uTN78=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
@@ -302,6 +314,7 @@ github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An
 github.com/spf13/viper v1.3.2/go.mod h1:ZiWeW+zYFKm7srdB9IoDzzZXaJaI5eL9QjNiN/DMA2s=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/objx v0.2.0 h1:Hbg2NidpLE8veEBkEZTL3CvlkUIVzuU9jDplZO54c48=
 github.com/stretchr/objx v0.2.0/go.mod h1:qt09Ya8vawLte6SNmTgCsAVtYtaKzEcn8ATUoHMkEqE=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=

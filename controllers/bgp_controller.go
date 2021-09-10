@@ -29,7 +29,8 @@ import (
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/http"
+	api "github.com/netrisai/netriswebapi/v2"
 )
 
 // BGPReconciler reconciles a BGP object
@@ -37,7 +38,7 @@ type BGPReconciler struct {
 	client.Client
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
-	Cred     *api.HTTPCred
+	Cred     *api.Clientset
 	NStorage *netrisstorage.Storage
 }
 
@@ -170,11 +171,11 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 func (r *BGPReconciler) deleteBGP(bgp *k8sv1alpha1.BGP, bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result, error) {
 	if bgpMeta != nil && bgpMeta.Spec.ID > 0 && !bgpMeta.Spec.Reclaim {
-		reply, err := r.Cred.DeleteEBGP(bgpMeta.Spec.ID)
+		reply, err := r.Cred.BGP().Delete(bgpMeta.Spec.ID)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteBGP} %s", err)
 		}
-		resp, err := api.ParseAPIResponse(reply.Data)
+		resp, err := http.ParseAPIResponse(reply.Data)
 		if err != nil {
 			return ctrl.Result{}, err
 		}

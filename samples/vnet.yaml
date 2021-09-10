@@ -1,16 +1,14 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: VNet
 metadata:
-  name: my-vnet
+  name: artash-test
 spec:
-  ownerTenant: Default
+  ownerTenant: Admin
   guestTenants: []
   sites:
     - name: Yerevan
       gateways:
-        - 109.23.0.6/24
-        - 2001:db8:acad::fffe/64
+        - 2.0.0.9/18
       switchPorts:
-        - name: swp5@rlab-spine1
-          vlanId: 1050
-        - name: swp7@rlab-leaf1
+        - name: swp16@yerevan-leaf1
+          vlanId: 2000

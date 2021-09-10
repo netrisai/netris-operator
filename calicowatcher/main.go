@@ -32,7 +32,8 @@ import (
 	"github.com/netrisai/netris-operator/calicowatcher/calico"
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v1/types/site"
+	"github.com/netrisai/netriswebapi/v2/types/vnet"
 	"github.com/r3labs/diff/v2"
 	"go.uber.org/zap/zapcore"
 	v1 "k8s.io/api/core/v1"
@@ -76,7 +77,7 @@ type data struct {
 	switchName string
 
 	nodes        *v1.NodeList
-	site         *api.APISite
+	site         *site.Site
 	vnetGW       string
 	vnetGWIP     string
 	blockSize    int
@@ -661,7 +662,7 @@ func (w *Watcher) fillNodesASNs() error {
 func (w *Watcher) nodesProcessing() error {
 	var (
 		siteName   string
-		site       *api.APISite
+		site       *site.Site
 		vnetName   string
 		vnetGW     string
 		switchName string
@@ -670,7 +671,7 @@ func (w *Watcher) nodesProcessing() error {
 
 	siteID := 0
 	subnet := ""
-	vnet := &api.APIVNet{}
+	vnet := &vnet.VNet{}
 
 	nodesMap := make(map[string]*nodeIP)
 
@@ -733,18 +734,18 @@ func (w *Watcher) nodesProcessing() error {
 	}
 
 	if spine := w.NStorage.HWsStorage.FindSpineBySite(siteID); spine != nil {
-		switchName = spine.SwitchName
+		switchName = spine.Name
 	} else {
 		return fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
 	}
 
 	vnetName = vnet.Name
 	for _, gw := range vnet.Gateways {
-		gateway := fmt.Sprintf("%s/%d", gw.Gateway, gw.GwLength)
+		gateway := strings.Split(gw.Prefix, "/")[0]
 		_, gwNet, _ := net.ParseCIDR(gateway)
 		if gwNet.String() == subnet {
-			vnetGW = gateway
-			vnetGWIP = gw.Gateway
+			vnetGW = gw.Prefix
+			vnetGWIP = gateway
 		}
 	}
 	w.data.nodesMap = nodesMap

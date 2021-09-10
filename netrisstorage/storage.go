@@ -21,10 +21,10 @@ import (
 	"sync"
 	"time"
 
-	api "github.com/netrisai/netrisapi"
+	api "github.com/netrisai/netriswebapi/v2"
 )
 
-var Cred *api.HTTPCred
+var Cred *api.Clientset
 
 /********************************************************************************
 	Storage
@@ -44,7 +44,7 @@ type Storage struct {
 }
 
 // NewStorage .
-func NewStorage(cred *api.HTTPCred) *Storage {
+func NewStorage(cred *api.Clientset) *Storage {
 	Cred = cred
 	return &Storage{
 		PortsStorage:   NewPortStorage(),
@@ -63,27 +63,35 @@ func (s *Storage) Download() error {
 	s.Lock()
 	defer s.Unlock()
 	if err := s.PortsStorage.Download(); err != nil {
+		fmt.Println("PortsStorage", err)
 		return err
 	}
 	if err := s.SitesStorage.Download(); err != nil {
+		fmt.Println("SitesStorage", err)
 		return err
 	}
 	if err := s.TenantsStorage.Download(); err != nil {
+		fmt.Println("TenantsStorage", err)
 		return err
 	}
 	if err := s.VNetStorage.Download(); err != nil {
+		fmt.Println("VNetStorage", err)
 		return err
 	}
 	if err := s.BGPStorage.Download(); err != nil {
+		fmt.Println("BGPStorage", err)
 		return err
 	}
 	if err := s.L4LBStorage.Download(); err != nil {
+		fmt.Println("L4LBStorage", err)
 		return err
 	}
 	if err := s.SubnetsStorage.Download(); err != nil {
+		fmt.Println("SubnetsStorage", err)
 		return err
 	}
 	if err := s.HWsStorage.Download(); err != nil {
+		fmt.Println("HWsStorage", err)
 		return err
 	}
 	return nil

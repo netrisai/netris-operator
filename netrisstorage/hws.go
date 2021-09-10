@@ -19,13 +19,13 @@ package netrisstorage
 import (
 	"sync"
 
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v2/types/inventory"
 )
 
 // HWsStorage .
 type HWsStorage struct {
 	sync.Mutex
-	HWs []*api.APIInventory
+	HWs []*inventory.HW
 }
 
 // NewHWsStorage .
@@ -34,30 +34,30 @@ func NewHWsStorage() *HWsStorage {
 }
 
 // GetAll .
-func (p *HWsStorage) GetAll() []*api.APIInventory {
+func (p *HWsStorage) GetAll() []*inventory.HW {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *HWsStorage) getAll() []*api.APIInventory {
+func (p *HWsStorage) getAll() []*inventory.HW {
 	return p.HWs
 }
 
-func (p *HWsStorage) storeAll(items []*api.APIInventory) {
+func (p *HWsStorage) storeAll(items []*inventory.HW) {
 	p.HWs = items
 }
 
 // FindByName .
-func (p *HWsStorage) FindByName(name string) (*api.APIInventory, bool) {
+func (p *HWsStorage) FindByName(name string) (*inventory.HW, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findByName(name)
 }
 
-func (p *HWsStorage) findByName(name string) (*api.APIInventory, bool) {
+func (p *HWsStorage) findByName(name string) (*inventory.HW, bool) {
 	for _, hw := range p.HWs {
-		if hw.SwitchName == name {
+		if hw.Name == name {
 			return hw, true
 		}
 	}
@@ -65,7 +65,7 @@ func (p *HWsStorage) findByName(name string) (*api.APIInventory, bool) {
 }
 
 // FindByID .
-func (p *HWsStorage) FindByID(id int) (*api.APIInventory, bool) {
+func (p *HWsStorage) FindByID(id int) (*inventory.HW, bool) {
 	p.Lock()
 	defer p.Unlock()
 	item, ok := p.findByID(id)
@@ -76,7 +76,7 @@ func (p *HWsStorage) FindByID(id int) (*api.APIInventory, bool) {
 	return item, ok
 }
 
-func (p *HWsStorage) findByID(id int) (*api.APIInventory, bool) {
+func (p *HWsStorage) findByID(id int) (*inventory.HW, bool) {
 	for _, hw := range p.HWs {
 		if hw.ID == id {
 			return hw, true
@@ -86,16 +86,16 @@ func (p *HWsStorage) findByID(id int) (*api.APIInventory, bool) {
 }
 
 // FindHWsBySite .
-func (p *HWsStorage) FindHWsBySite(siteID int) []api.APIInventory {
+func (p *HWsStorage) FindHWsBySite(siteID int) []inventory.HW {
 	p.Lock()
 	defer p.Unlock()
 	return p.findHWsBySite(siteID)
 }
 
-func (p *HWsStorage) findHWsBySite(siteID int) []api.APIInventory {
-	hws := []api.APIInventory{}
+func (p *HWsStorage) findHWsBySite(siteID int) []inventory.HW {
+	hws := []inventory.HW{}
 	for _, hw := range p.HWs {
-		if hw.SiteID == siteID {
+		if hw.Site.ID == siteID {
 			hws = append(hws, *hw)
 		}
 	}
@@ -103,7 +103,7 @@ func (p *HWsStorage) findHWsBySite(siteID int) []api.APIInventory {
 }
 
 // FindSpineBySite .
-func (p *HWsStorage) FindSpineBySite(siteID int) *api.APIInventory {
+func (p *HWsStorage) FindSpineBySite(siteID int) *inventory.HW {
 	p.Lock()
 	defer p.Unlock()
 	for _, hw := range p.findHWsBySite(siteID) {
@@ -117,7 +117,7 @@ func (p *HWsStorage) FindSpineBySite(siteID int) *api.APIInventory {
 
 // Download .
 func (p *HWsStorage) download() error {
-	items, err := Cred.GetInventory()
+	items, err := Cred.Inventory().Get()
 	if err != nil {
 		return err
 	}

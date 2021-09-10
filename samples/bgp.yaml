@@ -1,41 +1,18 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: BGP
 metadata:
-  name: my-bgp
+  name: artash-test 
 spec:
-  site: Default
-  softgate: softgate1
+  site: Yerevan
+  softgate: sg01
   neighborAs: 23456
   transport:
     type: port
-    name: swp5@rlab-spine1
-    vlanId: 4
-  localIP: 172.16.0.1/30
-  remoteIP: 172.16.0.2/30
-  description: someDesc
+    name: swp13@yerevan-spine2
+  localIP: 1.0.32.11/24
+  remoteIP: 1.0.32.12/24
+  description: K8S
   state: enabled
   terminateOnSwitch:
     enabled: false
     switchName: spine1
-  multihop:
-    neighborAddress: 8.8.8.8
-    updateSource: 10.254.97.33
-    hops: 5
-  bgpPassword: somestrongpass
-  allowAsIn: 5
-  defaultOriginate: false
-  prefixInboundMax: 10000
-  inboundRouteMap: my-in-rm
-  outboundRouteMap: my-out-rm
-  localPreference: 100
-  weight: 0
-  prependInbound: 2
-  prependOutbound: 1
-  prefixListInbound:
-    - deny 127.0.0.0/8 le 32
-    - permit 0.0.0.0/0 le 24
-  prefixListOutbound:
-    - permit 192.168.0.0/23
-  sendBGPCommunity:
-    - 65501:777
-    - 65501:779

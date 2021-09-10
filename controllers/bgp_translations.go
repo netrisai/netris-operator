@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v2/types/bgp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -71,9 +71,11 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 
 	if !bgp.Spec.TerminateOnSwitch.Enabled {
 		if softgate, ok := r.NStorage.BGPStorage.FindOffloaderByName(siteID, bgp.Spec.Softgate); ok {
-			nfvID = softgate.SwitchID
+			nfvID = softgate.ID
 			termSwitchID = nfvID
-			nfvPortID = softgate.OffloadPortID
+			if len(softgate.Links) > 0 {
+				nfvPortID = softgate.Links[0].Local.ID
+			}
 		} else {
 			return bgpMeta, fmt.Errorf("invalid softgate '%s'", bgp.Spec.Softgate)
 		}
@@ -215,8 +217,8 @@ func bgpUpdateDefaultAnnotations(bgp *k8sv1alpha1.BGP) {
 }
 
 // BGPMetaToNetris converts the k8s BGP resource to Netris type and used for add the BGP for Netris API.
-func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPAdd, error) {
-	bgpAdd := &api.APIEBGPAdd{
+func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
+	bgpAdd := &bgp.EBGPAdd{
 		AllowasIn:          bgpMeta.Spec.AllowasIn,
 		BgpPassword:        bgpMeta.Spec.BgpPassword,
 		Community:          bgpMeta.Spec.Community,
@@ -258,8 +260,8 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPAdd, error) {
 }
 
 // BGPMetaToNetrisUpdate converts the k8s BGP resource to Netris type and used for update the BGP for Netris API.
-func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPUpdate, error) {
-	bgpAdd := &api.APIEBGPUpdate{
+func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPUpdate, error) {
+	bgpAdd := &bgp.EBGPUpdate{
 		ID:                 bgpMeta.Spec.ID,
 		AllowasIn:          bgpMeta.Spec.AllowasIn,
 		BgpPassword:        bgpMeta.Spec.BgpPassword,
@@ -301,7 +303,7 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPUpdate, er
 	return bgpAdd, nil
 }
 
-func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bool {
+func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP) bool {
 	if apiBGP.AllowasIn != bgpMeta.Spec.AllowasIn {
 		return false
 	}

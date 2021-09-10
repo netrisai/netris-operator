@@ -20,13 +20,13 @@ import (
 	"fmt"
 	"sync"
 
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v2/types/port"
 )
 
 // PortsStorage .
 type PortsStorage struct {
 	sync.Mutex
-	Ports []*api.APIPort
+	Ports []*port.Port
 }
 
 // NewPortStorage .
@@ -34,31 +34,31 @@ func NewPortStorage() *PortsStorage {
 	return &PortsStorage{}
 }
 
-func (p *PortsStorage) storeAll(ports []*api.APIPort) {
+func (p *PortsStorage) storeAll(ports []*port.Port) {
 	p.Ports = ports
 }
 
 // GetAll .
-func (p *PortsStorage) GetAll() []*api.APIPort {
+func (p *PortsStorage) GetAll() []*port.Port {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *PortsStorage) getAll() []*api.APIPort {
+func (p *PortsStorage) getAll() []*port.Port {
 	return p.Ports
 }
 
 // FindByName .
-func (p *PortsStorage) FindByName(name string) (*api.APIPort, bool) {
+func (p *PortsStorage) FindByName(name string) (*port.Port, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findByName(name)
 }
 
-func (p *PortsStorage) findByName(name string) (*api.APIPort, bool) {
+func (p *PortsStorage) findByName(name string) (*port.Port, bool) {
 	for _, port := range p.Ports {
-		portName := fmt.Sprintf("%s@%s", port.SlavePortName, port.SwitchName)
+		portName := fmt.Sprintf("%s@%s", port.Port, port.SwitchName)
 		if portName == name {
 			return port, true
 		}
@@ -70,7 +70,7 @@ func (p *PortsStorage) findByName(name string) (*api.APIPort, bool) {
 func (p *PortsStorage) Download() error {
 	p.Lock()
 	defer p.Unlock()
-	ports, err := Cred.GetPorts()
+	ports, err := Cred.Port().Get()
 	if err != nil {
 		return err
 	}
