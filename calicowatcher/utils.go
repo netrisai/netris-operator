@@ -27,7 +27,7 @@ func (w *Watcher) findSiteByIP(ip string) (int, string, error) {
 	siteID := 0
 	subnets := w.NStorage.SubnetsStorage.GetAll()
 
-	subnetChilds := []ipam.IPAM{}
+	subnetChilds := []*ipam.IPAM{}
 	for _, subnet := range subnets {
 		subnetChilds = append(subnetChilds, subnet.Children...)
 	}

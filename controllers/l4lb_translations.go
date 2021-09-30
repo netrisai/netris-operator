@@ -391,7 +391,7 @@ func (r *L4LBReconciler) findTenantByIP(ip string) (int, error) {
 		return tenantID, err
 	}
 
-	subnetChilds := []ipam.IPAM{}
+	subnetChilds := []*ipam.IPAM{}
 	for _, subnet := range subnets {
 		subnetChilds = append(subnetChilds, subnet.Children...)
 	}
@@ -417,7 +417,7 @@ func (r *L4LBReconciler) findSiteByIP(ip string) (int, error) {
 		return siteID, err
 	}
 
-	subnetChilds := []ipam.IPAM{}
+	subnetChilds := []*ipam.IPAM{}
 	for _, subnet := range subnets {
 		subnetChilds = append(subnetChilds, subnet.Children...)
 	}
