@@ -34,7 +34,6 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		vlanID            = 1
 		siteID            int
 		nfvID             int
-		nfvPortID         int
 		state             = "enabled"
 		terminateOnSwitch = "no"
 		termSwitchID      int
@@ -73,9 +72,6 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		if softgate, ok := r.NStorage.BGPStorage.FindOffloaderByName(siteID, bgp.Spec.Softgate); ok {
 			nfvID = softgate.ID
 			termSwitchID = nfvID
-			if len(softgate.Links) > 0 {
-				nfvPortID = softgate.Links[0].Local.ID
-			}
 		} else {
 			return bgpMeta, fmt.Errorf("invalid softgate '%s'", bgp.Spec.Softgate)
 		}
@@ -98,7 +94,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		}
 	} else {
 		vlanID = 1
-		if vnet, ok := r.NStorage.BGPStorage.FindVNetByName(bgp.Spec.Transport.Name); ok {
+		if vnet, ok := r.NStorage.VNetStorage.FindByName(bgp.Spec.Transport.Name); ok {
 			vnetID = vnet.ID
 			if bgp.Spec.TerminateOnSwitch.Enabled {
 				if sw, ok := r.NStorage.BGPStorage.FindSwitchByName(siteID, bgp.Spec.TerminateOnSwitch.SwitchName); ok {
@@ -138,8 +134,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			Name:     string(bgp.GetUID()),
 			BGPName:  bgp.Name,
 
-			NfvID:     nfvID,
-			NfvPortID: nfvPortID,
+			NfvID: nfvID,
 
 			SwitchPortID: portID,
 			Vlan:         vlanID,
@@ -232,7 +227,6 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
 		NeighborAddress:    stringOrNull(bgpMeta.Spec.NeighborAddress),
 		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
 		NfvID:              bgpMeta.Spec.NfvID,
-		NfvPortID:          bgpMeta.Spec.NfvPortID,
 		Originate:          bgpMeta.Spec.Originate,
 		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
 		PrefixLength:       bgpMeta.Spec.PrefixLength,
@@ -276,7 +270,6 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPUpdate, error
 		NeighborAddress:    stringOrNull(bgpMeta.Spec.NeighborAddress),
 		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
 		NfvID:              bgpMeta.Spec.NfvID,
-		NfvPortID:          bgpMeta.Spec.NfvPortID,
 		Originate:          bgpMeta.Spec.Originate,
 		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
 		PrefixLength:       bgpMeta.Spec.PrefixLength,

@@ -75,8 +75,6 @@ spec:
                 type: integer
               nfv_id:
                 type: integer
-              nfv_port_id:
-                type: integer
               originate:
                 type: string
               outboundRouteMap:
@@ -140,7 +138,6 @@ spec:
             - neighbor_address
             - neighbor_as
             - nfv_id
-            - nfv_port_id
             - originate
             - outboundRouteMap
             - prefix_length

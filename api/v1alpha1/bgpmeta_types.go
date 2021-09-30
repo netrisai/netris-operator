@@ -47,7 +47,6 @@ type BGPMetaSpec struct {
 	NeighborAddress    string `json:"neighbor_address"`
 	NeighborAs         int    `json:"neighbor_as"`
 	NfvID              int    `json:"nfv_id"`
-	NfvPortID          int    `json:"nfv_port_id"`
 	Originate          string `json:"originate"`
 	OutboundRouteMap   int    `json:"outboundRouteMap"`
 	PrefixLength       int    `json:"prefix_length"`

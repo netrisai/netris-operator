@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -169,6 +170,10 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					logger.Error(fmt.Errorf("{BGPMetaToNetrisUpdate} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", err.Error())
 				}
+
+				js, _ := json.Marshal(bgpUpdate)
+				debugLogger.Info("bgpUpdate", "payload", string(js))
+
 				_, err, errMsg := updateBGP(bgpUpdate, r.Cred)
 				if err != nil {
 					logger.Error(fmt.Errorf("{updateBGP} %s", err), "")
@@ -200,6 +205,10 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
+
+	js, _ := json.Marshal(bgpAdd)
+	debugLogger.Info("bgpToAdd", "payload", string(js))
+
 	reply, err := r.Cred.BGP().Add(bgpAdd)
 	if err != nil {
 		return ctrl.Result{}, err, err
