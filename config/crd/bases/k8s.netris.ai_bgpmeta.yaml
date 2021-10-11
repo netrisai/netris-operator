@@ -49,6 +49,8 @@ spec:
                 type: string
               description:
                 type: string
+              hwid:
+                type: integer
               id:
                 type: integer
               imported:
@@ -73,12 +75,12 @@ spec:
                 type: string
               neighbor_as:
                 type: integer
-              nfv_id:
-                type: integer
               originate:
                 type: string
               outboundRouteMap:
                 type: integer
+              port:
+                type: string
               prefix_length:
                 type: integer
               prefix_limit:
@@ -91,31 +93,19 @@ spec:
                 type: integer
               prepend_outbound:
                 type: integer
-              rcircuit_id:
-                type: integer
               reclaimPolicy:
                 type: boolean
               remote_ip:
                 type: string
-              site_id:
-                type: integer
+              site:
+                type: string
               status:
-                type: string
-              switch_id:
-                type: integer
-              switch_name:
-                type: string
-              switch_port_id:
-                type: integer
-              term_switch_id:
-                type: integer
-              term_switch_name:
-                type: string
-              terminate_on_switch:
                 type: string
               update_source:
                 type: string
               vlan:
+                type: integer
+              vnet:
                 type: integer
               weight:
                 type: integer
@@ -126,6 +116,7 @@ spec:
             - bgp_password
             - community
             - description
+            - hwid
             - id
             - imported
             - inboundRouteMap
@@ -135,30 +126,23 @@ spec:
             - local_preference
             - multihop
             - name
-            - neighbor_address
             - neighbor_as
-            - nfv_id
             - originate
             - outboundRouteMap
+            - port
             - prefix_length
             - prefix_limit
             - prefix_list_inbound
             - prefix_list_outbound
             - prepend_inbound
             - prepend_outbound
-            - rcircuit_id
             - reclaimPolicy
             - remote_ip
-            - site_id
+            - site
             - status
-            - switch_id
-            - switch_name
-            - switch_port_id
-            - term_switch_id
-            - term_switch_name
-            - terminate_on_switch
             - update_source
             - vlan
+            - vnet
             - weight
             type: object
           status:

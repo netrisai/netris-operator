@@ -55,10 +55,3 @@ func regParser(valueMatch []string, subexpNames []string) map[string]string {
 	}
 	return result
 }
-
-func stringOrNull(s string) *string {
-	if len(s) > 0 {
-		return &s
-	}
-	return nil
-}

@@ -174,7 +174,7 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				js, _ := json.Marshal(bgpUpdate)
 				debugLogger.Info("bgpUpdate", "payload", string(js))
 
-				_, err, errMsg := updateBGP(bgpUpdate, r.Cred)
+				_, err, errMsg := updateBGP(bgpMeta.Spec.ID, bgpUpdate, r.Cred)
 				if err != nil {
 					logger.Error(fmt.Errorf("{updateBGP} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", errMsg.Error())
@@ -224,6 +224,7 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 	idStruct := struct {
 		ID int `json:"id"`
 	}{}
+	debugLogger.Info("response Data", "payload", resp.Data)
 	err = http.Decode(resp.Data, &idStruct)
 	if err != nil {
 		return ctrl.Result{}, err, err
@@ -250,8 +251,8 @@ func (r *BGPMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func updateBGP(bgp *bgp.EBGPUpdate, cred *api.Clientset) (ctrl.Result, error, error) {
-	reply, err := cred.BGP().Update(bgp)
+func updateBGP(id int, bgp *bgp.EBGPUpdate, cred *api.Clientset) (ctrl.Result, error, error) {
+	reply, err := cred.BGP().Update(id, bgp)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateBGP} %s", err), err
 	}

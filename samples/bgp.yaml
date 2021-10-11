@@ -1,18 +1,17 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: BGP
 metadata:
-  name: artash-test 
+  name: artash-kube-test
 spec:
-  site: Yerevan
-  softgate: sg01
-  neighborAs: 23456
+  site: Artash
+  hardware: terraform-sg
+  neighborAs: 2345656
   transport:
     type: port
-    name: swp13@yerevan-spine2
-  localIP: 1.0.32.11/24
-  remoteIP: 1.0.32.12/24
+    name: swp37@artash-spine-1
+  multihop:
+    neighborAddress: 8.8.8.8
+  localIP: 99.0.5.1/24
+  remoteIP: 99.0.5.2/24
   description: K8S
   state: enabled
-  terminateOnSwitch:
-    enabled: false
-    switchName: spine1

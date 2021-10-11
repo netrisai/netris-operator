@@ -426,10 +426,7 @@ func (w *Watcher) generateBGPs() error {
 			Spec: k8sv1alpha1.BGPSpec{
 				Site:       w.data.site.Name,
 				NeighborAS: asn,
-				TerminateOnSwitch: k8sv1alpha1.BGPTerminateOnSwitch{
-					Enabled:    true,
-					SwitchName: w.data.switchName,
-				},
+				Hardware:   w.data.switchName,
 				Transport: v1alpha1.BGPTransport{
 					Type: "vnet",
 					Name: w.data.vnetName,

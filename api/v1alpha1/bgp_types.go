@@ -46,9 +46,9 @@ type BGPSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	Site       string       `json:"site"`
-	Softgate   string       `json:"softgate,omitempty"`
 	NeighborAS int          `json:"neighborAs"`
 	Transport  BGPTransport `json:"transport"`
+	Hardware   string       `json:"hardware"`
 
 	// +kubebuilder:validation:Pattern=`(^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([0-9]|[12]\d|3[0-2]))?$)|(^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?(\/([1-9]|[1-5][0-9]|6[0-4]))?$)`
 	LocalIP string `json:"localIP"`
@@ -58,28 +58,21 @@ type BGPSpec struct {
 	Description string `json:"description,omitempty"`
 
 	// +kubebuilder:validation:Enum=enabled;disabled
-	State              string               `json:"state,omitempty"`
-	TerminateOnSwitch  BGPTerminateOnSwitch `json:"terminateOnSwitch,omitempty"`
-	Multihop           BGPMultihop          `json:"multihop,omitempty"`
-	BGPPassword        string               `json:"bgpPassword,omitempty"`
-	AllowAsIn          int                  `json:"allowAsIn,omitempty"`
-	DefaultOriginate   bool                 `json:"defaultOriginate,omitempty"`
-	PrefixInboundMax   int                  `json:"prefixInboundMax,omitempty"`
-	InboundRouteMap    string               `json:"inboundRouteMap,omitempty"`
-	OutboundRouteMap   string               `json:"outboundRouteMap,omitempty"`
-	LocalPreference    int                  `json:"localPreference,omitempty"`
-	Weight             int                  `json:"weight,omitempty"`
-	PrependInbound     int                  `json:"prependInbound,omitempty"`
-	PrependOutbound    int                  `json:"prependOutbound,omitempty"`
-	PrefixListInbound  []string             `json:"prefixListInbound,omitempty"`
-	PrefixListOutbound []string             `json:"prefixListOutbound,omitempty"`
-	SendBGPCommunity   []string             `json:"sendBGPCommunity,omitempty"`
-}
-
-// BGPTerminateOnSwitch .
-type BGPTerminateOnSwitch struct {
-	Enabled    bool   `json:"enabled"`
-	SwitchName string `json:"switchName,omitempty"`
+	State              string      `json:"state,omitempty"`
+	Multihop           BGPMultihop `json:"multihop,omitempty"`
+	BGPPassword        string      `json:"bgpPassword,omitempty"`
+	AllowAsIn          int         `json:"allowAsIn,omitempty"`
+	DefaultOriginate   bool        `json:"defaultOriginate,omitempty"`
+	PrefixInboundMax   int         `json:"prefixInboundMax,omitempty"`
+	InboundRouteMap    string      `json:"inboundRouteMap,omitempty"`
+	OutboundRouteMap   string      `json:"outboundRouteMap,omitempty"`
+	LocalPreference    int         `json:"localPreference,omitempty"`
+	Weight             int         `json:"weight,omitempty"`
+	PrependInbound     int         `json:"prependInbound,omitempty"`
+	PrependOutbound    int         `json:"prependOutbound,omitempty"`
+	PrefixListInbound  []string    `json:"prefixListInbound,omitempty"`
+	PrefixListOutbound []string    `json:"prefixListOutbound,omitempty"`
+	SendBGPCommunity   []string    `json:"sendBGPCommunity,omitempty"`
 }
 
 // BGPMultihop .
