@@ -331,12 +331,12 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, u uni
 		u.DebugLogger.Info("NeighborAs changed", "netrisValue", apiBGP.NeighborAs, "k8sValue", bgpMeta.Spec.NeighborAs)
 		return false
 	}
-	// if apiBGP.NfvID != bgpMeta.Spec.NfvID {
-	// 	return false
-	// }
-	// if apiBGP.NfvPortID != bgpMeta.Spec.NfvPortID {
-	// 	return false
-	// }
+	if port, ok := u.NStorage.PortsStorage.FindByID(apiBGP.Port.ID); ok {
+		if port.ShortName != bgpMeta.Spec.Port {
+			u.DebugLogger.Info("Port changed", "netrisValue", port.ShortName, "k8sValue", bgpMeta.Spec.Port)
+			return false
+		}
+	}
 	if apiBGP.Originate != bgpMeta.Spec.Originate {
 		u.DebugLogger.Info("Originate changed", "netrisValue", apiBGP.Originate, "k8sValue", bgpMeta.Spec.Originate)
 		return false
