@@ -66,6 +66,22 @@ func (p *PortsStorage) findByName(name string) (*port.Port, bool) {
 	return nil, false
 }
 
+// FindByID .
+func (p *PortsStorage) FindByID(id int) (*port.Port, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findByID(id)
+}
+
+func (p *PortsStorage) findByID(id int) (*port.Port, bool) {
+	for _, port := range p.Ports {
+		if id == port.ID {
+			return port, true
+		}
+	}
+	return nil, false
+}
+
 // Download .
 func (p *PortsStorage) Download() error {
 	p.Lock()

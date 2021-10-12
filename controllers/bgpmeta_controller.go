@@ -159,9 +159,9 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				bgpCR.Status.VLANID = "untagged"
 			}
 			debugLogger.Info("Comparing BGPMeta with Netris BGP")
-			if ok := compareBGPMetaAPIEBGP(bgpMeta, apiBGP, debugLogger); ok {
+			if ok := compareBGPMetaAPIEBGP(bgpMeta, apiBGP, u); ok {
 				debugLogger.Info("Nothing Changed")
-			} else {	
+			} else {
 				debugLogger.Info("Go to update BGP in Netris")
 				logger.Info("Updating BGP")
 				bgpUpdate, err := BGPMetaToNetrisUpdate(bgpMeta)
