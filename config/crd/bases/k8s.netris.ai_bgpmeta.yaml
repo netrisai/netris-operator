@@ -84,7 +84,7 @@ spec:
               prefix_length:
                 type: integer
               prefix_limit:
-                type: integer
+                type: string
               prefix_list_inbound:
                 type: string
               prefix_list_outbound:

@@ -53,7 +53,7 @@ type BGPMetaSpec struct {
 	Originate          string  `json:"originate"`
 	OutboundRouteMap   int     `json:"outboundRouteMap"`
 	PrefixLength       int     `json:"prefix_length"`
-	PrefixLimit        int     `json:"prefix_limit"`
+	PrefixLimit        string     `json:"prefix_limit"`
 	PrefixListInbound  string  `json:"prefix_list_inbound"`
 	PrefixListOutbound string  `json:"prefix_list_outbound"`
 	PrependInbound     int     `json:"prepend_inbound"`

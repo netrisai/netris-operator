@@ -136,7 +136,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			BgpPassword:        bgp.Spec.BGPPassword,
 			AllowasIn:          bgp.Spec.AllowAsIn,
 			Originate:          originate,
-			PrefixLimit:        bgp.Spec.PrefixInboundMax, // ?
+			PrefixLimit:        strconv.Itoa(bgp.Spec.PrefixInboundMax), // ?
 			IPVersion:          ipVersion,
 			InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
 			LocalPreference:    localPreference,
@@ -364,8 +364,9 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, u uni
 		u.DebugLogger.Info("PrefixLength changed", "netrisValue", apiBGP.PrefixLength, "k8sValue", bgpMeta.Spec.PrefixLength)
 		return false
 	}
-	if apiBGP.PrefixLimit != bgpMeta.Spec.PrefixLimit {
-		u.DebugLogger.Info("PrefixLimit changed", "netrisValue", apiBGP.PrefixLimit, "k8sValue", bgpMeta.Spec.PrefixLimit)
+	prefixLimit, _ := strconv.Atoi(bgpMeta.Spec.PrefixLimit)
+	if apiBGP.PrefixLimit != prefixLimit {
+		u.DebugLogger.Info("PrefixLimit changed", "netrisValue", apiBGP.PrefixLimit, "k8sValue", prefixLimit)
 		return false
 	}
 	if apiBGP.PrefixListInbound != bgpMeta.Spec.PrefixListInbound {
