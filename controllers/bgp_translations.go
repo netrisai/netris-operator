@@ -295,7 +295,8 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, debug
 		debugLogger.Info("Description changed", "netrisValue", apiBGP.Description, "k8sValue", bgpMeta.Spec.Description)
 		return false
 	}
-	if apiBGP.InboundRouteMap != strconv.Itoa(bgpMeta.Spec.InboundRouteMap) {
+	inboundRouteMap, _ := strconv.Atoi(apiBGP.InboundRouteMap)
+	if inboundRouteMap != bgpMeta.Spec.InboundRouteMap {
 		debugLogger.Info("InboundRouteMap changed", "netrisValue", apiBGP.InboundRouteMap, "k8sValue", bgpMeta.Spec.InboundRouteMap)
 		return false
 	}
@@ -341,7 +342,8 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, debug
 		debugLogger.Info("Originate changed", "netrisValue", apiBGP.Originate, "k8sValue", bgpMeta.Spec.Originate)
 		return false
 	}
-	if apiBGP.OutboundRouteMap != strconv.Itoa(bgpMeta.Spec.OutboundRouteMap) {
+	outboundRouteMap, _ := strconv.Atoi(apiBGP.OutboundRouteMap)
+	if outboundRouteMap != bgpMeta.Spec.OutboundRouteMap {
 		debugLogger.Info("OutboundRouteMap changed", "netrisValue", apiBGP.OutboundRouteMap, "k8sValue", bgpMeta.Spec.OutboundRouteMap)
 		return false
 	}
