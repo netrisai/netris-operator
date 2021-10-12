@@ -662,11 +662,10 @@ func (w *Watcher) nodesProcessing() error {
 		site       *site.Site
 		vnetName   string
 		vnetGW     string
-		switchName string
+		switchName string = "auto"
 		vnetGWIP   string
 	)
 
-	siteID := 0
 	subnet := ""
 	vnet := &vnet.VNet{}
 
@@ -711,7 +710,6 @@ func (w *Watcher) nodesProcessing() error {
 			var ok bool
 			if site, ok = w.NStorage.SitesStorage.FindByID(id); ok {
 				siteName = site.Name
-				siteID = site.ID
 			}
 			subnet = gateway
 			if vn, ok := w.NStorage.VNetStorage.FindByGateway(gateway); ok {
@@ -728,12 +726,6 @@ func (w *Watcher) nodesProcessing() error {
 
 	if vnet == nil {
 		return fmt.Errorf("Couldn't find vnet")
-	}
-
-	if spine := w.NStorage.HWsStorage.FindSpineBySite(siteID); spine != nil {
-		switchName = spine.Name
-	} else {
-		return fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
 	}
 
 	vnetName = vnet.Name

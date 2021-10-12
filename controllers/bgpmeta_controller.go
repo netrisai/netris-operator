@@ -161,7 +161,7 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			debugLogger.Info("Comparing BGPMeta with Netris BGP")
 			if ok := compareBGPMetaAPIEBGP(bgpMeta, apiBGP, debugLogger); ok {
 				debugLogger.Info("Nothing Changed")
-			} else {
+			} else {	
 				debugLogger.Info("Go to update BGP in Netris")
 				logger.Info("Updating BGP")
 				bgpUpdate, err := BGPMetaToNetrisUpdate(bgpMeta)
