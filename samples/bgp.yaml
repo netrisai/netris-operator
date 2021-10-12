@@ -4,14 +4,14 @@ metadata:
   name: artash-kube-test
 spec:
   site: Artash
-  hardware: terraform-sg
-  neighborAs: 2345656
+  hardware: auto
+  neighborAs: 23456
   transport:
-    type: port
-    name: swp37@artash-spine-1
+    type: vnet
+    name: artash-kube
   multihop:
     neighborAddress: 8.8.8.8
-  localIP: 99.0.5.1/24
-  remoteIP: 99.0.5.2/24
+  localIP: 99.0.4.1/24
+  remoteIP: 99.0.4.2/24
   description: K8S
   state: enabled

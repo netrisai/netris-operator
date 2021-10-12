@@ -83,7 +83,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	}
 
 	for _, hw := range inventory {
-		if hw.Name == bgp.Spec.Hardware {
+		if hw.Name == bgp.Spec.Hardware && bgp.Spec.Hardware != "auto" {
 			hwID = hw.ID
 		}
 	}
@@ -199,11 +199,18 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
 	} else {
 		vnetID = "none"
 	}
+
+	var hwID interface{}
+	if bgpMeta.Spec.HWID > 0 {
+		hwID = bgpMeta.Spec.HWID
+	} else {
+		hwID = "auto"
+	}
 	bgpAdd := &bgp.EBGPAdd{
 		AllowAsIn:          bgpMeta.Spec.AllowasIn,
 		BgpPassword:        bgpMeta.Spec.BgpPassword,
 		BgpCommunity:       bgpMeta.Spec.Community,
-		Hardware:           bgp.IDName{ID: bgpMeta.Spec.HWID},
+		Hardware:           bgp.IDNone{ID: hwID},
 		Vnet:               bgp.IDNone{ID: vnetID},
 		Port:               bgp.IDName{Name: bgpMeta.Spec.Port},
 		Description:        bgpMeta.Spec.Description,
@@ -242,6 +249,13 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPUpdate, error
 	} else {
 		vnetID = "none"
 	}
+
+	var hwID interface{}
+	if bgpMeta.Spec.HWID > 0 {
+		hwID = bgpMeta.Spec.HWID
+	} else {
+		hwID = "auto"
+	}
 	bgpAdd := &bgp.EBGPUpdate{
 		AllowAsIn:          bgpMeta.Spec.AllowasIn,
 		BgpPassword:        bgpMeta.Spec.BgpPassword,
@@ -266,7 +280,7 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPUpdate, error
 		RemoteIP:           bgpMeta.Spec.RemoteIP,
 		Site:               bgp.IDName{Name: bgpMeta.Spec.Site},
 		State:              bgpMeta.Spec.Status,
-		Hardware:           bgp.IDName{ID: bgpMeta.Spec.HWID},
+		Hardware:           bgp.IDNone{ID: hwID},
 		Port:               bgp.IDName{Name: bgpMeta.Spec.Port},
 		Vnet:               bgp.IDNone{ID: vnetID},
 		UpdateSource:       bgpMeta.Spec.UpdateSource,
