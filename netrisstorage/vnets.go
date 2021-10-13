@@ -17,6 +17,8 @@ limitations under the License.
 package netrisstorage
 
 import (
+	"net"
+	"strings"
 	"sync"
 
 	"github.com/netrisai/netriswebapi/v2/types/vnet"
@@ -100,6 +102,13 @@ func (p *VNetStorage) findByGateway(gateway string) (*vnet.VNet, bool) {
 	for _, item := range p.VNets {
 		for _, gway := range item.Gateways {
 			if gway.Prefix == gateway {
+				return item, true
+			}
+			_, ipNet, err := net.ParseCIDR(gateway)
+			if err != nil {
+				return nil, false
+			}
+			if ipNet.Contains(net.ParseIP(strings.Split(gway.Prefix, "/")[0])) {
 				return item, true
 			}
 		}

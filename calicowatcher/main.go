@@ -727,11 +727,17 @@ func (w *Watcher) nodesProcessing() error {
 	if vnet == nil {
 		return fmt.Errorf("Couldn't find vnet")
 	}
+	if vnet.ID == 0 {
+		return fmt.Errorf("Couldn't find vnet")
+	}
 
 	vnetName = vnet.Name
 	for _, gw := range vnet.Gateways {
 		gateway := strings.Split(gw.Prefix, "/")[0]
-		_, gwNet, _ := net.ParseCIDR(gateway)
+		_, gwNet, err := net.ParseCIDR(gw.Prefix)
+		if err != nil {
+			return fmt.Errorf("invalid vnet gateway %s", gw.Prefix)
+		}
 		if gwNet.String() == subnet {
 			vnetGW = gw.Prefix
 			vnetGWIP = gateway
