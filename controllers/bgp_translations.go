@@ -30,7 +30,7 @@ import (
 func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta, error) {
 	bgpMeta := &k8sv1alpha1.BGPMeta{}
 	var (
-		vlanID    = 1
+		vlanID    = 0
 		state     = "enabled"
 		imported  = false
 		reclaim   = false
@@ -47,10 +47,6 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		originate = "enabled"
 	}
 
-	if bgp.Spec.Transport.VlanID > 1 {
-		vlanID = bgp.Spec.Transport.VlanID
-	}
-
 	if bgp.Spec.LocalPreference > 0 {
 		localPreference = bgp.Spec.LocalPreference
 	}
@@ -65,6 +61,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 
 	if bgp.Spec.Transport.Type == "port" {
 		port = bgp.Spec.Transport.Name
+		vlanID = 1
 	} else {
 		vnets, err := r.Cred.VNet().Get()
 		if err != nil {
@@ -75,6 +72,10 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 				vnetID = vnet.ID
 			}
 		}
+	}
+
+	if bgp.Spec.Transport.VlanID > 1 {
+		vlanID = bgp.Spec.Transport.VlanID
 	}
 
 	inventory, err := r.Cred.Inventory().Get()
