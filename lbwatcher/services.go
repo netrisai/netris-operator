@@ -51,8 +51,6 @@ func assignIngress(clientset *kubernetes.Clientset, ips []string, namespace stri
 		ingressList = append(ingressList, v1.LoadBalancerIngress{IP: ip})
 	}
 
-	// ingressList = append(ingressList, v1.LoadBalancerIngress{IP: "aaaaa"})
-
 	var updatedService *v1.Service
 
 	service, err := clientset.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})

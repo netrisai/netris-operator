@@ -199,8 +199,6 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
 	}
 
-	fmt.Println("AAAAAA", resp.Data)
-
 	idStruct := struct {
 		ID int `json:"id"`
 	}{}
