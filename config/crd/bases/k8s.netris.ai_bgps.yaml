@@ -154,7 +154,6 @@ spec:
               weight:
                 type: integer
             required:
-            - hardware
             - localIP
             - neighborAs
             - remoteIP

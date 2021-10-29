@@ -662,7 +662,7 @@ func (w *Watcher) nodesProcessing() error {
 		site       *site.Site
 		vnetName   string
 		vnetGW     string
-		switchName string = "auto"
+		switchName string = ""
 		vnetGWIP   string
 	)
 

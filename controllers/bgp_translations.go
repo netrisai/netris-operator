@@ -84,7 +84,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	}
 
 	for _, hw := range inventory {
-		if hw.Name == bgp.Spec.Hardware && bgp.Spec.Hardware != "auto" {
+		if hw.Name == bgp.Spec.Hardware && bgp.Spec.Hardware != "auto" && bgp.Spec.Hardware != "" {
 			hwID = hw.ID
 		}
 	}
