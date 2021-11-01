@@ -19,32 +19,29 @@ package calicowatcher
 import (
 	"fmt"
 	"net"
-	"strconv"
 
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v2/types/ipam"
 )
 
 func (w *Watcher) findSiteByIP(ip string) (int, string, error) {
 	siteID := 0
 	subnets := w.NStorage.SubnetsStorage.GetAll()
 
-	subnetChilds := []api.APISubnetChild{}
+	subnetChilds := []*ipam.IPAM{}
 	for _, subnet := range subnets {
 		subnetChilds = append(subnetChilds, subnet.Children...)
 	}
 
 	for _, subnet := range subnetChilds {
 		ipAddr := net.ParseIP(ip)
-		_, ipNet, err := net.ParseCIDR(fmt.Sprintf("%s/%d", subnet.Prefix, subnet.Length))
+		_, ipNet, err := net.ParseCIDR(subnet.Prefix)
 		if err != nil {
 			return siteID, "", err
 		}
 		if ipNet.Contains(ipAddr) {
-			sID, _ := strconv.Atoi(subnet.SiteID)
-			if err != nil {
-				return siteID, "", err
+			if len(subnet.Sites) > 0 {
+				return subnet.Sites[0].ID, ipNet.String(), nil
 			}
-			return sID, ipNet.String(), nil
 		}
 	}
 

@@ -33,12 +33,11 @@ type VNetMetaSpec struct {
 	Members          []VNetMetaMember  `json:"members"`
 	Name             string            `json:"name"`
 	VnetName         string            `json:"vnetName"`
-	OwnerID          int               `json:"ownerid"`
 	Owner            string            `json:"owner"`
 	Provisioning     int               `json:"provisioning"`
 	Sites            []VNetMetaSite    `json:"sites"`
 	State            string            `json:"state"`
-	Tenants          []int             `json:"tenants"`
+	Tenants          []string          `json:"tenants"`
 	VaMode           bool              `json:"vaMode"`
 	VaNativeVLAN     int               `json:"vaNativeVlan"`
 	VaVLANs          string            `json:"vaVlans"`

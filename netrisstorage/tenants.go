@@ -19,13 +19,13 @@ package netrisstorage
 import (
 	"sync"
 
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v1/types/tenant"
 )
 
 // TenantsStorage .
 type TenantsStorage struct {
 	sync.Mutex
-	Tenants []*api.APITenant
+	Tenants []*tenant.Tenant
 }
 
 // NewTenantsStorage .
@@ -34,28 +34,28 @@ func NewTenantsStorage() *TenantsStorage {
 }
 
 // GetAll .
-func (p *TenantsStorage) GetAll() []*api.APITenant {
+func (p *TenantsStorage) GetAll() []*tenant.Tenant {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *TenantsStorage) getAll() []*api.APITenant {
+func (p *TenantsStorage) getAll() []*tenant.Tenant {
 	return p.Tenants
 }
 
-func (p *TenantsStorage) storeAll(items []*api.APITenant) {
+func (p *TenantsStorage) storeAll(items []*tenant.Tenant) {
 	p.Tenants = items
 }
 
 // FindByName .
-func (p *TenantsStorage) FindByName(name string) (*api.APITenant, bool) {
+func (p *TenantsStorage) FindByName(name string) (*tenant.Tenant, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findByName(name)
 }
 
-func (p *TenantsStorage) findByName(name string) (*api.APITenant, bool) {
+func (p *TenantsStorage) findByName(name string) (*tenant.Tenant, bool) {
 	for _, item := range p.Tenants {
 		if item.Name == name {
 			return item, true
@@ -65,7 +65,7 @@ func (p *TenantsStorage) findByName(name string) (*api.APITenant, bool) {
 }
 
 // FindByID .
-func (p *TenantsStorage) FindByID(id int) (*api.APITenant, bool) {
+func (p *TenantsStorage) FindByID(id int) (*tenant.Tenant, bool) {
 	p.Lock()
 	defer p.Unlock()
 	item, ok := p.findByID(id)
@@ -76,7 +76,7 @@ func (p *TenantsStorage) FindByID(id int) (*api.APITenant, bool) {
 	return item, ok
 }
 
-func (p *TenantsStorage) findByID(id int) (*api.APITenant, bool) {
+func (p *TenantsStorage) findByID(id int) (*tenant.Tenant, bool) {
 	for _, item := range p.Tenants {
 		if item.ID == id {
 			return item, true
@@ -87,7 +87,7 @@ func (p *TenantsStorage) findByID(id int) (*api.APITenant, bool) {
 
 // Download .
 func (p *TenantsStorage) download() error {
-	items, err := Cred.GetTenants()
+	items, err := Cred.Tenant().Get()
 	if err != nil {
 		return err
 	}

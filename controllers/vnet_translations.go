@@ -18,9 +18,10 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v2/types/vnet"
 	"github.com/r3labs/diff/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -53,23 +54,6 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 		})
 	}
 
-	tenantID := 0
-
-	tenant, ok := r.NStorage.TenantsStorage.FindByName(vnet.Spec.Owner)
-	if !ok {
-		return nil, fmt.Errorf("Tenant '%s' not found", vnet.Spec.Owner)
-	}
-	tenantID = tenant.ID
-
-	guestTenants := []int{}
-	for _, guest := range vnet.Spec.GuestTenants {
-		tenant, ok := r.NStorage.TenantsStorage.FindByName(guest)
-		if !ok {
-			return nil, fmt.Errorf("Guest tenant '%s' not found", guest)
-		}
-		guestTenants = append(guestTenants, tenant.ID)
-	}
-
 	state := "active"
 	if len(vnet.Spec.State) > 0 {
 		if !(vnet.Spec.State == "active" || vnet.Spec.State == "disabled") {
@@ -100,8 +84,8 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 			VnetName:     vnet.Name,
 			Sites:        sitesList,
 			State:        state,
-			OwnerID:      tenantID,
-			Tenants:      guestTenants,
+			Owner:        vnet.Spec.Owner,
+			Tenants:      vnet.Spec.GuestTenants,
 			Gateways:     apiGateways,
 			Members:      prts,
 			Provisioning: 1,
@@ -115,95 +99,75 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 }
 
 // VnetMetaToNetris converts the k8s VNet resource to Netris type and used for add the VNet for Netris API.
-func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetAdd, error) {
-	siteNames := []string{}
-	apiGateways := []api.APIVNetGateway{}
+func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetAdd, error) {
+	apiGateways := []vnet.VNetAddGateway{}
+
+	sites := []vnet.VNetAddSite{}
 
 	for _, site := range vnetMeta.Spec.Sites {
-		siteNames = append(siteNames, site.Name)
+		sites = append(sites, vnet.VNetAddSite{Name: site.Name})
 	}
 	for _, gateway := range vnetMeta.Spec.Gateways {
-		apiGateways = append(apiGateways, api.APIVNetGateway{
-			Gateway:  gateway.Gateway,
-			GwLength: gateway.GwLength,
-			ID:       gateway.ID,
-			Version:  gateway.Version,
+		apiGateways = append(apiGateways, vnet.VNetAddGateway{
+			Prefix: fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength),
 		})
 	}
 
-	sites := getSites(siteNames, r.NStorage)
-	siteIDs := []int{}
-	for _, id := range sites {
-		siteIDs = append(siteIDs, id)
+	guestTenants := []vnet.VNetAddTenant{}
+	for _, tenant := range vnetMeta.Spec.Tenants {
+		guestTenants = append(guestTenants, vnet.VNetAddTenant{Name: tenant})
 	}
 
-	provisioning := 1
-	if vnetMeta.Spec.State == "disabled" {
-		provisioning = 0
-	}
-
-	vnetAdd := &api.APIVNetAdd{
+	vnetAdd := &vnet.VNetAdd{
 		Name:         vnetMeta.Spec.VnetName,
-		Sites:        siteIDs,
-		Owner:        vnetMeta.Spec.OwnerID,
+		Sites:        sites,
+		Tenant:       vnet.VNetAddTenant{Name: vnetMeta.Spec.Owner},
 		State:        vnetMeta.Spec.State,
-		Tenants:      vnetMeta.Spec.Tenants,
+		GuestTenants: guestTenants,
 		Gateways:     apiGateways,
-		Members:      k8sMemberToAPIMember(vnetMeta.Spec.Members).String(),
-		VaMode:       false,
-		VaNativeVLAN: 1,
-		VaVLANs:      "",
-		Provisioning: provisioning,
+		Ports:        k8sMemberToAPIMember(vnetMeta.Spec.Members),
+		NativeVlan:   1,
 	}
 
 	return vnetAdd, nil
 }
 
 // VnetMetaToNetrisUpdate converts the k8s VNet resource to Netris type and used for update the VNet for Netris API.
-func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*api.APIVNetUpdate, error) {
-	apiGateways := []api.APIVNetGateway{}
+func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, error) {
+	apiGateways := []vnet.VNetUpdateGateway{}
 
+	sites := []vnet.VNetUpdateSite{}
+
+	for _, site := range vnetMeta.Spec.Sites {
+		sites = append(sites, vnet.VNetUpdateSite{Name: site.Name})
+	}
 	for _, gateway := range vnetMeta.Spec.Gateways {
-		apiGateways = append(apiGateways, api.APIVNetGateway{
-			Gateway:  gateway.Gateway,
-			GwLength: gateway.GwLength,
-			ID:       gateway.ID,
-			Version:  gateway.Version,
+		apiGateways = append(apiGateways, vnet.VNetUpdateGateway{
+			Prefix: fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength),
 		})
 	}
 
-	siteIDs := []int{}
-	for _, site := range vnetMeta.Spec.Sites {
-		siteIDs = append(siteIDs, site.ID)
+	guestTenants := []vnet.VNetUpdateGuestTenant{}
+	for _, tenant := range vnetMeta.Spec.Tenants {
+		guestTenants = append(guestTenants, vnet.VNetUpdateGuestTenant{Name: tenant})
 	}
 
-	provisioning := 1
-	if vnetMeta.Spec.State == "disabled" {
-		provisioning = 0
-	}
-
-	vnetUpdate := &api.APIVNetUpdate{
-		ID:           vnetMeta.Spec.ID,
+	vnetUpdate := &vnet.VNetUpdate{
 		Name:         vnetMeta.Spec.VnetName,
-		Sites:        siteIDs,
+		Sites:        sites,
 		State:        vnetMeta.Spec.State,
-		Owner:        vnetMeta.Spec.OwnerID,
-		Tenants:      vnetMeta.Spec.Tenants,
+		GuestTenants: guestTenants,
 		Gateways:     apiGateways,
-		Members:      k8sMemberToAPIMember(vnetMeta.Spec.Members).String(),
-		VaMode:       false,
-		VaNativeVLAN: "1",
-		VaVLANs:      "",
-		Provisioning: provisioning,
+		Ports:        k8sMemberToAPIMemberUpdate(vnetMeta.Spec.Members),
+		NativeVlan:   1,
 	}
 
 	return vnetUpdate, nil
 }
 
-func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGateway, apiVnetGateways []api.APIVNetGateway) bool {
+func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGateway, apiVnetGateways []vnet.VNetDetailedGateway) bool {
 	type gateway struct {
-		Gateway string `diff:"gateway"`
-		Length  int    `diff:"gwLength"`
+		Prefix string `diff:"gateway"`
 	}
 
 	vnetGateways := []gateway{}
@@ -211,15 +175,13 @@ func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGatew
 
 	for _, g := range vnetMetaGateways {
 		vnetGateways = append(vnetGateways, gateway{
-			Gateway: g.Gateway,
-			Length:  g.GwLength,
+			Prefix: fmt.Sprintf("%s/%d", g.Gateway, g.GwLength),
 		})
 	}
 
 	for _, g := range apiVnetGateways {
 		apiGateways = append(apiGateways, gateway{
-			Gateway: g.Gateway,
-			Length:  g.GwLength,
+			Prefix: g.Prefix,
 		})
 	}
 
@@ -228,7 +190,7 @@ func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGatew
 	return len(changelog) <= 0
 }
 
-func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember, apiVnetMembers []api.APIVNetInfoMember) bool {
+func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember, apiVnetMembers []vnet.VNetDetailedPort) bool {
 	type member struct {
 		PortID   int    `diff:"port_id"`
 		TenantID int    `diff:"tenant_id"`
@@ -244,16 +206,15 @@ func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember,
 			PortID:   m.PortID,
 			TenantID: m.TenantID,
 			VLANID:   m.VLANID,
-			State:    m.MemberState,
 		})
 	}
 
 	for _, m := range apiVnetMembers {
+		vlan, _ := strconv.Atoi(m.Vlan)
 		apiMembers = append(apiMembers, member{
-			PortID:   m.PortID,
-			TenantID: m.TenantID,
-			VLANID:   m.VlanID,
-			State:    m.MemberState,
+			PortID:   m.ID,
+			TenantID: m.Tenant.ID,
+			VLANID:   vlan,
 		})
 	}
 
@@ -261,19 +222,23 @@ func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember,
 	return len(changelog) <= 0
 }
 
-func compareVNetMetaAPIVnetTenants(vnetMetaTenants []int, apiVnetTenants []int) bool {
-	changelog, _ := diff.Diff(vnetMetaTenants, apiVnetTenants)
+func compareVNetMetaAPIVnetTenants(vnetMetaTenants []string, apiVnetTenants []vnet.VNetDetailedGuestTenant) bool {
+	tenantList := []string{}
+	for _, tenant := range apiVnetTenants {
+		tenantList = append(tenantList, tenant.Name)
+	}
+	changelog, _ := diff.Diff(vnetMetaTenants, tenantList)
 	return len(changelog) <= 0
 }
 
-func compareVNetMetaAPIVnetSites(vnetMetaSites []k8sv1alpha1.VNetMetaSite, apiVnetSites []int) bool {
-	k8sSites := make(map[int]string)
+func compareVNetMetaAPIVnetSites(vnetMetaSites []k8sv1alpha1.VNetMetaSite, apiVnetSites []vnet.VNetDetailedSite) bool {
+	k8sSites := make(map[string]string)
 	for _, site := range vnetMetaSites {
-		k8sSites[site.ID] = ""
+		k8sSites[site.Name] = ""
 	}
 
-	for _, siteID := range apiVnetSites {
-		if _, ok := k8sSites[siteID]; !ok {
+	for _, site := range apiVnetSites {
+		if _, ok := k8sSites[site.Name]; !ok {
 			return false
 		}
 	}
@@ -281,39 +246,33 @@ func compareVNetMetaAPIVnetSites(vnetMetaSites []k8sv1alpha1.VNetMetaSite, apiVn
 	return true
 }
 
-func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *api.APIVNetInfo) bool {
-	if ok := compareVNetMetaAPIVnetSites(vnetMeta.Spec.Sites, apiVnet.SitesID); !ok {
+func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *vnet.VNetDetailed) bool {
+	if ok := compareVNetMetaAPIVnetSites(vnetMeta.Spec.Sites, apiVnet.Sites); !ok {
+		fmt.Println("apiVnet.Sites")
 		return false
 	}
 	if ok := compareVNetMetaAPIVnetGateways(vnetMeta.Spec.Gateways, apiVnet.Gateways); !ok {
+		fmt.Println("apiVnet.Gateways")
 		return false
 	}
-	if ok := compareVNetMetaAPIVnetMembers(vnetMeta.Spec.Members, apiVnet.Members); !ok {
+	if ok := compareVNetMetaAPIVnetMembers(vnetMeta.Spec.Members, apiVnet.Ports); !ok {
+		fmt.Println("apiVnet.Ports")
 		return false
 	}
 
 	if vnetMeta.Spec.VnetName != apiVnet.Name {
+		fmt.Println("apiVnet.Name ")
 		return false
 	}
 
-	if vnetMeta.Spec.OwnerID != apiVnet.Owner {
+	if vnetMeta.Spec.Owner != apiVnet.Tenant.Name {
+		fmt.Println(vnetMeta.Spec.Owner, apiVnet.Tenant.Name)
+		fmt.Println("Tenant.Name ")
 		return false
 	}
 
-	if ok := compareVNetMetaAPIVnetTenants(vnetMeta.Spec.Tenants, apiVnet.TenantsID); !ok {
-		return false
-	}
-
-	apiVaMode := false
-	if apiVnet.VaMode > 0 {
-		apiVaMode = true
-	}
-
-	if vnetMeta.Spec.VaMode != apiVaMode {
-		return false
-	}
-
-	if vnetMeta.Spec.VaVLANs != apiVnet.VaVlans {
+	if ok := compareVNetMetaAPIVnetTenants(vnetMeta.Spec.Tenants, apiVnet.GuestTenants); !ok {
+		fmt.Println("apiVnet.GuestTenants")
 		return false
 	}
 
@@ -324,19 +283,31 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *api.APIVNet
 	return true
 }
 
-func k8sMemberToAPIMember(portNames []k8sv1alpha1.VNetMetaMember) *api.APIVNetMembers {
-	members := &api.APIVNetMembers{}
+func k8sMemberToAPIMember(portNames []k8sv1alpha1.VNetMetaMember) []vnet.VNetAddPort {
+	members := []vnet.VNetAddPort{}
 	for _, port := range portNames {
-		members.Add(api.APIVNetMember{
-			ChildPort:      port.ChildPort,
-			LACP:           port.LACP,
-			MemberState:    port.MemberState,
-			ParentPort:     port.ParentPort,
-			PortIsUntagged: port.PortIsUntagged,
-			PortID:         port.PortID,
-			PortName:       port.PortName,
-			TenantID:       port.TenantID,
-			VLANID:         port.VLANID,
+		members = append(members, vnet.VNetAddPort{
+			// Port:   port.ChildPort,
+			Lacp:  port.LACP,
+			State: port.MemberState,
+			ID:    port.PortID,
+			Name:  port.PortName,
+			Vlan:  strconv.Itoa(port.VLANID),
+		})
+	}
+	return members
+}
+
+func k8sMemberToAPIMemberUpdate(portNames []k8sv1alpha1.VNetMetaMember) []vnet.VNetUpdatePort {
+	members := []vnet.VNetUpdatePort{}
+	for _, port := range portNames {
+		members = append(members, vnet.VNetUpdatePort{
+			// Port:   port.ChildPort,
+			Lacp:  port.LACP,
+			State: port.MemberState,
+			ID:    port.PortID,
+			Name:  port.PortName,
+			Vlan:  strconv.Itoa(port.VLANID),
 		})
 	}
 	return members

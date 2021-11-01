@@ -17,13 +17,12 @@ limitations under the License.
 package controllers
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"strings"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v2/types/bgp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -31,34 +30,21 @@ import (
 func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta, error) {
 	bgpMeta := &k8sv1alpha1.BGPMeta{}
 	var (
-		vlanID            = 1
-		siteID            int
-		nfvID             int
-		nfvPortID         int
-		state             = "enabled"
-		terminateOnSwitch = "no"
-		termSwitchID      int
-		portID            int
-		vnetID            int
-		imported          = false
-		reclaim           = false
-		ipVersion         = "ipv6"
+		vlanID    = 0
+		state     = "enabled"
+		imported  = false
+		reclaim   = false
+		ipVersion = "ipv6"
+		hwID      = 0
+		port      = ""
+		vnetID    = 0
 	)
 
 	originate := "disabled"
 	localPreference := 100
-	if site, ok := r.NStorage.SitesStorage.FindByName(bgp.Spec.Site); ok {
-		siteID = site.ID
-	} else {
-		return bgpMeta, fmt.Errorf("invalid site '%s'", bgp.Spec.Site)
-	}
 
 	if bgp.Spec.DefaultOriginate {
 		originate = "enabled"
-	}
-
-	if bgp.Spec.Transport.VlanID > 1 {
-		vlanID = bgp.Spec.Transport.VlanID
 	}
 
 	if bgp.Spec.LocalPreference > 0 {
@@ -69,44 +55,37 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		state = bgp.Spec.State
 	}
 
-	if !bgp.Spec.TerminateOnSwitch.Enabled {
-		if softgate, ok := r.NStorage.BGPStorage.FindOffloaderByName(siteID, bgp.Spec.Softgate); ok {
-			nfvID = softgate.SwitchID
-			termSwitchID = nfvID
-			nfvPortID = softgate.OffloadPortID
-		} else {
-			return bgpMeta, fmt.Errorf("invalid softgate '%s'", bgp.Spec.Softgate)
-		}
-	} else {
-		terminateOnSwitch = "yes"
-	}
-
 	if bgp.Spec.Transport.Type == "" {
 		bgp.Spec.Transport.Type = "port"
 	}
 
 	if bgp.Spec.Transport.Type == "port" {
-		if port, ok := r.NStorage.BGPStorage.FindPort(siteID, bgp.Spec.Transport.Name); ok {
-			portID = port.PortID
-			if bgp.Spec.TerminateOnSwitch.Enabled {
-				termSwitchID = port.SwitchID
-			}
-		} else {
-			return bgpMeta, fmt.Errorf("invalid port '%s'", bgp.Spec.Transport.Name)
-		}
-	} else {
+		port = bgp.Spec.Transport.Name
 		vlanID = 1
-		if vnet, ok := r.NStorage.BGPStorage.FindVNetByName(bgp.Spec.Transport.Name); ok {
-			vnetID = vnet.ID
-			if bgp.Spec.TerminateOnSwitch.Enabled {
-				if sw, ok := r.NStorage.BGPStorage.FindSwitchByName(siteID, bgp.Spec.TerminateOnSwitch.SwitchName); ok {
-					termSwitchID = sw.SwitchID
-				} else {
-					return bgpMeta, fmt.Errorf("invalid TerminateOnSwitchName '%s'", bgp.Spec.TerminateOnSwitch.SwitchName)
-				}
+	} else {
+		vnets, err := r.Cred.VNet().Get()
+		if err != nil {
+			return nil, err
+		}
+		for _, vnet := range vnets {
+			if vnet.Name == bgp.Spec.Transport.Name {
+				vnetID = vnet.ID
 			}
-		} else {
-			return bgpMeta, fmt.Errorf("invalid vnet '%s'", bgp.Spec.Transport.Name)
+		}
+	}
+
+	if bgp.Spec.Transport.VlanID > 1 {
+		vlanID = bgp.Spec.Transport.VlanID
+	}
+
+	inventory, err := r.Cred.Inventory().Get()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, hw := range inventory {
+		if hw.Name == bgp.Spec.Hardware && bgp.Spec.Hardware != "auto" && bgp.Spec.Hardware != "" {
+			hwID = hw.ID
 		}
 	}
 
@@ -124,6 +103,11 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		ipVersion = "ipv4"
 	}
 
+	var neighborAddress *string
+	if bgp.Spec.Multihop.NeighborAddress != "" && bgp.Spec.Multihop.Hops > 0 {
+		neighborAddress = &bgp.Spec.Multihop.NeighborAddress
+	}
+
 	bgpMeta = &k8sv1alpha1.BGPMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(bgp.GetUID()),
@@ -131,35 +115,29 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		},
 		TypeMeta: metav1.TypeMeta{},
 		Spec: k8sv1alpha1.BGPMetaSpec{
-			Imported: imported,
-			Reclaim:  reclaim,
-			Name:     string(bgp.GetUID()),
-			BGPName:  bgp.Name,
+			Imported:    imported,
+			Reclaim:     reclaim,
+			Name:        string(bgp.GetUID()),
+			HWID:        hwID,
+			VnetID:      vnetID,
+			Port:        port,
+			Site:        bgp.Spec.Site,
+			BGPName:     bgp.Name,
+			Vlan:        vlanID,
+			NeighborAs:  bgp.Spec.NeighborAS,
+			LocalIP:     localIP.String(),
+			RemoteIP:    remoteIP.String(),
+			Description: bgp.Spec.Description,
+			Status:      state,
 
-			NfvID:     nfvID,
-			NfvPortID: nfvPortID,
-
-			SwitchPortID: portID,
-			Vlan:         vlanID,
-			RcircuitID:   vnetID,
-
-			SiteID:            siteID,
-			NeighborAs:        bgp.Spec.NeighborAS,
-			LocalIP:           localIP.String(),
-			RemoteIP:          remoteIP.String(),
-			Description:       bgp.Spec.Description,
-			Status:            state,
-			TerminateOnSwitch: terminateOnSwitch,
-			TermSwitchID:      termSwitchID,
-
-			NeighborAddress: bgp.Spec.Multihop.NeighborAddress,
+			NeighborAddress: neighborAddress,
 			UpdateSource:    bgp.Spec.Multihop.UpdateSource,
 			Multihop:        bgp.Spec.Multihop.Hops,
 
 			BgpPassword:        bgp.Spec.BGPPassword,
 			AllowasIn:          bgp.Spec.AllowAsIn,
 			Originate:          originate,
-			PrefixLimit:        bgp.Spec.PrefixInboundMax, // ?
+			PrefixLimit:        strconv.Itoa(bgp.Spec.PrefixInboundMax), // ?
 			IPVersion:          ipVersion,
 			InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
 			LocalPreference:    localPreference,
@@ -215,40 +193,47 @@ func bgpUpdateDefaultAnnotations(bgp *k8sv1alpha1.BGP) {
 }
 
 // BGPMetaToNetris converts the k8s BGP resource to Netris type and used for add the BGP for Netris API.
-func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPAdd, error) {
-	bgpAdd := &api.APIEBGPAdd{
-		AllowasIn:          bgpMeta.Spec.AllowasIn,
+func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
+	var vnetID interface{}
+	if bgpMeta.Spec.VnetID > 0 {
+		vnetID = bgpMeta.Spec.VnetID
+	} else {
+		vnetID = "none"
+	}
+
+	var hwID interface{}
+	if bgpMeta.Spec.HWID > 0 {
+		hwID = bgpMeta.Spec.HWID
+	} else {
+		hwID = "auto"
+	}
+	bgpAdd := &bgp.EBGPAdd{
+		AllowAsIn:          bgpMeta.Spec.AllowasIn,
 		BgpPassword:        bgpMeta.Spec.BgpPassword,
-		Community:          bgpMeta.Spec.Community,
+		BgpCommunity:       bgpMeta.Spec.Community,
+		Hardware:           bgp.IDNone{ID: hwID},
+		Vnet:               bgp.IDNone{ID: vnetID},
+		Port:               bgp.IDName{Name: bgpMeta.Spec.Port},
 		Description:        bgpMeta.Spec.Description,
 		InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
-		IPVersion:          bgpMeta.Spec.IPVersion,
+		IPFamily:           bgpMeta.Spec.IPVersion,
 		LocalIP:            bgpMeta.Spec.LocalIP,
 		LocalPreference:    bgpMeta.Spec.LocalPreference,
 		Multihop:           bgpMeta.Spec.Multihop,
 		Name:               bgpMeta.Spec.BGPName,
-		NeighborAddress:    stringOrNull(bgpMeta.Spec.NeighborAddress),
-		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
-		NfvID:              bgpMeta.Spec.NfvID,
-		NfvPortID:          bgpMeta.Spec.NfvPortID,
-		Originate:          bgpMeta.Spec.Originate,
+		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
+		NeighborAS:         bgpMeta.Spec.NeighborAs,
+		DefaultOriginate:   bgpMeta.Spec.Originate,
 		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
 		PrefixLength:       bgpMeta.Spec.PrefixLength,
-		PrefixLimit:        strconv.Itoa(bgpMeta.Spec.PrefixLimit),
+		PrefixInboundMax:   bgpMeta.Spec.PrefixLimit,
 		PrefixListInbound:  bgpMeta.Spec.PrefixListInbound,
 		PrefixListOutbound: bgpMeta.Spec.PrefixListOutbound,
 		PrependInbound:     bgpMeta.Spec.PrependInbound,
 		PrependOutbound:    bgpMeta.Spec.PrependInbound,
-		RcircuitID:         bgpMeta.Spec.RcircuitID,
 		RemoteIP:           bgpMeta.Spec.RemoteIP,
-		SiteID:             bgpMeta.Spec.SiteID,
-		Status:             bgpMeta.Spec.Status,
-		SwitchID:           bgpMeta.Spec.SwitchID,
-		SwitchName:         bgpMeta.Spec.SwitchName,
-		SwitchPortID:       bgpMeta.Spec.SwitchPortID,
-		TermSwitchID:       bgpMeta.Spec.TermSwitchID,
-		TermSwitchName:     bgpMeta.Spec.TermSwitchName,
-		TerminateOnSwitch:  bgpMeta.Spec.TerminateOnSwitch,
+		Site:               bgp.IDName{Name: bgpMeta.Spec.Site},
+		State:              bgpMeta.Spec.Status,
 		UpdateSource:       bgpMeta.Spec.UpdateSource,
 		Vlan:               bgpMeta.Spec.Vlan,
 		Weight:             bgpMeta.Spec.Weight,
@@ -258,41 +243,47 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPAdd, error) {
 }
 
 // BGPMetaToNetrisUpdate converts the k8s BGP resource to Netris type and used for update the BGP for Netris API.
-func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPUpdate, error) {
-	bgpAdd := &api.APIEBGPUpdate{
-		ID:                 bgpMeta.Spec.ID,
-		AllowasIn:          bgpMeta.Spec.AllowasIn,
+func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPUpdate, error) {
+	var vnetID interface{}
+	if bgpMeta.Spec.VnetID > 0 {
+		vnetID = bgpMeta.Spec.VnetID
+	} else {
+		vnetID = "none"
+	}
+
+	var hwID interface{}
+	if bgpMeta.Spec.HWID > 0 {
+		hwID = bgpMeta.Spec.HWID
+	} else {
+		hwID = "auto"
+	}
+	bgpAdd := &bgp.EBGPUpdate{
+		AllowAsIn:          bgpMeta.Spec.AllowasIn,
 		BgpPassword:        bgpMeta.Spec.BgpPassword,
-		Community:          bgpMeta.Spec.Community,
+		BgpCommunity:       bgpMeta.Spec.Community,
 		Description:        bgpMeta.Spec.Description,
 		InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
-		IPVersion:          bgpMeta.Spec.IPVersion,
+		IPFamily:           bgpMeta.Spec.IPVersion,
 		LocalIP:            bgpMeta.Spec.LocalIP,
 		LocalPreference:    bgpMeta.Spec.LocalPreference,
 		Multihop:           bgpMeta.Spec.Multihop,
 		Name:               bgpMeta.Spec.BGPName,
-		NeighborAddress:    stringOrNull(bgpMeta.Spec.NeighborAddress),
-		NeighborAs:         strconv.Itoa(bgpMeta.Spec.NeighborAs),
-		NfvID:              bgpMeta.Spec.NfvID,
-		NfvPortID:          bgpMeta.Spec.NfvPortID,
-		Originate:          bgpMeta.Spec.Originate,
+		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
+		NeighborAS:         bgpMeta.Spec.NeighborAs,
+		DefaultOriginate:   bgpMeta.Spec.Originate,
 		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
 		PrefixLength:       bgpMeta.Spec.PrefixLength,
-		PrefixLimit:        strconv.Itoa(bgpMeta.Spec.PrefixLimit),
+		PrefixInboundMax:   bgpMeta.Spec.PrefixLimit,
 		PrefixListInbound:  bgpMeta.Spec.PrefixListInbound,
 		PrefixListOutbound: bgpMeta.Spec.PrefixListOutbound,
 		PrependInbound:     bgpMeta.Spec.PrependInbound,
 		PrependOutbound:    bgpMeta.Spec.PrependInbound,
-		RcircuitID:         bgpMeta.Spec.RcircuitID,
 		RemoteIP:           bgpMeta.Spec.RemoteIP,
-		SiteID:             bgpMeta.Spec.SiteID,
-		Status:             bgpMeta.Spec.Status,
-		SwitchID:           bgpMeta.Spec.SwitchID,
-		SwitchName:         bgpMeta.Spec.SwitchName,
-		SwitchPortID:       bgpMeta.Spec.SwitchPortID,
-		TermSwitchID:       bgpMeta.Spec.TermSwitchID,
-		TermSwitchName:     bgpMeta.Spec.TermSwitchName,
-		TerminateOnSwitch:  bgpMeta.Spec.TerminateOnSwitch,
+		Site:               bgp.IDName{Name: bgpMeta.Spec.Site},
+		State:              bgpMeta.Spec.Status,
+		Hardware:           bgp.IDNone{ID: hwID},
+		Port:               bgp.IDName{Name: bgpMeta.Spec.Port},
+		Vnet:               bgp.IDNone{ID: vnetID},
 		UpdateSource:       bgpMeta.Spec.UpdateSource,
 		Vlan:               bgpMeta.Spec.Vlan,
 		Weight:             bgpMeta.Spec.Weight,
@@ -301,109 +292,130 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*api.APIEBGPUpdate, er
 	return bgpAdd, nil
 }
 
-func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *api.APIEBGP) bool {
+func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, u uniReconciler) bool {
 	if apiBGP.AllowasIn != bgpMeta.Spec.AllowasIn {
+		u.DebugLogger.Info("AllowasIn changed", "netrisValue", apiBGP.AllowasIn, "k8sValue", bgpMeta.Spec.AllowasIn)
 		return false
 	}
 	if apiBGP.BgpPassword != bgpMeta.Spec.BgpPassword {
+		u.DebugLogger.Info("BgpPassword changed", "netrisValue", apiBGP.BgpPassword, "k8sValue", bgpMeta.Spec.BgpPassword)
 		return false
 	}
 	if apiBGP.Community != bgpMeta.Spec.Community {
+		u.DebugLogger.Info("Community changed", "netrisValue", apiBGP.Community, "k8sValue", bgpMeta.Spec.Community)
 		return false
 	}
 	if apiBGP.Description != bgpMeta.Spec.Description {
+		u.DebugLogger.Info("Description changed", "netrisValue", apiBGP.Description, "k8sValue", bgpMeta.Spec.Description)
 		return false
 	}
-	if apiBGP.InboundRouteMap != strconv.Itoa(bgpMeta.Spec.InboundRouteMap) {
+	inboundRouteMap, _ := strconv.Atoi(apiBGP.InboundRouteMap)
+	if inboundRouteMap != bgpMeta.Spec.InboundRouteMap {
+		u.DebugLogger.Info("InboundRouteMap changed", "netrisValue", apiBGP.InboundRouteMap, "k8sValue", bgpMeta.Spec.InboundRouteMap)
 		return false
 	}
 	if apiBGP.IPVersion != bgpMeta.Spec.IPVersion {
+		u.DebugLogger.Info("IPVersion changed", "netrisValue", apiBGP.IPVersion, "k8sValue", bgpMeta.Spec.IPVersion)
 		return false
 	}
 	if apiBGP.LocalIP != bgpMeta.Spec.LocalIP {
+		u.DebugLogger.Info("LocalIP changed", "netrisValue", apiBGP.LocalIP, "k8sValue", bgpMeta.Spec.LocalIP)
 		return false
 	}
 	if apiBGP.LocalPreference != bgpMeta.Spec.LocalPreference {
+		u.DebugLogger.Info("LocalPreference changed", "netrisValue", apiBGP.LocalPreference, "k8sValue", bgpMeta.Spec.LocalPreference)
 		return false
 	}
 	if apiBGP.Multihop != bgpMeta.Spec.Multihop {
+		u.DebugLogger.Info("Multihop changed", "netrisValue", apiBGP.Multihop, "k8sValue", bgpMeta.Spec.Multihop)
 		return false
 	}
 	if apiBGP.Name != bgpMeta.Spec.BGPName {
+		u.DebugLogger.Info("Name changed", "netrisValue", apiBGP.Name, "k8sValue", bgpMeta.Spec.BGPName)
 		return false
 	}
-	if apiBGP.NeighborAddress != bgpMeta.Spec.NeighborAddress {
+	neighborAddress := ""
+	if bgpMeta.Spec.NeighborAddress != nil {
+		neighborAddress = *bgpMeta.Spec.NeighborAddress
+	}
+	if apiBGP.NeighborAddress != neighborAddress {
+		u.DebugLogger.Info("NeighborAddress changed", "netrisValue", apiBGP.NeighborAddress, "k8sValue", neighborAddress)
 		return false
 	}
 	if apiBGP.NeighborAs != bgpMeta.Spec.NeighborAs {
+		u.DebugLogger.Info("NeighborAs changed", "netrisValue", apiBGP.NeighborAs, "k8sValue", bgpMeta.Spec.NeighborAs)
 		return false
 	}
-
-	if bgpMeta.Spec.TerminateOnSwitch != apiBGP.TerminateOnSwitch {
-		return false
+	if port, ok := u.NStorage.PortsStorage.FindByID(apiBGP.Port.ID); ok {
+		if port.ShortName != bgpMeta.Spec.Port {
+			u.DebugLogger.Info("Port changed", "netrisValue", port.ShortName, "k8sValue", bgpMeta.Spec.Port)
+			return false
+		}
 	}
-
-	if bgpMeta.Spec.TerminateOnSwitch != "yes" && bgpMeta.Spec.NfvID != apiBGP.TermSwitchID {
-		return false
-	}
-	// if apiBGP.NfvID != bgpMeta.Spec.NfvID {
-	// 	return false
-	// }
-	// if apiBGP.NfvPortID != bgpMeta.Spec.NfvPortID {
-	// 	return false
-	// }
 	if apiBGP.Originate != bgpMeta.Spec.Originate {
+		u.DebugLogger.Info("Originate changed", "netrisValue", apiBGP.Originate, "k8sValue", bgpMeta.Spec.Originate)
 		return false
 	}
-	if apiBGP.OutboundRouteMap != strconv.Itoa(bgpMeta.Spec.OutboundRouteMap) {
+	outboundRouteMap, _ := strconv.Atoi(apiBGP.OutboundRouteMap)
+	if outboundRouteMap != bgpMeta.Spec.OutboundRouteMap {
+		u.DebugLogger.Info("OutboundRouteMap changed", "netrisValue", apiBGP.OutboundRouteMap, "k8sValue", bgpMeta.Spec.OutboundRouteMap)
 		return false
 	}
 	if apiBGP.PrefixLength != bgpMeta.Spec.PrefixLength {
+		u.DebugLogger.Info("PrefixLength changed", "netrisValue", apiBGP.PrefixLength, "k8sValue", bgpMeta.Spec.PrefixLength)
 		return false
 	}
-	// if apiBGP.PrefixLimit != bgpMeta.Spec.PrefixLimit {
-	// 	return false
-	// }
+	prefixLimit, _ := strconv.Atoi(bgpMeta.Spec.PrefixLimit)
+	if apiBGP.PrefixLimit != prefixLimit {
+		u.DebugLogger.Info("PrefixLimit changed", "netrisValue", apiBGP.PrefixLimit, "k8sValue", prefixLimit)
+		return false
+	}
 	if apiBGP.PrefixListInbound != bgpMeta.Spec.PrefixListInbound {
+		u.DebugLogger.Info("PrefixListInbound changed", "netrisValue", apiBGP.PrefixListInbound, "k8sValue", bgpMeta.Spec.PrefixListInbound)
 		return false
 	}
 	if apiBGP.PrefixListOutbound != bgpMeta.Spec.PrefixListOutbound {
+		u.DebugLogger.Info("PrefixListOutbound changed", "netrisValue", apiBGP.PrefixListOutbound, "k8sValue", bgpMeta.Spec.PrefixListOutbound)
 		return false
 	}
 	if apiBGP.PrependInbound != bgpMeta.Spec.PrependInbound {
+		u.DebugLogger.Info("PrependInbound changed", "netrisValue", apiBGP.PrependInbound, "k8sValue", bgpMeta.Spec.PrependInbound)
 		return false
 	}
 	if apiBGP.PrependOutbound != bgpMeta.Spec.PrependInbound {
+		u.DebugLogger.Info("PrependOutbound changed", "netrisValue", apiBGP.PrependOutbound, "k8sValue", bgpMeta.Spec.PrependOutbound)
 		return false
 	}
 	if apiBGP.RemoteIP != bgpMeta.Spec.RemoteIP {
+		u.DebugLogger.Info("RemoteIP changed", "netrisValue", apiBGP.RemoteIP, "k8sValue", bgpMeta.Spec.RemoteIP)
 		return false
 	}
-	if apiBGP.SiteID != bgpMeta.Spec.SiteID {
+	if apiBGP.SiteName != bgpMeta.Spec.Site {
+		u.DebugLogger.Info("SiteName changed", "netrisValue", apiBGP.SiteName, "k8sValue", bgpMeta.Spec.Site)
 		return false
 	}
 	if apiBGP.Status != bgpMeta.Spec.Status {
+		u.DebugLogger.Info("Status changed", "netrisValue", apiBGP.Status, "k8sValue", bgpMeta.Spec.Status)
 		return false
 	}
-	if apiBGP.SwitchPortID != bgpMeta.Spec.SwitchPortID {
-		return false
-	}
-	if apiBGP.TermSwitchID != bgpMeta.Spec.TermSwitchID {
-		return false
-	}
-	if apiBGP.TerminateOnSwitch != bgpMeta.Spec.TerminateOnSwitch {
-		return false
-	}
+	// if apiBGP.PortName != bgpMeta.Spec.Port {
+	// 	fmt.Println("apiBGP.PortName", apiBGP.PortName)
+	// 	return false
+	// }
+	// if apiBGP.TermSwitchID != bgpMeta.Spec.TermSwitchID {
+	// 	return false
+	// }
+
 	if apiBGP.UpdateSource != bgpMeta.Spec.UpdateSource {
+		u.DebugLogger.Info("UpdateSource changed", "netrisValue", apiBGP.UpdateSource, "k8sValue", bgpMeta.Spec.UpdateSource)
 		return false
 	}
 	if apiBGP.Vlan != bgpMeta.Spec.Vlan {
+		u.DebugLogger.Info("Vlan changed", "netrisValue", apiBGP.Vlan, "k8sValue", bgpMeta.Spec.Vlan)
 		return false
 	}
 	if apiBGP.Weight != bgpMeta.Spec.Weight {
-		return false
-	}
-	if bgpMeta.Spec.RcircuitID > 0 && apiBGP.RcircuitID != bgpMeta.Spec.RcircuitID {
+		u.DebugLogger.Info("Weight changed", "netrisValue", apiBGP.Weight, "k8sValue", bgpMeta.Spec.Weight)
 		return false
 	}
 

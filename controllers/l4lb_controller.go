@@ -29,7 +29,8 @@ import (
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/http"
+	api "github.com/netrisai/netriswebapi/v2"
 )
 
 // L4LBReconciler reconciles a L4LB object
@@ -37,7 +38,7 @@ type L4LBReconciler struct {
 	client.Client
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
-	Cred     *api.HTTPCred
+	Cred     *api.Clientset
 	NStorage *netrisstorage.Storage
 }
 
@@ -169,11 +170,11 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 func (r *L4LBReconciler) deleteL4LB(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Result, error) {
 	if l4lbMeta != nil && l4lbMeta.Spec.ID > 0 && !l4lbMeta.Spec.Reclaim {
-		reply, err := r.Cred.DeleteLB4(l4lbMeta.Spec.ID)
+		reply, err := r.Cred.L4LB().Delete(l4lbMeta.Spec.ID)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteL4LB} %s", err)
 		}
-		resp, err := api.ParseAPIResponse(reply.Data)
+		resp, err := http.ParseAPIResponse(reply.Data)
 		if err != nil {
 			return ctrl.Result{}, err
 		}

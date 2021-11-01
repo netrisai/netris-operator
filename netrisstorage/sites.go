@@ -19,13 +19,13 @@ package netrisstorage
 import (
 	"sync"
 
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v1/types/site"
 )
 
 // SitesStorage .
 type SitesStorage struct {
 	sync.Mutex
-	Sites []*api.APISite
+	Sites []*site.Site
 }
 
 // NewSitesStorage .
@@ -34,28 +34,28 @@ func NewSitesStorage() *SitesStorage {
 }
 
 // GetAll .
-func (p *SitesStorage) GetAll() []*api.APISite {
+func (p *SitesStorage) GetAll() []*site.Site {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *SitesStorage) getAll() []*api.APISite {
+func (p *SitesStorage) getAll() []*site.Site {
 	return p.Sites
 }
 
-func (p *SitesStorage) storeAll(items []*api.APISite) {
+func (p *SitesStorage) storeAll(items []*site.Site) {
 	p.Sites = items
 }
 
 // FindByName .
-func (p *SitesStorage) FindByName(name string) (*api.APISite, bool) {
+func (p *SitesStorage) FindByName(name string) (*site.Site, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findByName(name)
 }
 
-func (p *SitesStorage) findByName(name string) (*api.APISite, bool) {
+func (p *SitesStorage) findByName(name string) (*site.Site, bool) {
 	for _, site := range p.Sites {
 		if site.Name == name {
 			return site, true
@@ -65,7 +65,7 @@ func (p *SitesStorage) findByName(name string) (*api.APISite, bool) {
 }
 
 // FindByID .
-func (p *SitesStorage) FindByID(id int) (*api.APISite, bool) {
+func (p *SitesStorage) FindByID(id int) (*site.Site, bool) {
 	p.Lock()
 	defer p.Unlock()
 	item, ok := p.findByID(id)
@@ -76,7 +76,7 @@ func (p *SitesStorage) FindByID(id int) (*api.APISite, bool) {
 	return item, ok
 }
 
-func (p *SitesStorage) findByID(id int) (*api.APISite, bool) {
+func (p *SitesStorage) findByID(id int) (*site.Site, bool) {
 	for _, site := range p.Sites {
 		if site.ID == id {
 			return site, true
@@ -87,7 +87,7 @@ func (p *SitesStorage) findByID(id int) (*api.APISite, bool) {
 
 // Download .
 func (p *SitesStorage) download() error {
-	items, err := Cred.GetSites()
+	items, err := Cred.Site().Get()
 	if err != nil {
 		return err
 	}

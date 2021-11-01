@@ -19,13 +19,13 @@ package netrisstorage
 import (
 	"sync"
 
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v1/types/l4lb"
 )
 
 // L4LBStorage .
 type L4LBStorage struct {
 	sync.Mutex
-	L4LBs []*api.APILoadBalancer
+	L4LBs []*l4lb.LoadBalancer
 }
 
 // NewVNetStorage .
@@ -34,28 +34,28 @@ func NewL4LBStorage() *L4LBStorage {
 }
 
 // GetAll .
-func (p *L4LBStorage) GetAll() []*api.APILoadBalancer {
+func (p *L4LBStorage) GetAll() []*l4lb.LoadBalancer {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *L4LBStorage) getAll() []*api.APILoadBalancer {
+func (p *L4LBStorage) getAll() []*l4lb.LoadBalancer {
 	return p.L4LBs
 }
 
-func (p *L4LBStorage) storeAll(items []*api.APILoadBalancer) {
+func (p *L4LBStorage) storeAll(items []*l4lb.LoadBalancer) {
 	p.L4LBs = items
 }
 
 // FindByName .
-func (p *L4LBStorage) FindByName(name string) (*api.APILoadBalancer, bool) {
+func (p *L4LBStorage) FindByName(name string) (*l4lb.LoadBalancer, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findByName(name)
 }
 
-func (p *L4LBStorage) findByName(name string) (*api.APILoadBalancer, bool) {
+func (p *L4LBStorage) findByName(name string) (*l4lb.LoadBalancer, bool) {
 	for _, item := range p.L4LBs {
 		if item.Name == name {
 			return item, true
@@ -65,7 +65,7 @@ func (p *L4LBStorage) findByName(name string) (*api.APILoadBalancer, bool) {
 }
 
 // FindByID .
-func (p *L4LBStorage) FindByID(id int) (*api.APILoadBalancer, bool) {
+func (p *L4LBStorage) FindByID(id int) (*l4lb.LoadBalancer, bool) {
 	p.Lock()
 	defer p.Unlock()
 	item, ok := p.findByID(id)
@@ -76,7 +76,7 @@ func (p *L4LBStorage) FindByID(id int) (*api.APILoadBalancer, bool) {
 	return item, ok
 }
 
-func (p *L4LBStorage) findByID(id int) (*api.APILoadBalancer, bool) {
+func (p *L4LBStorage) findByID(id int) (*l4lb.LoadBalancer, bool) {
 	for _, item := range p.L4LBs {
 		if item.ID == id {
 			return item, true
@@ -87,7 +87,7 @@ func (p *L4LBStorage) findByID(id int) (*api.APILoadBalancer, bool) {
 
 // Download .
 func (p *L4LBStorage) download() error {
-	items, err := Cred.GetLoadBalancers()
+	items, err := Cred.L4LB().Get()
 	if err != nil {
 		return err
 	}

@@ -17,16 +17,15 @@ limitations under the License.
 package netrisstorage
 
 import (
-	"strconv"
 	"sync"
 
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v2/types/ipam"
 )
 
 // SubnetsStorage .
 type SubnetsStorage struct {
 	sync.Mutex
-	Subnets []*api.APISubnet
+	Subnets []*ipam.IPAM
 }
 
 // NewVNetStorage .
@@ -35,32 +34,32 @@ func NewSubnetsStorage() *SubnetsStorage {
 }
 
 // GetAll .
-func (p *SubnetsStorage) GetAll() []api.APISubnet {
+func (p *SubnetsStorage) GetAll() []ipam.IPAM {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *SubnetsStorage) getAll() []api.APISubnet {
-	subnets := []api.APISubnet{}
+func (p *SubnetsStorage) getAll() []ipam.IPAM {
+	subnets := []ipam.IPAM{}
 	for _, subnet := range p.Subnets {
 		subnets = append(subnets, *subnet)
 	}
 	return subnets
 }
 
-func (p *SubnetsStorage) storeAll(items []*api.APISubnet) {
+func (p *SubnetsStorage) storeAll(items []*ipam.IPAM) {
 	p.Subnets = items
 }
 
 // FindByName .
-func (p *SubnetsStorage) FindByName(name string) (*api.APISubnet, bool) {
+func (p *SubnetsStorage) FindByName(name string) (*ipam.IPAM, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findByName(name)
 }
 
-func (p *SubnetsStorage) findByName(name string) (*api.APISubnet, bool) {
+func (p *SubnetsStorage) findByName(name string) (*ipam.IPAM, bool) {
 	for _, item := range p.Subnets {
 		if item.Name == name {
 			return item, true
@@ -70,7 +69,7 @@ func (p *SubnetsStorage) findByName(name string) (*api.APISubnet, bool) {
 }
 
 // FindByID .
-func (p *SubnetsStorage) FindByID(id int) (*api.APISubnet, bool) {
+func (p *SubnetsStorage) FindByID(id int) (*ipam.IPAM, bool) {
 	p.Lock()
 	defer p.Unlock()
 	item, ok := p.findByID(id)
@@ -81,10 +80,9 @@ func (p *SubnetsStorage) FindByID(id int) (*api.APISubnet, bool) {
 	return item, ok
 }
 
-func (p *SubnetsStorage) findByID(id int) (*api.APISubnet, bool) {
+func (p *SubnetsStorage) findByID(id int) (*ipam.IPAM, bool) {
 	for _, item := range p.Subnets {
-		subnetID, _ := strconv.Atoi(item.ID)
-		if subnetID == id {
+		if item.ID == id {
 			return item, true
 		}
 	}
@@ -93,7 +91,7 @@ func (p *SubnetsStorage) findByID(id int) (*api.APISubnet, bool) {
 
 // Download .
 func (p *SubnetsStorage) download() error {
-	items, err := Cred.GetSubnets()
+	items, err := Cred.IPAM().Get()
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	api "github.com/netrisai/netrisapi"
+	api "github.com/netrisai/netriswebapi/v2"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/calicowatcher"
@@ -44,7 +44,7 @@ var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 	// cred stores the Netris API usepoint.
-	cred *api.HTTPCred
+	cred *api.Clientset
 
 	// nStorage is the instance of the Netris API in-memory storage.
 	nStorage *netrisstorage.Storage
@@ -73,16 +73,16 @@ func main() {
 	}
 
 	var err error
-	cred, err = api.NewHTTPCredentials(configloader.Root.Controller.Host, configloader.Root.Controller.Login, configloader.Root.Controller.Password, configloader.Root.RequeueInterval)
+	cred, err = api.Client(configloader.Root.Controller.Host, configloader.Root.Controller.Login, configloader.Root.Controller.Password, configloader.Root.RequeueInterval)
 	if err != nil {
 		log.Panicf("newHTTPCredentials error %v", err)
 	}
-	cred.InsecureVerify(configloader.Root.Controller.Insecure)
-	err = cred.LoginUser()
+	cred.Client.InsecureVerify(configloader.Root.Controller.Insecure)
+	err = cred.Client.LoginUser()
 	if err != nil {
 		log.Printf("LoginUser error %v", err)
 	}
-	go cred.CheckAuthWithInterval()
+	go cred.Client.CheckAuthWithInterval()
 
 	nStorage = netrisstorage.NewStorage(cred)
 	err = nStorage.Download()

@@ -4,7 +4,7 @@ metadata:
   name: my-bgp
 spec:
   site: Default
-  softgate: softgate1
+  hardware: softgate1
   neighborAs: 23456
   transport:
     type: port
@@ -14,9 +14,6 @@ spec:
   remoteIP: 172.16.0.2/30
   description: someDesc
   state: enabled
-  terminateOnSwitch:
-    enabled: false
-    switchName: spine1
   multihop:
     neighborAddress: 8.8.8.8
     updateSource: 10.254.97.33

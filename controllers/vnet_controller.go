@@ -30,7 +30,9 @@ import (
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/http"
+	api "github.com/netrisai/netriswebapi/v2"
+	"github.com/netrisai/netriswebapi/v2/types/vnet"
 )
 
 // VNetReconciler reconciles a VNet object
@@ -38,7 +40,7 @@ type VNetReconciler struct {
 	client.Client
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
-	Cred     *api.HTTPCred
+	Cred     *api.Clientset
 	NStorage *netrisstorage.Storage
 }
 
@@ -171,24 +173,12 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
-func (r *VNetMetaReconciler) updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, error, error) {
-	reply, err := r.Cred.ValidateVNet(vnet)
+func (r *VNetMetaReconciler) updateVNet(id int, vnet *vnet.VNetUpdate) (ctrl.Result, error, error) {
+	reply, err := r.Cred.VNet().Update(id, vnet)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
 	}
-	resp, err := api.ParseAPIResponse(reply.Data)
-	if err != nil {
-		return ctrl.Result{}, err, err
-	}
-	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
-	}
-
-	reply, err = r.Cred.UpdateVNet(vnet)
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", err), err
-	}
-	resp, err = api.ParseAPIResponse(reply.Data)
+	resp, err := http.ParseAPIResponse(reply.Data)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
@@ -201,11 +191,11 @@ func (r *VNetMetaReconciler) updateVNet(vnet *api.APIVNetUpdate) (ctrl.Result, e
 
 func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Result, error) {
 	if vnetMeta != nil && vnetMeta.Spec.ID > 0 && !vnetMeta.Spec.Reclaim {
-		reply, err := r.Cred.DeleteVNet(vnetMeta.Spec.ID, []int{1})
+		reply, err := r.Cred.VNet().Delete(vnetMeta.Spec.ID)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", err)
 		}
-		resp, err := api.ParseAPIResponse(reply.Data)
+		resp, err := http.ParseAPIResponse(reply.Data)
 		if err != nil {
 			return ctrl.Result{}, err
 		}

@@ -24,7 +24,8 @@ import (
 	"strings"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v1/types/l4lb"
+	"github.com/netrisai/netriswebapi/v2/types/ipam"
 	"github.com/r3labs/diff/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -159,7 +160,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	return l4lbMeta, nil
 }
 
-func compareL4LBMetaAPIL4LBHealthCheck(l4lbMetaHealthCheck k8sv1alpha1.L4LBMetaHealthCheck, apiL4LBHealthCheck api.APILBHealthCheck) bool {
+func compareL4LBMetaAPIL4LBHealthCheck(l4lbMetaHealthCheck k8sv1alpha1.L4LBMetaHealthCheck, apiL4LBHealthCheck l4lb.LBHealthCheck) bool {
 	var convertedAPIHealthCheck k8sv1alpha1.L4LBMetaHealthCheck
 
 	if apiL4LBHealthCheck.TCP.Timeout != "" {
@@ -178,7 +179,7 @@ func compareL4LBMetaAPIL4LBHealthCheck(l4lbMetaHealthCheck k8sv1alpha1.L4LBMetaH
 	return len(changelog) <= 0
 }
 
-func compareL4LBMetaAPIL4LBBackend(l4lbMetaBackends []k8sv1alpha1.L4LBMetaBackend, apiL4LBBackends []api.APILBBackend) bool {
+func compareL4LBMetaAPIL4LBBackend(l4lbMetaBackends []k8sv1alpha1.L4LBMetaBackend, apiL4LBBackends []l4lb.LBBackend) bool {
 	type member struct {
 		Port string `diff:"port"`
 		IP   string `diff:"ip"`
@@ -205,7 +206,7 @@ func compareL4LBMetaAPIL4LBBackend(l4lbMetaBackends []k8sv1alpha1.L4LBMetaBacken
 	return len(changelog) <= 0
 }
 
-func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoadBalancer) bool {
+func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *l4lb.LoadBalancer) bool {
 	if l4lbMeta.Spec.L4LBName != apiL4LB.Name {
 		return false
 	}
@@ -241,7 +242,7 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *api.APILoad
 }
 
 // L4LBetaToNetris converts the k8s L4LB resource to Netris type and used for add the L4LB for Netris API.
-func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, error) {
+func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*l4lb.LoadBalancerAdd, error) {
 	healthCheck := ""
 	requestPath := ""
 	timeOut := ""
@@ -259,10 +260,10 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 		requestPath = l4lbMeta.Spec.HealthCheck.TCP.RequestPath
 		timeOut = l4lbMeta.Spec.HealthCheck.TCP.Timeout
 	}
-	lbBackends := []api.LBBackend{}
+	lbBackends := []l4lb.LBAddBackend{}
 
 	for _, backend := range l4lbMeta.Spec.Backend {
-		lbBackends = append(lbBackends, api.LBBackend{
+		lbBackends = append(lbBackends, l4lb.LBAddBackend{
 			IP:   backend.IP,
 			Port: backend.Port,
 		})
@@ -273,7 +274,7 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 		ip = l4lbMeta.Spec.IP
 	}
 
-	l4lbAdd := &api.APILoadBalancerAdd{
+	l4lbAdd := &l4lb.LoadBalancerAdd{
 		Name:        l4lbMeta.Spec.L4LBName,
 		Tenant:      l4lbMeta.Spec.Tenant,
 		SiteID:      l4lbMeta.Spec.SiteID,
@@ -295,7 +296,7 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APILoadBalancerAdd, 
 }
 
 // L4LBMetaToNetrisUpdate converts the k8s L4LB resource to Netris type and used for update the L4LB for Netris API.
-func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadBalancer, error) {
+func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*l4lb.LoadBalancerUpdate, error) {
 	healthCheck := ""
 	requestPath := ""
 	timeOut := ""
@@ -313,16 +314,16 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*api.APIUpdateLoadB
 		requestPath = l4lbMeta.Spec.HealthCheck.TCP.RequestPath
 		timeOut = l4lbMeta.Spec.HealthCheck.TCP.Timeout
 	}
-	lbBackends := []api.APILBBackend{}
+	lbBackends := []l4lb.LBBackend{}
 
 	for _, backend := range l4lbMeta.Spec.Backend {
-		lbBackends = append(lbBackends, api.APILBBackend{
+		lbBackends = append(lbBackends, l4lb.LBBackend{
 			IP:   backend.IP,
 			Port: strconv.Itoa(backend.Port),
 		})
 	}
 
-	l4lbUpdate := &api.APIUpdateLoadBalancer{
+	l4lbUpdate := &l4lb.LoadBalancerUpdate{
 		ID:          l4lbMeta.Spec.ID,
 		Name:        l4lbMeta.Spec.L4LBName,
 		TenantID:    l4lbMeta.Spec.Tenant,
@@ -385,24 +386,24 @@ func l4lbUpdateDefaultAnnotations(l4lb *k8sv1alpha1.L4LB) {
 
 func (r *L4LBReconciler) findTenantByIP(ip string) (int, error) {
 	tenantID := 0
-	subnets, err := r.Cred.GetSubnets()
+	subnets, err := r.Cred.IPAM().Get()
 	if err != nil {
 		return tenantID, err
 	}
 
-	subnetChilds := []api.APISubnetChild{}
+	subnetChilds := []*ipam.IPAM{}
 	for _, subnet := range subnets {
 		subnetChilds = append(subnetChilds, subnet.Children...)
 	}
 
 	for _, subnet := range subnetChilds {
 		ipAddr := net.ParseIP(ip)
-		_, ipNet, err := net.ParseCIDR(fmt.Sprintf("%s/%d", subnet.Prefix, subnet.Length))
+		_, ipNet, err := net.ParseCIDR(subnet.Prefix)
 		if err != nil {
 			return tenantID, err
 		}
 		if ipNet.Contains(ipAddr) {
-			return subnet.TenantID, nil
+			return subnet.Tenant.ID, nil
 		}
 	}
 
@@ -411,28 +412,26 @@ func (r *L4LBReconciler) findTenantByIP(ip string) (int, error) {
 
 func (r *L4LBReconciler) findSiteByIP(ip string) (int, error) {
 	siteID := 0
-	subnets, err := r.Cred.GetSubnets()
+	subnets, err := r.Cred.IPAM().Get()
 	if err != nil {
 		return siteID, err
 	}
 
-	subnetChilds := []api.APISubnetChild{}
+	subnetChilds := []*ipam.IPAM{}
 	for _, subnet := range subnets {
 		subnetChilds = append(subnetChilds, subnet.Children...)
 	}
 
 	for _, subnet := range subnetChilds {
 		ipAddr := net.ParseIP(ip)
-		_, ipNet, err := net.ParseCIDR(fmt.Sprintf("%s/%d", subnet.Prefix, subnet.Length))
+		_, ipNet, err := net.ParseCIDR(subnet.Prefix)
 		if err != nil {
 			return siteID, err
 		}
 		if ipNet.Contains(ipAddr) {
-			sID, _ := strconv.Atoi(subnet.SiteID)
-			if err != nil {
-				return siteID, err
+			if len(subnet.Sites) > 0 {
+				return subnet.Sites[0].ID, nil
 			}
-			return sID, nil
 		}
 	}
 

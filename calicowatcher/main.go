@@ -32,7 +32,8 @@ import (
 	"github.com/netrisai/netris-operator/calicowatcher/calico"
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v1/types/site"
+	"github.com/netrisai/netriswebapi/v2/types/vnet"
 	"github.com/r3labs/diff/v2"
 	"go.uber.org/zap/zapcore"
 	v1 "k8s.io/api/core/v1"
@@ -76,7 +77,7 @@ type data struct {
 	switchName string
 
 	nodes        *v1.NodeList
-	site         *api.APISite
+	site         *site.Site
 	vnetGW       string
 	vnetGWIP     string
 	blockSize    int
@@ -425,10 +426,7 @@ func (w *Watcher) generateBGPs() error {
 			Spec: k8sv1alpha1.BGPSpec{
 				Site:       w.data.site.Name,
 				NeighborAS: asn,
-				TerminateOnSwitch: k8sv1alpha1.BGPTerminateOnSwitch{
-					Enabled:    true,
-					SwitchName: w.data.switchName,
-				},
+				Hardware:   w.data.switchName,
 				Transport: v1alpha1.BGPTransport{
 					Type: "vnet",
 					Name: w.data.vnetName,
@@ -661,16 +659,15 @@ func (w *Watcher) fillNodesASNs() error {
 func (w *Watcher) nodesProcessing() error {
 	var (
 		siteName   string
-		site       *api.APISite
+		site       *site.Site
 		vnetName   string
 		vnetGW     string
-		switchName string
+		switchName string = ""
 		vnetGWIP   string
 	)
 
-	siteID := 0
 	subnet := ""
-	vnet := &api.APIVNet{}
+	vnet := &vnet.VNet{}
 
 	nodesMap := make(map[string]*nodeIP)
 
@@ -713,7 +710,6 @@ func (w *Watcher) nodesProcessing() error {
 			var ok bool
 			if site, ok = w.NStorage.SitesStorage.FindByID(id); ok {
 				siteName = site.Name
-				siteID = site.ID
 			}
 			subnet = gateway
 			if vn, ok := w.NStorage.VNetStorage.FindByGateway(gateway); ok {
@@ -731,20 +727,20 @@ func (w *Watcher) nodesProcessing() error {
 	if vnet == nil {
 		return fmt.Errorf("Couldn't find vnet")
 	}
-
-	if spine := w.NStorage.HWsStorage.FindSpineBySite(siteID); spine != nil {
-		switchName = spine.SwitchName
-	} else {
-		return fmt.Errorf("Couldn't find spine swtich for site %s", siteName)
+	if vnet.ID == 0 {
+		return fmt.Errorf("Couldn't find vnet")
 	}
 
 	vnetName = vnet.Name
 	for _, gw := range vnet.Gateways {
-		gateway := fmt.Sprintf("%s/%d", gw.Gateway, gw.GwLength)
-		_, gwNet, _ := net.ParseCIDR(gateway)
+		gateway := strings.Split(gw.Prefix, "/")[0]
+		_, gwNet, err := net.ParseCIDR(gw.Prefix)
+		if err != nil {
+			return fmt.Errorf("invalid vnet gateway %s", gw.Prefix)
+		}
 		if gwNet.String() == subnet {
-			vnetGW = gateway
-			vnetGWIP = gw.Gateway
+			vnetGW = gw.Prefix
+			vnetGWIP = gateway
 		}
 	}
 	w.data.nodesMap = nodesMap

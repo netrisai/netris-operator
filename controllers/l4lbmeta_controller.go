@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -33,7 +32,9 @@ import (
 	"github.com/netrisai/netris-operator/api/v1alpha1"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/http"
+	"github.com/netrisai/netriswebapi/v1/types/l4lb"
+	api "github.com/netrisai/netriswebapi/v2"
 )
 
 // L4LBMetaReconciler reconciles a L4LBMeta object
@@ -41,7 +42,7 @@ type L4LBMetaReconciler struct {
 	client.Client
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
-	Cred     *api.HTTPCred
+	Cred     *api.Clientset
 	NStorage *netrisstorage.Storage
 }
 
@@ -177,11 +178,11 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
-	reply, err := r.Cred.AddLB4(l4lbAdd)
+	reply, err := r.Cred.L4LB().Add(l4lbAdd)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
-	resp, err := api.ParseAPIResponse(reply.Data)
+	resp, err := http.ParseAPIResponse(reply.Data)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
@@ -191,16 +192,16 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 
 	var id int
 	ip := l4lbMeta.Spec.IP
-	idStruct := api.APILoadBalancerAddResponse{}
+	idStruct := l4lb.LoadBalancerAddResponse{}
 	if l4lbMeta.Spec.Automatic {
-		err = api.CustomDecode(resp.Data, &idStruct)
+		err = http.Decode(resp.Data, &idStruct)
 		if err != nil {
 			return ctrl.Result{}, err, err
 		}
 		id = idStruct.ID
 		ip = idStruct.IP
 	} else {
-		err = api.CustomDecode(resp.Data, &id)
+		err = http.Decode(resp.Data, &id)
 		if err != nil {
 			return ctrl.Result{}, err, err
 		}
@@ -222,17 +223,12 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	return ctrl.Result{}, nil, nil
 }
 
-func (r *L4LBMetaReconciler) updateL4LB(l4lb *api.APIUpdateLoadBalancer) (ctrl.Result, error, error) {
-	js, err := json.Marshal(l4lb)
+func (r *L4LBMetaReconciler) updateL4LB(l4lb *l4lb.LoadBalancerUpdate) (ctrl.Result, error, error) {
+	reply, err := r.Cred.L4LB().Update(l4lb)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateL4LB} %s", err), err
 	}
-
-	reply, err := r.Cred.UpdateLB4(js)
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("{updateL4LB} %s", err), err
-	}
-	resp, err := api.ParseAPIResponse(reply.Data)
+	resp, err := http.ParseAPIResponse(reply.Data)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

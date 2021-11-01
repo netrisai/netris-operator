@@ -17,18 +17,17 @@ limitations under the License.
 package netrisstorage
 
 import (
-	"fmt"
 	"net"
-	"strconv"
+	"strings"
 	"sync"
 
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/v2/types/vnet"
 )
 
 // VNetStorage .
 type VNetStorage struct {
 	sync.Mutex
-	VNets []*api.APIVNet
+	VNets []*vnet.VNet
 }
 
 // NewVNetStorage .
@@ -37,32 +36,32 @@ func NewVNetStorage() *VNetStorage {
 }
 
 // GetAll .
-func (p *VNetStorage) GetAll() []api.APIVNet {
+func (p *VNetStorage) GetAll() []vnet.VNet {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *VNetStorage) getAll() []api.APIVNet {
-	vnets := []api.APIVNet{}
+func (p *VNetStorage) getAll() []vnet.VNet {
+	vnets := []vnet.VNet{}
 	for _, vnet := range p.VNets {
 		vnets = append(vnets, *vnet)
 	}
 	return vnets
 }
 
-func (p *VNetStorage) storeAll(items []*api.APIVNet) {
+func (p *VNetStorage) storeAll(items []*vnet.VNet) {
 	p.VNets = items
 }
 
 // FindByName .
-func (p *VNetStorage) FindByName(name string) (*api.APIVNet, bool) {
+func (p *VNetStorage) FindByName(name string) (*vnet.VNet, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findByName(name)
 }
 
-func (p *VNetStorage) findByName(name string) (*api.APIVNet, bool) {
+func (p *VNetStorage) findByName(name string) (*vnet.VNet, bool) {
 	for _, item := range p.VNets {
 		if item.Name == name {
 			return item, true
@@ -72,7 +71,7 @@ func (p *VNetStorage) findByName(name string) (*api.APIVNet, bool) {
 }
 
 // FindByID .
-func (p *VNetStorage) FindByID(id int) (*api.APIVNet, bool) {
+func (p *VNetStorage) FindByID(id int) (*vnet.VNet, bool) {
 	p.Lock()
 	defer p.Unlock()
 	item, ok := p.findByID(id)
@@ -83,10 +82,9 @@ func (p *VNetStorage) FindByID(id int) (*api.APIVNet, bool) {
 	return item, ok
 }
 
-func (p *VNetStorage) findByID(id int) (*api.APIVNet, bool) {
+func (p *VNetStorage) findByID(id int) (*vnet.VNet, bool) {
 	for _, item := range p.VNets {
-		vnetID, _ := strconv.Atoi(item.ID)
-		if vnetID == id {
+		if item.ID == id {
 			return item, true
 		}
 	}
@@ -94,17 +92,23 @@ func (p *VNetStorage) findByID(id int) (*api.APIVNet, bool) {
 }
 
 // FindByGateway .
-func (p *VNetStorage) FindByGateway(gateway string) (*api.APIVNet, bool) {
+func (p *VNetStorage) FindByGateway(gateway string) (*vnet.VNet, bool) {
 	p.Lock()
 	defer p.Unlock()
 	return p.findByGateway(gateway)
 }
 
-func (p *VNetStorage) findByGateway(gateway string) (*api.APIVNet, bool) {
+func (p *VNetStorage) findByGateway(gateway string) (*vnet.VNet, bool) {
 	for _, item := range p.VNets {
 		for _, gway := range item.Gateways {
-			_, gwNet, _ := net.ParseCIDR(fmt.Sprintf("%s/%d", gway.Gateway, gway.GwLength))
-			if gwNet.String() == gateway {
+			if gway.Prefix == gateway {
+				return item, true
+			}
+			_, ipNet, err := net.ParseCIDR(gateway)
+			if err != nil {
+				return nil, false
+			}
+			if ipNet.Contains(net.ParseIP(strings.Split(gway.Prefix, "/")[0])) {
 				return item, true
 			}
 		}
@@ -114,7 +118,7 @@ func (p *VNetStorage) findByGateway(gateway string) (*api.APIVNet, bool) {
 
 // Download .
 func (p *VNetStorage) download() error {
-	items, err := Cred.GetVNets()
+	items, err := Cred.VNet().Get()
 	if err != nil {
 		return err
 	}

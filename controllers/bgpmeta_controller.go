@@ -18,12 +18,15 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
-	api "github.com/netrisai/netrisapi"
+	"github.com/netrisai/netriswebapi/http"
+	api "github.com/netrisai/netriswebapi/v2"
+	"github.com/netrisai/netriswebapi/v2/types/bgp"
 	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,7 +43,7 @@ type BGPMetaReconciler struct {
 	client.Client
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
-	Cred     *api.HTTPCred
+	Cred     *api.Clientset
 	NStorage *netrisstorage.Storage
 }
 
@@ -156,10 +159,9 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				bgpCR.Status.VLANID = "untagged"
 			}
 			debugLogger.Info("Comparing BGPMeta with Netris BGP")
-			if ok := compareBGPMetaAPIEBGP(bgpMeta, apiBGP); ok {
+			if ok := compareBGPMetaAPIEBGP(bgpMeta, apiBGP, u); ok {
 				debugLogger.Info("Nothing Changed")
 			} else {
-				debugLogger.Info("Something changed")
 				debugLogger.Info("Go to update BGP in Netris")
 				logger.Info("Updating BGP")
 				bgpUpdate, err := BGPMetaToNetrisUpdate(bgpMeta)
@@ -167,7 +169,11 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					logger.Error(fmt.Errorf("{BGPMetaToNetrisUpdate} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", err.Error())
 				}
-				_, err, errMsg := updateBGP(bgpUpdate, r.Cred)
+
+				js, _ := json.Marshal(bgpUpdate)
+				debugLogger.Info("bgpUpdate", "payload", string(js))
+
+				_, err, errMsg := updateBGP(bgpMeta.Spec.ID, bgpUpdate, r.Cred)
 				if err != nil {
 					logger.Error(fmt.Errorf("{updateBGP} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", errMsg.Error())
@@ -198,11 +204,15 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
-	reply, err := r.Cred.AddEBGP(bgpAdd)
+
+	js, _ := json.Marshal(bgpAdd)
+	debugLogger.Info("bgpToAdd", "payload", string(js))
+
+	reply, err := r.Cred.BGP().Add(bgpAdd)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
-	resp, err := api.ParseAPIResponse(reply.Data)
+	resp, err := http.ParseAPIResponse(reply.Data)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
@@ -210,8 +220,11 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
 	}
 
-	idStruct := api.APIEBGPAddReply{}
-	err = api.CustomDecode(resp.Data, &idStruct)
+	idStruct := struct {
+		ID int `json:"id"`
+	}{}
+	debugLogger.Info("response Data", "payload", resp.Data)
+	err = http.Decode(resp.Data, &idStruct)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
@@ -237,12 +250,12 @@ func (r *BGPMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func updateBGP(vnet *api.APIEBGPUpdate, cred *api.HTTPCred) (ctrl.Result, error, error) {
-	reply, err := cred.UpdateEBGP(vnet)
+func updateBGP(id int, bgp *bgp.EBGPUpdate, cred *api.Clientset) (ctrl.Result, error, error) {
+	reply, err := cred.BGP().Update(id, bgp)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateBGP} %s", err), err
 	}
-	resp, err := api.ParseAPIResponse(reply.Data)
+	resp, err := http.ParseAPIResponse(reply.Data)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
