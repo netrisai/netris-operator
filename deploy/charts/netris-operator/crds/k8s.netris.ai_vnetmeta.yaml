@@ -99,8 +99,6 @@ spec:
                 type: string
               owner:
                 type: string
-              ownerid:
-                type: integer
               provisioning:
                 type: integer
               reclaimPolicy:
@@ -119,7 +117,7 @@ spec:
                 type: string
               tenants:
                 items:
-                  type: integer
+                  type: string
                 type: array
               vaMode:
                 type: boolean
@@ -139,7 +137,6 @@ spec:
             - members
             - name
             - owner
-            - ownerid
             - provisioning
             - reclaimPolicy
             - sites

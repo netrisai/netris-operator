@@ -48,7 +48,7 @@ metadata:
   name: my-bgp
 spec:
   site: Default                                      # [1]
-  softgate: softgate1                                # [2] Ignoring when terminateOnSwitch == true
+  hardware: softgate1                                # [2] Ignoring when transport.type == vnet
   neighborAs: 23456                                  # [3]
   transport:                                         # [4]
     type: port                                       # [5] optional
@@ -58,29 +58,26 @@ spec:
   remoteIP: 172.16.0.2/30                            # [9]
   description: someDesc                              # [10] optional
   state: enabled                                     # [11] optional
-  terminateOnSwitch:
-    enabled: false                                   # [12] optional
-    switchName: spine1                               # [13] optional. Using when transport.type == vnet AND terminateOnSwitch.enabled == true
-  multihop:                                          # [14] optional
-    neighborAddress: 8.8.8.8                         # [15] optional
-    updateSource: 10.254.97.33                       # [16] optional
-    hops: 5                                          # [17] optional
-  bgpPassword: somestrongpass                        # [18] optional
-  allowAsIn: 5                                       # [19] optional
-  defaultOriginate: false                            # [20] optional
-  prefixInboundMax: 10000                            # [21] optional
-  inboundRouteMap: my-in-rm                          # [22] optional
-  outboundRouteMap: my-out-rm                        # [23] optional
-  localPreference: 100                               # [24] optional. Ignoring when *RouteMap defined
-  weight: 0                                          # [25] optional. Ignoring when *RouteMap defined
-  prependInbound: 2                                  # [26] optional. Ignoring when *RouteMap defined
-  prependOutbound: 1                                 # [27] optional. Ignoring when *RouteMap defined
-  prefixListInbound:                                 # [28] optional. Ignoring when *RouteMap defined
+  multihop:                                          # [12] optional
+    neighborAddress: 8.8.8.8                         # [13] optional
+    updateSource: 10.254.97.33                       # [14] optional
+    hops: 5                                          # [15] optional
+  bgpPassword: somestrongpass                        # [16] optional
+  allowAsIn: 5                                       # [17] optional
+  defaultOriginate: false                            # [18] optional
+  prefixInboundMax: 10000                            # [19] optional
+  inboundRouteMap: my-in-rm                          # [20] optional
+  outboundRouteMap: my-out-rm                        # [21] optional
+  localPreference: 100                               # [22] optional. Ignoring when *RouteMap defined
+  weight: 0                                          # [23] optional. Ignoring when *RouteMap defined
+  prependInbound: 2                                  # [24] optional. Ignoring when *RouteMap defined
+  prependOutbound: 1                                 # [25] optional. Ignoring when *RouteMap defined
+  prefixListInbound:                                 # [26] optional. Ignoring when *RouteMap defined
     - deny 127.0.0.0/8 le 32
     - permit 0.0.0.0/0 le 24
-  prefixListOutbound:                                # [29] optional. Ignoring when *RouteMap defined
+  prefixListOutbound:                                # [27] optional. Ignoring when *RouteMap defined
     - permit 192.168.0.0/23
-  sendBGPCommunity:                                  # [30] optional. Ignoring when *RouteMap defined
+  sendBGPCommunity:                                  # [28] optional. Ignoring when *RouteMap defined
     - 65501:777
     - 65501:779
 ```
@@ -88,7 +85,7 @@ spec:
 Ref | Attribute                              | Default     | Description
 ----| -------------------------------------- | ----------- | ----------------
 [1] | sites                                  | ""          | BGP session site
-[2] | softgate                               | ""          | Defines softgate for Layer-3 and BGP session termination. Ignoring when terminateOnSwitch == true
+[2] | hardware                               | "auto"      | Defines hardware for Layer-3 and BGP session termination. Ignoring when transport.type == vnet
 [3] | neighborAs                             | 0           | BGP neighbor AS number
 [4] | transport                              | {}          | Physical port where BGP neighbor cable is connected or an existing V-Net service
 [5] | transport.type                         | port        | Possible values: port/vnet
@@ -98,25 +95,23 @@ Ref | Attribute                              | Default     | Description
 [9] | remoteIP                               | ""          | BGP session remote ip
 [10]| description                            | ""          | BGP session description
 [11]| state                                  | enabled     | Possible values: enabled/disabled; enabled - initiating and waiting for BGP connections, disabled - disable Layer-2 tunnel and Layer-3 address.
-[12]| terminateOnSwitch.enabled              | false       | Terminate Layer-3 and BGP session directly on the physical spine or border switch. Available for BGP sessions limited to 1000 prefixes or less.
-[13]| terminateOnSwitch.switchName           | ""          | The name of the switch on which the BGP session should be terminated. Using when transport.type == vnet AND terminateOnSwitch.enabled == true
-[14]| multihop                               | {}          | Multihop BGP session configurations
-[15]| multihop.neighborAddress               | ""          | -
-[16]| multihop.updateSource                  | ""          | -
-[17]| multihop.hops                          | 0           | -
-[18]| bgpPassword                            | ""          | BGP session password
-[19]| allowAsIn                              | 0           | Optionally allow number of occurrences of the own AS number in received prefix AS-path.
-[20]| defaultOriginate                       | false       | Originate default route to current neighbor.
-[21]| prefixInboundMax                       | 0           | BGP session will be terminated if neighbor advertises more prefixes than defined.
-[22]| inboundRouteMap                        | ""          | Reference to route-map resource.
-[23]| outboundRouteMap                       | ""          | Reference to route-map resource. 
-[24]| localPreference                        | 100         | -
-[25]| weight                                 | 0           | -
-[26]| prependInbound                         | 0           | Number of times to prepend self AS to as-path of received prefix advertisements.
-[27]| prependOutbound                        | 0           | Number of times to prepend self AS to as-path being advertised to neighbors.
-[28]| prefixListInbound                      | []          | -
-[29]| prefixListOutbound                     | []          | Define outbound prefix list, if not defined autogenerated prefix list will apply which will permit defined allocations and assignments, and will deny all private addresses.
-[30]| sendBGPCommunity                       | []          | Send BGP Community Unconditionally advertise defined list of BGP communities towards BGP neighbor. Format: AA:NN Community number in AA:NN format (where AA and NN are (0-65535)) or local-AS|no-advertise|no-export|internet or additive
+[12]| multihop                               | {}          | Multihop BGP session configurations
+[13]| multihop.neighborAddress               | ""          | -
+[14]| multihop.updateSource                  | ""          | -
+[15]| multihop.hops                          | 0           | -
+[16]| bgpPassword                            | ""          | BGP session password
+[17]| allowAsIn                              | 0           | Optionally allow number of occurrences of the own AS number in received prefix AS-path.
+[18]| defaultOriginate                       | false       | Originate default route to current neighbor.
+[19]| prefixInboundMax                       | 0           | BGP session will be terminated if neighbor advertises more prefixes than defined.
+[20]| inboundRouteMap                        | ""          | Reference to route-map resource.
+[21]| outboundRouteMap                       | ""          | Reference to route-map resource. 
+[22]| localPreference                        | 100         | -
+[23]| weight                                 | 0           | -
+[24]| prependInbound                         | 0           | Number of times to prepend self AS to as-path of received prefix advertisements.
+[25]| prependOutbound                        | 0           | Number of times to prepend self AS to as-path being advertised to neighbors.
+[26]| prefixListInbound                      | []          | -
+[27]| prefixListOutbound                     | []          | Define outbound prefix list, if not defined autogenerated prefix list will apply which will permit defined allocations and assignments, and will deny all private addresses.
+[28]| sendBGPCommunity                       | []          | Send BGP Community Unconditionally advertise defined list of BGP communities towards BGP neighbor. Format: AA:NN Community number in AA:NN format (where AA and NN are (0-65535)) or local-AS|no-advertise|no-export|internet or additive
 
 
 ### L4LB Attributes

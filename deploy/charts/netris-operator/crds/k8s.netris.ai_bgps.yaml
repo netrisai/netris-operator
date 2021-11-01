@@ -82,6 +82,8 @@ spec:
                 type: boolean
               description:
                 type: string
+              hardware:
+                type: string
               inboundRouteMap:
                 type: string
               localIP:
@@ -128,23 +130,11 @@ spec:
                 type: array
               site:
                 type: string
-              softgate:
-                type: string
               state:
                 enum:
                 - enabled
                 - disabled
                 type: string
-              terminateOnSwitch:
-                description: BGPTerminateOnSwitch .
-                properties:
-                  enabled:
-                    type: boolean
-                  switchName:
-                    type: string
-                required:
-                - enabled
-                type: object
               transport:
                 description: BGPTransport .
                 properties:

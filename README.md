@@ -28,6 +28,12 @@ You can also use [Helm charts](./deploy/charts/netris-operator) to deploy Netris
 ## Documentation
 Netris Operator managing resources samples are available in the `samples/` [folder](./samples/).
 
+## Compatibility with Netris-Controller
+  | Operator version | Controller version |
+  | -----------------| -------------------|
+  | `v0.X`           | `v2.9.X`           |
+  | `v1.X`           | `v3.X`             |
+
 ## Features
 * Managing Netris Controller via CRD
 * Automatically creating `L4LB` resource for `type: load-balancer` services

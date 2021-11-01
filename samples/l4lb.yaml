@@ -1,17 +1,18 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: L4LB
 metadata:
-  name: artash-test
+  name: my-l4lb
 spec:
-  ownerTenant: qa-tenant
-  site: Yerevan
+  ownerTenant: Admin
+  site: Default
   state: active
   protocol: tcp
   frontend:
-    port: 456
-    ip: 5.0.32.2
+    port: 31434
+    ip: 109.23.0.6
   backend:
-    - 5.0.32.5:23456
+    - 172.16.0.100:443
+    - 172.16.0.101:443
   check:
     type: http
     timeout: 3000
