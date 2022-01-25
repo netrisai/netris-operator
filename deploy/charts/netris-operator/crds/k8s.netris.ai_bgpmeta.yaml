@@ -80,7 +80,7 @@ spec:
               outboundRouteMap:
                 type: integer
               port:
-                type: string
+                type: integer
               prefix_length:
                 type: integer
               prefix_limit:
