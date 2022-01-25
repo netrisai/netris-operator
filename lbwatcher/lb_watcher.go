@@ -367,10 +367,7 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, autoIPs
 		return lbList, fmt.Errorf("{generateLoadBalancers} %s", err)
 	}
 
-	site, ok := w.NStorage.SitesStorage.FindByID(1)
-	if !ok {
-		return lbList, fmt.Errorf("{generateLoadBalancers} Default site not found")
-	}
+	var siteName string
 
 	for _, svc := range serviceList.Items {
 		if svc.Spec.Type == "LoadBalancer" {
@@ -433,6 +430,13 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, autoIPs
 					}
 					backends := []k8sv1alpha1.L4LBBackend{}
 					for _, hostIP := range hostIPS {
+						if siteName == "" {
+							site, _, err := w.findSiteByIP(hostIP)
+							if err != nil {
+								fmt.Println(err)
+							}
+							siteName = site.Name
+						}
 						backend := fmt.Sprintf("%s:%d", hostIP, lbIP.NodePort)
 						backends = append(backends, k8sv1alpha1.L4LBBackend(backend))
 					}
@@ -448,7 +452,7 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, autoIPs
 							APIVersion: "k8s.netris.ai/v1alpha1",
 						},
 						Spec: k8sv1alpha1.L4LBSpec{
-							Site:     site.Name,
+							Site:     siteName,
 							Protocol: strings.ToLower(lbIP.Protocol),
 							Frontend: k8sv1alpha1.L4LBFrontend{
 								Port: lbIP.Port,
@@ -475,4 +479,8 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, autoIPs
 		}
 	}
 	return lbList, nil
+}
+
+func findSiteByIP(hostIP string) {
+	panic("unimplemented")
 }
