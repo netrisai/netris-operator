@@ -351,7 +351,7 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, u uni
 	}
 	if port, ok := u.NStorage.PortsStorage.FindByID(apiBGP.Port.ID); ok {
 		if port.ID != bgpMeta.Spec.PortID {
-			u.DebugLogger.Info("Port changed", "netrisValue", port.ShortName, "k8sValue", bgpMeta.Spec.PortID)
+			u.DebugLogger.Info("Port changed", "netrisValue", port.ID, "k8sValue", bgpMeta.Spec.PortID)
 			return false
 		}
 	}
