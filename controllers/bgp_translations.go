@@ -36,7 +36,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		reclaim   = false
 		ipVersion = "ipv6"
 		hwID      = 0
-		port      = ""
+		portID    = 0
 		vnetID    = 0
 	)
 
@@ -60,7 +60,9 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	}
 
 	if bgp.Spec.Transport.Type == "port" {
-		port = bgp.Spec.Transport.Name
+		if port, ok := r.NStorage.PortsStorage.FindByName(bgp.Spec.Transport.Name); ok {
+			portID = port.ID
+		}
 		vlanID = 1
 	} else {
 		vnets, err := r.Cred.VNet().Get()
@@ -103,9 +105,10 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		ipVersion = "ipv4"
 	}
 
-	var neighborAddress *string
+	var neighborAddress string
+
 	if bgp.Spec.Multihop.NeighborAddress != "" && bgp.Spec.Multihop.Hops > 0 {
-		neighborAddress = &bgp.Spec.Multihop.NeighborAddress
+		neighborAddress = bgp.Spec.Multihop.NeighborAddress
 	}
 
 	bgpMeta = &k8sv1alpha1.BGPMeta{
@@ -120,7 +123,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 			Name:        string(bgp.GetUID()),
 			HWID:        hwID,
 			VnetID:      vnetID,
-			Port:        port,
+			PortID:      portID,
 			Site:        bgp.Spec.Site,
 			BGPName:     bgp.Name,
 			Vlan:        vlanID,
@@ -207,13 +210,14 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
 	} else {
 		hwID = "auto"
 	}
+
 	bgpAdd := &bgp.EBGPAdd{
 		AllowAsIn:          bgpMeta.Spec.AllowasIn,
 		BgpPassword:        bgpMeta.Spec.BgpPassword,
 		BgpCommunity:       bgpMeta.Spec.Community,
 		Hardware:           bgp.IDNone{ID: hwID},
 		Vnet:               bgp.IDNone{ID: vnetID},
-		Port:               bgp.IDName{Name: bgpMeta.Spec.Port},
+		Port:               bgp.IDName{ID: bgpMeta.Spec.PortID},
 		Description:        bgpMeta.Spec.Description,
 		InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
 		IPFamily:           bgpMeta.Spec.IPVersion,
@@ -282,7 +286,7 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPUpdate, error
 		Site:               bgp.IDName{Name: bgpMeta.Spec.Site},
 		State:              bgpMeta.Spec.Status,
 		Hardware:           bgp.IDNone{ID: hwID},
-		Port:               bgp.IDName{Name: bgpMeta.Spec.Port},
+		Port:               bgp.IDName{ID: bgpMeta.Spec.PortID},
 		Vnet:               bgp.IDNone{ID: vnetID},
 		UpdateSource:       bgpMeta.Spec.UpdateSource,
 		Vlan:               bgpMeta.Spec.Vlan,
@@ -334,8 +338,8 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, u uni
 		return false
 	}
 	neighborAddress := ""
-	if bgpMeta.Spec.NeighborAddress != nil {
-		neighborAddress = *bgpMeta.Spec.NeighborAddress
+	if bgpMeta.Spec.NeighborAddress != "" {
+		neighborAddress = bgpMeta.Spec.NeighborAddress
 	}
 	if apiBGP.NeighborAddress != neighborAddress {
 		u.DebugLogger.Info("NeighborAddress changed", "netrisValue", apiBGP.NeighborAddress, "k8sValue", neighborAddress)
@@ -346,8 +350,8 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, u uni
 		return false
 	}
 	if port, ok := u.NStorage.PortsStorage.FindByID(apiBGP.Port.ID); ok {
-		if port.ShortName != bgpMeta.Spec.Port {
-			u.DebugLogger.Info("Port changed", "netrisValue", port.ShortName, "k8sValue", bgpMeta.Spec.Port)
+		if port.ID != bgpMeta.Spec.PortID {
+			u.DebugLogger.Info("Port changed", "netrisValue", port.ShortName, "k8sValue", bgpMeta.Spec.PortID)
 			return false
 		}
 	}
