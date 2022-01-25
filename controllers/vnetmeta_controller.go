@@ -124,11 +124,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		logger.Info("VNet Created")
 	} else {
-		vnet, err := r.Cred.VNet().GetByID(vnetMeta.Spec.ID)
-		if err != nil {
-			logger.Error(fmt.Errorf("{GetVNetsByID} %s", err), "")
-			return u.patchVNetStatus(vnetCR, "Failure", err.Error())
-		}
+		vnet, _ := r.Cred.VNet().GetByID(vnetMeta.Spec.ID)
 		if vnet == nil {
 			debugLogger.Info("VNet not found in Netris")
 			debugLogger.Info("Going to create VNet")
