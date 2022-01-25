@@ -71,6 +71,10 @@ type ServiceClusterIPBlock struct {
 	CIDR string `json:"cidr,omitempty" validate:"omitempty,net"`
 }
 
+func IsCalicoNotDetected(err error) bool {
+	return err.Error() == "Calico CNI not detected"
+}
+
 // GetBGPConfiguration .
 func (c *Calico) GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
@@ -88,7 +92,7 @@ func (c *Calico) GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, 
 
 	list, err := dynClient.Resource(bgpConfigurationResource).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("{getBGPConfiguration} %s", err)
+		return nil, fmt.Errorf("Calico CNI not detected")
 	}
 
 	var bgpConfigurations []*BGPConfiguration
