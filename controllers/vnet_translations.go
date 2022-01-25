@@ -248,31 +248,25 @@ func compareVNetMetaAPIVnetSites(vnetMetaSites []k8sv1alpha1.VNetMetaSite, apiVn
 
 func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *vnet.VNetDetailed) bool {
 	if ok := compareVNetMetaAPIVnetSites(vnetMeta.Spec.Sites, apiVnet.Sites); !ok {
-		fmt.Println("apiVnet.Sites")
 		return false
 	}
 	if ok := compareVNetMetaAPIVnetGateways(vnetMeta.Spec.Gateways, apiVnet.Gateways); !ok {
-		fmt.Println("apiVnet.Gateways")
 		return false
 	}
 	if ok := compareVNetMetaAPIVnetMembers(vnetMeta.Spec.Members, apiVnet.Ports); !ok {
-		fmt.Println("apiVnet.Ports")
 		return false
 	}
 
 	if vnetMeta.Spec.VnetName != apiVnet.Name {
-		fmt.Println("apiVnet.Name ")
 		return false
 	}
 
 	if vnetMeta.Spec.Owner != apiVnet.Tenant.Name {
 		fmt.Println(vnetMeta.Spec.Owner, apiVnet.Tenant.Name)
-		fmt.Println("Tenant.Name ")
 		return false
 	}
 
 	if ok := compareVNetMetaAPIVnetTenants(vnetMeta.Spec.Tenants, apiVnet.GuestTenants); !ok {
-		fmt.Println("apiVnet.GuestTenants")
 		return false
 	}
 
