@@ -372,8 +372,18 @@ func (w *Watcher) deleteProcess() error {
 func (w *Watcher) mainProcessing() error {
 	var err error
 	if w.data.bgpConfs, err = w.Calico.GetBGPConfiguration(w.restClient); err != nil {
+		if calico.IsCalicoNotDetected(err) {
+			logger.Info(err.Error())
+			return nil
+		}
 		return err
 	}
+
+	if len(w.data.bgpConfs) == 0 {
+		logger.Info("bgpconfigurations.crd.projectcalico.org not found")
+		return nil
+	}
+
 	if !w.checkBGPConfigurations() {
 		w.data.deleteMode = true
 	}
