@@ -61,4 +61,22 @@ resources:
   kind: L4LBMeta
   path: github.com/netrisai/netris-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: Site
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: SiteMeta
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

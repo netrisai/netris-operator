@@ -165,6 +165,26 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "L4LBMeta")
 		os.Exit(1)
 	}
+	if err = (&controllers.SiteReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("Site"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Site")
+		os.Exit(1)
+	}
+	if err = (&controllers.SiteMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("SiteMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SiteMeta")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	watcherLogLevel := "info"

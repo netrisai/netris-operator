@@ -78,6 +78,28 @@ rules:
   - list
   - watch
 - apiGroups:
+  - crd.projectcalico.org
+  resources:
+  - siteconfigurations
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - crd.projectcalico.org
+  resources:
+  - sitepeers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - k8s.netris.ai
   resources:
   - bgpmeta
@@ -153,6 +175,46 @@ rules:
   - k8s.netris.ai
   resources:
   - l4lbs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - sitemeta
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - sitemeta/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - sites
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - sites/status
   verbs:
   - get
   - patch
