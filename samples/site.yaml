@@ -1,0 +1,11 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Site
+metadata:
+  name: santa-clara
+spec:
+  publicAsn: 65001
+  rohAsn: 65502
+  vmAsn: 65503
+  rohRoutingProfile: default
+  siteMesh: hub
+  aclDefaultPolicy: permit

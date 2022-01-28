@@ -1,0 +1,117 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: sites.k8s.netris.ai
+spec:
+  group: k8s.netris.ai
+  names:
+    kind: Site
+    listKind: SiteList
+    plural: sites
+    singular: site
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.publicAsn
+      name: Public ASN
+      type: integer
+    - jsonPath: .spec.rohAsn
+      name: ROH ASN
+      type: integer
+    - jsonPath: .spec.vmAsn
+      name: VM ASN
+      type: integer
+    - jsonPath: .spec.rohRoutingProfile
+      name: ROH Routing Profile
+      type: string
+    - jsonPath: .spec.siteMesh
+      name: Site Mesh
+      type: string
+    - jsonPath: .spec.aclDefaultPolicy
+      name: ACL Default Policy
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Site is the Schema for the sites API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SiteSpec defines the desired state of Site
+            properties:
+              aclDefaultPolicy:
+                enum:
+                - permit
+                - deny
+                type: string
+              publicAsn:
+                maximum: 65534
+                minimum: 0
+                type: integer
+              rohAsn:
+                maximum: 65534
+                minimum: 0
+                type: integer
+              rohRoutingProfile:
+                enum:
+                - default
+                - default_agg
+                - full
+                type: string
+              siteMesh:
+                enum:
+                - disabled
+                - hub
+                - spoke
+                - dspoke
+                type: string
+              vmAsn:
+                maximum: 65534
+                minimum: 0
+                type: integer
+            required:
+            - aclDefaultPolicy
+            - publicAsn
+            - rohAsn
+            - rohRoutingProfile
+            - siteMesh
+            - vmAsn
+            type: object
+          status:
+            description: SiteStatus defines the observed state of Site
+            properties:
+              message:
+                type: string
+              status:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

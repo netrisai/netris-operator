@@ -1,6 +1,31 @@
 # Note
 Register the Netris [CRDs](https://github.com/netrisai/netris-operator/tree/master/deploy) in the Kubernetes cluster before creating objects.
 
+### Site Attributes
+```
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Site
+metadata:
+  name: santa-clara
+spec:
+  publicAsn: 65001                                    # [1]
+  rohAsn: 65502                                       # [2]
+  vmAsn: 65503                                        # [3]
+  rohRoutingProfile: default                          # [4]
+  siteMesh: hub                                       # [5]
+  aclDefaultPolicy: permit                            # [6]
+```
+
+Ref | Attribute                              | Default     | Description
+----| -------------------------------------- | ----------- | ----------------
+[1] | publicAsn                              | nil         | Site public ASN that should be used for external bgp peer configuration.
+[2] | rohAsn                                 | nil         | ASN for ROH (Routing on the Host) compute instances, should be unique within the scope of a site, can be same for different sites.
+[3] | vmAsn                                  | nil         | ASN for ROH (Routing on the Host) virtual compute instances, should be unique within the scope of a site, can be same for different sites.
+[4] | rohRoutingProfile                      | ""          | ROH Routing profile defines set of routing prefixes to be advertised to ROH instances. Possible values: `default`, `default_agg`, `full`. Default route only - Will advertise 0.0.0.0/0 + loopback address of physically connected switch. Default + Aggregate - Will add prefixes of defined subnets + "Default" profile. Full - Will advertise all prefixes available in the routing table of the connected switch.
+[5] | siteMesh                               | ""          | Site to site VPN mode. Possible values: `disabled`, `hub`, `spoke`, `dynamicSpoke`. 
+[6] | aclDefaultPolicy                       | ""          | Possible values: `permit` or `deny`. Deny - Layer-3 packet forwarding is denied by default. ACLs are required to permit necessary traffic flows. Deny ACLs will be applied before Permit ACLs. Permit - Layer-3 packet forwarding is allowed by default. ACLs are required to deny unwanted traffic flows. Permit ACLs will be applied before Deny ACLs.
+
+
 ### VNet Attributes
 
 ```
@@ -13,7 +38,7 @@ spec:
   guestTenants: []                                   # [2]
   state: active                                      # [3] optional
   sites:                                             # [4]
-  - name: yerevan                                    # [5]
+  - name: santa-clara                                # [5]
     gateways:                                        # [6]
     - 109.23.0.6/24
     - 109.24.72.6/24
@@ -47,7 +72,7 @@ kind: BGP
 metadata:
   name: my-bgp
 spec:
-  site: Default                                      # [1]
+  site: santa-clara                                  # [1]
   hardware: softgate1                                # [2] Ignoring when transport.type == vnet
   neighborAs: 23456                                  # [3]
   transport:                                         # [4]
@@ -88,13 +113,13 @@ Ref | Attribute                              | Default     | Description
 [2] | hardware                               | "auto"      | Defines hardware for Layer-3 and BGP session termination. Ignoring when transport.type == vnet
 [3] | neighborAs                             | 0           | BGP neighbor AS number
 [4] | transport                              | {}          | Physical port where BGP neighbor cable is connected or an existing V-Net service
-[5] | transport.type                         | port        | Possible values: port/vnet
-[6] | transport.name                         | ""          | Possible values: portName@switchName/vnetName
+[5] | transport.type                         | port        | Possible values: `port` or `vnet`
+[6] | transport.name                         | ""          | Possible values: `portName@switchName` or `vnetName`
 [7] | transport.vlanId                       | nil         | Ignoring when transport.type == vnet
 [8] | localIP                                | ""          | BGP session local ip
 [9] | remoteIP                               | ""          | BGP session remote ip
 [10]| description                            | ""          | BGP session description
-[11]| state                                  | enabled     | Possible values: enabled/disabled; enabled - initiating and waiting for BGP connections, disabled - disable Layer-2 tunnel and Layer-3 address.
+[11]| state                                  | enabled     | Possible values: `enabled` or `disabled`; enabled - initiating and waiting for BGP connections, disabled - disable Layer-2 tunnel and Layer-3 address.
 [12]| multihop                               | {}          | Multihop BGP session configurations
 [13]| multihop.neighborAddress               | ""          | -
 [14]| multihop.updateSource                  | ""          | -
@@ -123,7 +148,7 @@ metadata:
   name: my-l4lb
 spec:
   ownerTenant: Admin                                 # [1]
-  site: Default                                      # [2]           
+  site: santa-clara                                  # [2]           
   state: active                                      # [3]  optional
   protocol: tcp                                      # [4]  optional
   frontend:
