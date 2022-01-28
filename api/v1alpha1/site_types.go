@@ -62,7 +62,7 @@ type SiteSpec struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Public ASN",type=integer,JSONPath=`.spec.publicAsn`
 // +kubebuilder:printcolumn:name="ROH ASN",type=integer,JSONPath=`.spec.rohAsn`
-// +kubebuilder:printcolumn:name="VV Asn",type=integer,JSONPath=`.spec.vmAsn`
+// +kubebuilder:printcolumn:name="VM ASN",type=integer,JSONPath=`.spec.vmAsn`
 // +kubebuilder:printcolumn:name="ROH Routing Profile",type=string,JSONPath=`.spec.rohRoutingProfile`
 // +kubebuilder:printcolumn:name="Site Mesh",type=string,JSONPath=`.spec.siteMesh`
 // +kubebuilder:printcolumn:name="ACL Default Policy",type=string,JSONPath=`.spec.aclDefaultPolicy`

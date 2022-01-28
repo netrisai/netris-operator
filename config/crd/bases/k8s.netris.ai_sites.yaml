@@ -24,7 +24,7 @@ spec:
       name: ROH ASN
       type: integer
     - jsonPath: .spec.vmAsn
-      name: VV Asn
+      name: VM ASN
       type: integer
     - jsonPath: .spec.rohRoutingProfile
       name: ROH Routing Profile
