@@ -3,7 +3,7 @@ kind: BGP
 metadata:
   name: my-bgp
 spec:
-  site: Default
+  site: santa-clara
   hardware: softgate1
   neighborAs: 23456
   transport:
