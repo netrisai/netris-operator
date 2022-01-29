@@ -49,6 +49,7 @@ type BGPReconciler struct {
 // +kubebuilder:rbac:groups=crd.projectcalico.org,resources=bgpconfigurations,verbs=get;list;watch;update;patch
 // +kubebuilder:rbac:groups=crd.projectcalico.org,resources=ippools,verbs=get;list;watch
 
+// Reconcile is the main reconciler for the appropriate resource type
 func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
@@ -219,6 +220,7 @@ func (r *BGPReconciler) deleteBGPMetaCR(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Resu
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager .
 func (r *BGPReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.BGP{}).

@@ -311,7 +311,7 @@ func findGatewayDuplicates(items []k8sv1alpha1.VNetGateway) (string, bool) {
 	tmpMap := make(map[string]int)
 	for _, s := range items {
 		str := s.String()
-		tmpMap[str] += 1
+		tmpMap[str]++
 		if tmpMap[str] > 1 {
 			return str, true
 		}

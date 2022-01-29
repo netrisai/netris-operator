@@ -50,6 +50,7 @@ type L4LBReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
+// Reconcile is the main reconciler for the appropriate resource type
 func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
@@ -217,6 +218,7 @@ func (r *L4LBReconciler) deleteL4LBMetaCR(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager .
 func (r *L4LBReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.L4LB{}).

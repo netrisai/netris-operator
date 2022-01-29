@@ -47,6 +47,7 @@ type SiteMetaReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=sitemeta,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=sitemeta/status,verbs=get;update;patch
 
+// Reconcile is the main reconciler for the appropriate resource type
 func (r *SiteMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
@@ -208,6 +209,7 @@ func (r *SiteMetaReconciler) createSite(siteMeta *k8sv1alpha1.SiteMeta) (ctrl.Re
 	return ctrl.Result{}, nil, nil
 }
 
+// SetupWithManager .
 func (r *SiteMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.SiteMeta{}).

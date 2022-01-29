@@ -49,6 +49,7 @@ type L4LBMetaReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta/status,verbs=get;update;patch
 
+// Reconcile is the main reconciler for the appropriate resource type
 func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
@@ -239,6 +240,7 @@ func (r *L4LBMetaReconciler) updateL4LB(l4lb *l4lb.LoadBalancerUpdate) (ctrl.Res
 	return ctrl.Result{}, nil, nil
 }
 
+// SetupWithManager .
 func (r *L4LBMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.L4LBMeta{}).

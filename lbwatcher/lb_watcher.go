@@ -480,7 +480,3 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, autoIPs
 	}
 	return lbList, nil
 }
-
-func findSiteByIP(hostIP string) {
-	panic("unimplemented")
-}

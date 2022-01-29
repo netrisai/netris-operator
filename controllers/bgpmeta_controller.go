@@ -50,6 +50,7 @@ type BGPMetaReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgpmeta,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgpmeta/status,verbs=get;update;patch
 
+// Reconcile is the main reconciler for the appropriate resource type
 func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
@@ -244,6 +245,7 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 	return ctrl.Result{}, nil, nil
 }
 
+// SetupWithManager .
 func (r *BGPMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.BGPMeta{}).

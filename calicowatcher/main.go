@@ -64,6 +64,7 @@ type Watcher struct {
 	client     client.Client
 	clientset  *kubernetes.Clientset
 	data       data
+	stop       chan struct{}
 }
 
 type data struct {
@@ -102,6 +103,7 @@ func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Op
 		MGR:      mgr,
 		Options:  options,
 		Calico:   calico.New(calico.Options{ContextTimeout: options.RequeueInterval}),
+		stop:     make(chan struct{}),
 	}
 	return watcher, nil
 }
@@ -158,8 +160,14 @@ func (w *Watcher) Start() {
 	ticker := time.NewTicker(requeueInterval)
 	w.start()
 	for {
-		<-ticker.C
-		w.start()
+		select {
+		case <-ticker.C:
+			w.start()
+		case <-w.stop:
+			ticker.Stop()
+			close(w.stop)
+			break
+		}
 	}
 }
 
@@ -374,6 +382,8 @@ func (w *Watcher) mainProcessing() error {
 	if w.data.bgpConfs, err = w.Calico.GetBGPConfiguration(w.restClient); err != nil {
 		if calico.IsCalicoNotDetected(err) {
 			logger.Info(err.Error())
+			logger.Info("Calico Watcher Stopped")
+			w.stop <- struct{}{}
 			return nil
 		}
 		return err

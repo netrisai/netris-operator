@@ -30,7 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// VnetToVnetMeta converts the VNet resource to VNetMeta type and used for add the VNet for Netris API.
+// L4LBToL4LBMeta converts the VNet resource to VNetMeta type and used for add the VNet for Netris API.
 func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4LBMeta, error) {
 	bReg := regexp.MustCompile(`^(?P<ip>(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])):(?P<port>([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-4]))$`)
 
@@ -241,7 +241,7 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *l4lb.LoadBa
 	return true
 }
 
-// L4LBetaToNetris converts the k8s L4LB resource to Netris type and used for add the L4LB for Netris API.
+// L4LBMetaToNetris converts the k8s L4LB resource to Netris type and used for add the L4LB for Netris API.
 func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*l4lb.LoadBalancerAdd, error) {
 	healthCheck := ""
 	requestPath := ""
@@ -435,5 +435,5 @@ func (r *L4LBReconciler) findSiteByIP(ip string) (int, error) {
 		}
 	}
 
-	return siteID, fmt.Errorf("There are no sites  for specified IP address %s", ip)
+	return siteID, fmt.Errorf("There are no sites for specified IP address %s", ip)
 }
