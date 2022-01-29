@@ -44,10 +44,6 @@ type SiteReconciler struct {
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=sites,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=sites/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch;update;patch
-// +kubebuilder:rbac:groups=crd.projectcalico.org,resources=sitepeers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=crd.projectcalico.org,resources=siteconfigurations,verbs=get;list;watch;update;patch
-// +kubebuilder:rbac:groups=crd.projectcalico.org,resources=ippools,verbs=get;list;watch
 
 // Reconcile is the main reconciler for the appropriate resource type
 func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {

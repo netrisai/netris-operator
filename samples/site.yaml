@@ -1,11 +1,11 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: Site
 metadata:
-  name: kube-site
+  name: santa-clara
 spec:
   publicAsn: 65001
   rohAsn: 65502
   vmAsn: 65503
-  rohRoutingProfile: default  #(default;default_agg;full)
-  siteMesh: hub                      #(disabled;hub;spoke;dynamicSpoke)
-  aclDefaultPolicy: deny         #(permit deny)
+  rohRoutingProfile: default
+  siteMesh: hub
+  aclDefaultPolicy: permit
