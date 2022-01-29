@@ -49,6 +49,7 @@ type SiteReconciler struct {
 // +kubebuilder:rbac:groups=crd.projectcalico.org,resources=siteconfigurations,verbs=get;list;watch;update;patch
 // +kubebuilder:rbac:groups=crd.projectcalico.org,resources=ippools,verbs=get;list;watch
 
+// Reconcile is the main reconciler for the appropriate resource type
 func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
@@ -219,6 +220,7 @@ func (r *SiteReconciler) deleteSiteMetaCR(siteMeta *k8sv1alpha1.SiteMeta) (ctrl.
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager .
 func (r *SiteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&k8sv1alpha1.Site{}).
