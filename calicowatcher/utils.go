@@ -45,5 +45,5 @@ func (w *Watcher) findSiteByIP(ip string) (int, string, error) {
 		}
 	}
 
-	return siteID, "", fmt.Errorf("There are no sites  for specified IP address %s", ip)
+	return siteID, "", fmt.Errorf("There are no sites for specified IP address %s", ip)
 }

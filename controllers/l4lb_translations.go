@@ -435,5 +435,5 @@ func (r *L4LBReconciler) findSiteByIP(ip string) (int, error) {
 		}
 	}
 
-	return siteID, fmt.Errorf("There are no sites  for specified IP address %s", ip)
+	return siteID, fmt.Errorf("There are no sites for specified IP address %s", ip)
 }
