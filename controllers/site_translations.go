@@ -54,10 +54,10 @@ func (r *SiteReconciler) SiteToSiteMeta(site *k8sv1alpha1.Site) (*k8sv1alpha1.Si
 			SiteName:            site.Name,
 			PublicASN:           site.Spec.PublicASN,
 			RohASN:              site.Spec.RohASN,
-			VmASN:               site.Spec.VmASN,
+			VMASN:               site.Spec.VMASN,
 			RohRoutingProfileID: routingProfiles[site.Spec.RohRoutingProfile],
 			SiteMesh:            site.Spec.SiteMesh,
-			AclDefaultPolicy:    site.Spec.AclDefaultPolicy,
+			ACLDefaultPolicy:    site.Spec.ACLDefaultPolicy,
 		},
 	}
 
@@ -108,9 +108,9 @@ func SiteMetaToNetris(siteMeta *k8sv1alpha1.SiteMeta) (*site.SiteAdd, error) {
 		Name:                siteMeta.Spec.SiteName,
 		PublicASN:           siteMeta.Spec.PublicASN,
 		PhysicalInstanceASN: siteMeta.Spec.RohASN,
-		VirtualInstanceASN:  siteMeta.Spec.VmASN,
+		VirtualInstanceASN:  siteMeta.Spec.VMASN,
 		VPN:                 siteMeta.Spec.SiteMesh,
-		ACLPolicy:           siteMeta.Spec.AclDefaultPolicy,
+		ACLPolicy:           siteMeta.Spec.ACLDefaultPolicy,
 		RoutingProfileID:    siteMeta.Spec.RohRoutingProfileID,
 	}
 
@@ -124,9 +124,9 @@ func SiteMetaToNetrisUpdate(siteMeta *k8sv1alpha1.SiteMeta) (*site.SiteAdd, erro
 		Name:                siteMeta.Spec.SiteName,
 		PublicASN:           siteMeta.Spec.PublicASN,
 		PhysicalInstanceASN: siteMeta.Spec.RohASN,
-		VirtualInstanceASN:  siteMeta.Spec.VmASN,
+		VirtualInstanceASN:  siteMeta.Spec.VMASN,
 		VPN:                 siteMeta.Spec.SiteMesh,
-		ACLPolicy:           siteMeta.Spec.AclDefaultPolicy,
+		ACLPolicy:           siteMeta.Spec.ACLDefaultPolicy,
 		RoutingProfileID:    siteMeta.Spec.RohRoutingProfileID,
 	}
 
@@ -146,8 +146,8 @@ func compareSiteMetaAPIESite(siteMeta *k8sv1alpha1.SiteMeta, apiSite *site.Site,
 		u.DebugLogger.Info("RohASN changed", "netrisValue", apiSite.PhysicalInstanceAsn, "k8sValue", siteMeta.Spec.RohASN)
 		return false
 	}
-	if apiSite.VirtualInstanceASN != siteMeta.Spec.VmASN {
-		u.DebugLogger.Info("VmASN changed", "netrisValue", apiSite.VirtualInstanceASN, "k8sValue", siteMeta.Spec.VmASN)
+	if apiSite.VirtualInstanceASN != siteMeta.Spec.VMASN {
+		u.DebugLogger.Info("VMASN changed", "netrisValue", apiSite.VirtualInstanceASN, "k8sValue", siteMeta.Spec.VMASN)
 		return false
 	}
 	if apiSite.RoutingProfileID != siteMeta.Spec.RohRoutingProfileID {
@@ -158,8 +158,8 @@ func compareSiteMetaAPIESite(siteMeta *k8sv1alpha1.SiteMeta, apiSite *site.Site,
 		u.DebugLogger.Info("SiteMesh changed", "netrisValue", apiSite.VPN, "k8sValue", siteMeta.Spec.SiteMesh)
 		return false
 	}
-	if apiSite.ACLPolicy != siteMeta.Spec.AclDefaultPolicy {
-		u.DebugLogger.Info("AclDefaultPolicy changed", "netrisValue", apiSite.ACLPolicy, "k8sValue", siteMeta.Spec.AclDefaultPolicy)
+	if apiSite.ACLPolicy != siteMeta.Spec.ACLDefaultPolicy {
+		u.DebugLogger.Info("ACLDefaultPolicy changed", "netrisValue", apiSite.ACLPolicy, "k8sValue", siteMeta.Spec.ACLDefaultPolicy)
 		return false
 	}
 

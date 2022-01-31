@@ -40,11 +40,11 @@ type SiteMetaSpec struct {
 
 	PublicASN           int    `json:"publicAsn"`
 	RohASN              int    `json:"rohAsn"`
-	VmASN               int    `json:"vmAsn"`
+	VMASN               int    `json:"vmAsn"`
 	RohRoutingProfileID int    `json:"rohRoutingProfile"`
 	SiteMesh            string `json:"siteMesh"`
 
-	AclDefaultPolicy string `json:"aclDefaultPolicy"`
+	ACLDefaultPolicy string `json:"aclDefaultPolicy"`
 }
 
 // +kubebuilder:object:root=true

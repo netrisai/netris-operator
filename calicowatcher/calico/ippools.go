@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// IPIPConfiguration .
 type IPIPConfiguration struct {
 	// When enabled is true, ipip tunneling will be used to deliver packets to
 	// destinations within this pool.
@@ -84,8 +85,10 @@ type IPPoolSpec struct {
 	NATOutgoingV1 bool `json:"nat-outgoing,omitempty" validate:"omitempty,mustBeFalse"`
 }
 
+// VXLANMode .
 type VXLANMode string
 
+// IPIPMode .
 type IPIPMode string
 
 // GetIPPool .

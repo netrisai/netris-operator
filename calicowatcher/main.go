@@ -55,6 +55,7 @@ var (
 	contextTimeout  = requeueInterval
 )
 
+// Watcher is the main structure in order to manage calicowatcher
 type Watcher struct {
 	Options    Options
 	NStorage   *netrisstorage.Storage
@@ -88,11 +89,13 @@ type data struct {
 	asnEnd       int
 }
 
+// Options is the main options struct.
 type Options struct {
 	RequeueInterval int
 	LogLevel        string
 }
 
+// NewWatcher is the main initialization function.
 func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Options) (*Watcher, error) {
 	if nStorage == nil {
 		return nil, fmt.Errorf("Please provide NStorage")
@@ -142,6 +145,7 @@ func (w *Watcher) start() {
 	}
 }
 
+// Start .
 func (w *Watcher) Start() {
 	if w.Options.LogLevel == "debug" {
 		logger = zap.New(zap.Level(zapcore.DebugLevel), zap.UseDevMode(false))
@@ -402,11 +406,10 @@ func (w *Watcher) mainProcessing() error {
 		debugLogger.Info("manage.k8s.netris.ai/calico is missing in BGP Configuration", "deleteMode", w.data.deleteMode)
 		debugLogger.Info("Clearing Netris staff", "deleteMode", w.data.deleteMode)
 		return w.deleteProcess()
-	} else {
-		debugLogger.Info("manage.k8s.netris.ai/calico is present in BGP Configuration", "deleteMode", w.data.deleteMode)
-		debugLogger.Info("Creating Netris staff", "deleteMode", w.data.deleteMode)
-		return w.process()
 	}
+	debugLogger.Info("manage.k8s.netris.ai/calico is present in BGP Configuration", "deleteMode", w.data.deleteMode)
+	debugLogger.Info("Creating Netris staff", "deleteMode", w.data.deleteMode)
+	return w.process()
 }
 
 func (w *Watcher) updateBGPConfMesh(enabled bool) error {
@@ -705,9 +708,9 @@ func (w *Watcher) nodesProcessing() error {
 
 		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
 			return fmt.Errorf("Couldn't get as number for node %s", node.Name)
-		} else {
-			asn = anns["projectcalico.org/ASNumber"]
 		}
+
+		asn = anns["projectcalico.org/ASNumber"]
 
 		tmpNode := &nodeIP{
 			IP:   anns["projectcalico.org/IPv4Address"],

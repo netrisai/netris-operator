@@ -46,6 +46,7 @@ var (
 	contextTimeout  = requeueInterval
 )
 
+// NewWatcher initializes the new lb watcher.
 func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Options) (*Watcher, error) {
 	if nStorage == nil {
 		return nil, fmt.Errorf("Please provide NStorage")
@@ -69,6 +70,7 @@ func (w *Watcher) start() {
 	w.loadBalancerProcess(clientset, cl, recorder)
 }
 
+// Start .
 func (w *Watcher) Start() {
 	if w.Options.LogLevel == "debug" {
 		logger = zap.New(zap.Level(zapcore.DebugLevel), zap.UseDevMode(false))

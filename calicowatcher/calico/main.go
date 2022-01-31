@@ -26,14 +26,17 @@ var (
 	contextTimeout = time.Duration(10 * time.Second)
 )
 
+// Calico .
 type Calico struct {
 	options Options
 }
 
+// Options .
 type Options struct {
 	ContextTimeout int
 }
 
+// New creates the new calico client.
 func New(options Options) *Calico {
 	if options.ContextTimeout > 0 {
 		contextTimeout = time.Duration(time.Duration(options.ContextTimeout) * time.Second)

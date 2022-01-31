@@ -28,7 +28,7 @@ type SubnetsStorage struct {
 	Subnets []*ipam.IPAM
 }
 
-// NewVNetStorage .
+// NewSubnetsStorage .
 func NewSubnetsStorage() *SubnetsStorage {
 	return &SubnetsStorage{}
 }
