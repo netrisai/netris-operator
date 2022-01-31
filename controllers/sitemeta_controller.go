@@ -209,13 +209,6 @@ func (r *SiteMetaReconciler) createSite(siteMeta *k8sv1alpha1.SiteMeta) (ctrl.Re
 	return ctrl.Result{}, nil, nil
 }
 
-// SetupWithManager .
-func (r *SiteMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&k8sv1alpha1.SiteMeta{}).
-		Complete(r)
-}
-
 func updateSite(id int, site *site.SiteAdd, cred *api.Clientset) (ctrl.Result, error, error) {
 	reply, err := cred.Site().Update(site)
 	if err != nil {
@@ -230,4 +223,11 @@ func updateSite(id int, site *site.SiteAdd, cred *api.Clientset) (ctrl.Result, e
 	}
 
 	return ctrl.Result{}, nil, nil
+}
+
+// SetupWithManager .
+func (r *SiteMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&k8sv1alpha1.SiteMeta{}).
+		Complete(r)
 }

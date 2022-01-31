@@ -131,3 +131,18 @@ func (u *uniReconciler) patchSiteStatus(l4lb *k8sv1alpha1.Site, status, message 
 	}
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
+
+func (u *uniReconciler) patchAllocationStatus(l4lb *k8sv1alpha1.Allocation, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	l4lb.Status.Status = status
+	l4lb.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}

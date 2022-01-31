@@ -1,0 +1,7 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Allocation
+metadata:
+  name: my-allocation
+spec:
+  prefix: 192.169.0.0/16
+  tenant: Admin
