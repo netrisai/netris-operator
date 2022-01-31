@@ -24,6 +24,7 @@ import (
 	api "github.com/netrisai/netriswebapi/v2"
 )
 
+// Cred is the Netris api client structure.
 var Cred *api.Clientset
 
 /********************************************************************************
@@ -51,7 +52,7 @@ func NewStorage(cred *api.Clientset) *Storage {
 		SitesStorage:   NewSitesStorage(),
 		TenantsStorage: NewTenantsStorage(),
 		VNetStorage:    NewVNetStorage(),
-		BGPStorage:     NewBGPStoragee(),
+		BGPStorage:     NewBGPStorage(),
 		L4LBStorage:    NewL4LBStorage(),
 		SubnetsStorage: NewSubnetsStorage(),
 		HWsStorage:     NewHWsStorage(),

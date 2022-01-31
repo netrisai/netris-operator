@@ -46,7 +46,7 @@ type SiteSpec struct {
 
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65534
-	VmASN int `json:"vmAsn"`
+	VMASN int `json:"vmAsn"`
 
 	// +kubebuilder:validation:Enum=default;default_agg;full
 	RohRoutingProfile string `json:"rohRoutingProfile"`
@@ -55,7 +55,7 @@ type SiteSpec struct {
 	SiteMesh string `json:"siteMesh"`
 
 	// +kubebuilder:validation:Enum=permit;deny
-	AclDefaultPolicy string `json:"aclDefaultPolicy"`
+	ACLDefaultPolicy string `json:"aclDefaultPolicy"`
 }
 
 // +kubebuilder:object:root=true

@@ -71,6 +71,7 @@ type ServiceClusterIPBlock struct {
 	CIDR string `json:"cidr,omitempty" validate:"omitempty,net"`
 }
 
+// IsCalicoNotDetected error message parser for missing calico case.
 func IsCalicoNotDetected(err error) bool {
 	return err.Error() == "Calico CNI not detected"
 }

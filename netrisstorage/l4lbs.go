@@ -28,7 +28,7 @@ type L4LBStorage struct {
 	L4LBs []*l4lb.LoadBalancer
 }
 
-// NewVNetStorage .
+// NewL4LBStorage .
 func NewL4LBStorage() *L4LBStorage {
 	return &L4LBStorage{}
 }

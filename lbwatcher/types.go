@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
+// Watcher is the main structure in order to manage lb watcher
 type Watcher struct {
 	Options  Options
 	NStorage *netrisstorage.Storage
@@ -36,6 +37,7 @@ type lbIP struct {
 	Automatic bool
 }
 
+// Options .
 type Options struct {
 	LogLevel        string
 	RequeueInterval int

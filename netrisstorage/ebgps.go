@@ -37,7 +37,7 @@ type BGPStorage struct {
 }
 
 // NewBGPStorage .
-func NewBGPStoragee() *BGPStorage {
+func NewBGPStorage() *BGPStorage {
 	return &BGPStorage{
 		BGPs:              []*bgp.EBGP{},
 		BGPSites:          []*bgp.EBGPSite{},
@@ -198,7 +198,7 @@ func (p *BGPStorage) findOffloaderByName(siteID int, name string) (*bgp.EBGPOffl
 	return nil, false
 }
 
-/* FindPort .
+/*FindPort .
 Example: FindPort(swp1@switch1)
 */
 func (p *BGPStorage) FindPort(siteID int, portName string) (*bgp.EBGPPort, bool) {
