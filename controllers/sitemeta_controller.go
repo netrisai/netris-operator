@@ -75,7 +75,7 @@ func (r *SiteMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		NStorage:    r.NStorage,
 	}
 
-	provisionState := "Provisioning"
+	provisionState := "OK"
 
 	siteNN := req.NamespacedName
 	siteNN.Name = siteMeta.Spec.SiteName
