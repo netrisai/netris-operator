@@ -288,6 +288,58 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
+  - subnetmeta
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - subnetmeta/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - subnetmeta/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - subnets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - subnets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - subnets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
   - vnetmeta
   verbs:
   - create

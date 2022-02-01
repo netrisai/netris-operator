@@ -80,10 +80,25 @@ func (p *SubnetsStorage) FindByID(id int) (*ipam.IPAM, bool) {
 	return item, ok
 }
 
+func (p *SubnetsStorage) findInChildren(ipam *ipam.IPAM, id int) (*ipam.IPAM, bool) {
+	for _, item := range ipam.Children {
+		if item.ID == id {
+			return item, true
+		} else {
+			return p.findInChildren(item, id)
+		}
+	}
+	return nil, false
+}
+
 func (p *SubnetsStorage) findByID(id int) (*ipam.IPAM, bool) {
 	for _, item := range p.Subnets {
 		if item.ID == id {
 			return item, true
+		} else {
+			if s, ok := p.findInChildren(item, id); ok {
+				return s, true
+			}
 		}
 	}
 	return nil, false

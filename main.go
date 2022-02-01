@@ -205,6 +205,26 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AllocationMeta")
 		os.Exit(1)
 	}
+	if err = (&controllers.SubnetReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("Subnet"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Subnet")
+		os.Exit(1)
+	}
+	if err = (&controllers.SubnetMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("SubnetMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SubnetMeta")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	watcherLogLevel := "info"
