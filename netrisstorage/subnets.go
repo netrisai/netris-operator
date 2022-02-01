@@ -63,6 +63,21 @@ func (p *SubnetsStorage) findByName(name string) (*ipam.IPAM, bool) {
 	for _, item := range p.Subnets {
 		if item.Name == name {
 			return item, true
+		} else {
+			if s, ok := p.findByNameInChildren(item, name); ok {
+				return s, true
+			}
+		}
+	}
+	return nil, false
+}
+
+func (p *SubnetsStorage) findByNameInChildren(ipam *ipam.IPAM, name string) (*ipam.IPAM, bool) {
+	for _, item := range ipam.Children {
+		if item.Name == name {
+			return item, true
+		} else {
+			return p.findByNameInChildren(item, name)
 		}
 	}
 	return nil, false
