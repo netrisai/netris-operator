@@ -35,6 +35,9 @@ spec:
     - jsonPath: .spec.aclDefaultPolicy
       name: ACL Default Policy
       type: string
+    - jsonPath: .status.status
+      name: Status
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
