@@ -16,7 +16,26 @@ spec:
     singular: subnet
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.prefix
+      name: Prefix
+      type: string
+    - jsonPath: .spec.tenant
+      name: Tenant
+      type: string
+    - jsonPath: .spec.purpose
+      name: Purpose
+      type: string
+    - jsonPath: .spec.sites
+      name: Sites
+      type: string
+    - jsonPath: .spec.defaultGateway
+      name: Default Gateway
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Subnet is the Schema for the subnets API

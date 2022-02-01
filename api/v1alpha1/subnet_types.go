@@ -46,8 +46,14 @@ type SubnetStatus struct {
 	Message string `json:"message,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Prefix",type=string,JSONPath=`.spec.prefix`
+// +kubebuilder:printcolumn:name="Tenant",type=string,JSONPath=`.spec.tenant`
+// +kubebuilder:printcolumn:name="Purpose",type=string,JSONPath=`.spec.purpose`
+// +kubebuilder:printcolumn:name="Sites",type=string,JSONPath=`.spec.sites`
+// +kubebuilder:printcolumn:name="Default Gateway",type=string,JSONPath=`.spec.defaultGateway`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // Subnet is the Schema for the subnets API
 type Subnet struct {
