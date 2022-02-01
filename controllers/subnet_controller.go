@@ -141,7 +141,7 @@ func (r *SubnetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	} else {
 		debugLogger.Info("Meta not found")
 		if subnet.GetFinalizers() == nil {
-			subnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+			subnet.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 
 			subnetPatchCtx, subnetPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer subnetPatchCancel()

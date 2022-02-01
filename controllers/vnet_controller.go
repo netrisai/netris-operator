@@ -144,7 +144,7 @@ func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	} else {
 		debugLogger.Info("Meta not found")
 		if vnet.GetFinalizers() == nil {
-			vnet.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+			vnet.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 			vnetPatchCtx, vnetPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer vnetPatchCancel()
 			err := r.Patch(vnetPatchCtx, vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})

@@ -140,7 +140,7 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	} else {
 		debugLogger.Info("Meta not found")
 		if bgp.GetFinalizers() == nil {
-			bgp.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+			bgp.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 
 			bgpPatchCtx, bgpPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer bgpPatchCancel()

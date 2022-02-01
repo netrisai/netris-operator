@@ -136,7 +136,7 @@ func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	} else {
 		debugLogger.Info("Meta not found")
 		if site.GetFinalizers() == nil {
-			site.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+			site.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 
 			sitePatchCtx, sitePatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer sitePatchCancel()

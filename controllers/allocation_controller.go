@@ -141,7 +141,7 @@ func (r *AllocationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	} else {
 		debugLogger.Info("Meta not found")
 		if allocation.GetFinalizers() == nil {
-			allocation.SetFinalizers([]string{"vnet.k8s.netris.ai/delete"})
+			allocation.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 
 			allocationPatchCtx, allocationPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer allocationPatchCancel()

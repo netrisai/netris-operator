@@ -140,7 +140,7 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	} else {
 		debugLogger.Info("Meta not found")
 		if l4lb.GetFinalizers() == nil {
-			l4lb.SetFinalizers([]string{"l4lb.k8s.netris.ai/delete"})
+			l4lb.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 			l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer l4lbCancel()
 			err := r.Patch(l4lbCtx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
