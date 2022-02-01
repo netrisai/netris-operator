@@ -83,7 +83,7 @@ func (r *SubnetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		NStorage:    r.NStorage,
 	}
 
-	provisionState := "Provisioning"
+	provisionState := "OK"
 
 	subnetNN := req.NamespacedName
 	subnetNN.Name = subnetMeta.Spec.SubnetName

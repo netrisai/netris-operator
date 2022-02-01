@@ -32,6 +32,9 @@ spec:
     - jsonPath: .spec.defaultGateway
       name: Default Gateway
       type: string
+    - jsonPath: .status.status
+      name: Status
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date

@@ -53,6 +53,7 @@ type SubnetStatus struct {
 // +kubebuilder:printcolumn:name="Purpose",type=string,JSONPath=`.spec.purpose`
 // +kubebuilder:printcolumn:name="Sites",type=string,JSONPath=`.spec.sites`
 // +kubebuilder:printcolumn:name="Default Gateway",type=string,JSONPath=`.spec.defaultGateway`
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // Subnet is the Schema for the subnets API
