@@ -46,6 +46,7 @@ type SiteMetaReconciler struct {
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=sitemeta,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=sitemeta/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8s.netris.ai,resources=sitemeta/finalizers,verbs=update
 
 // Reconcile is the main reconciler for the appropriate resource type
 func (r *SiteMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {

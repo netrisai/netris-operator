@@ -44,6 +44,7 @@ type BGPReconciler struct {
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgps/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgps/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch;update;patch
 // +kubebuilder:rbac:groups=crd.projectcalico.org,resources=bgppeers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=crd.projectcalico.org,resources=bgpconfigurations,verbs=get;list;watch;update;patch

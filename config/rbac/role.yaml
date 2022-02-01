@@ -144,6 +144,12 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
+  - bgpmeta/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
   - bgpmeta/status
   verbs:
   - get
@@ -161,6 +167,12 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - bgps/finalizers
+  verbs:
+  - update
 - apiGroups:
   - k8s.netris.ai
   resources:
@@ -184,6 +196,12 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
+  - l4lbmeta/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
   - l4lbmeta/status
   verbs:
   - get
@@ -201,6 +219,12 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - l4lbs/finalizers
+  verbs:
+  - update
 - apiGroups:
   - k8s.netris.ai
   resources:
@@ -224,6 +248,12 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
+  - sitemeta/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
   - sitemeta/status
   verbs:
   - get
@@ -241,6 +271,12 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - sites/finalizers
+  verbs:
+  - update
 - apiGroups:
   - k8s.netris.ai
   resources:
@@ -264,6 +300,12 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
+  - vnetmeta/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
   - vnetmeta/status
   verbs:
   - get
@@ -281,6 +323,12 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - vnets/finalizers
+  verbs:
+  - update
 - apiGroups:
   - k8s.netris.ai
   resources:

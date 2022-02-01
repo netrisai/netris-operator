@@ -3,5 +3,5 @@ kind: Allocation
 metadata:
   name: my-allocation
 spec:
-  prefix: 192.169.0.0/16
+  prefix: 192.168.0.0/16
   tenant: Admin
