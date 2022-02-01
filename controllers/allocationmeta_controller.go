@@ -80,7 +80,7 @@ func (r *AllocationMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 		NStorage:    r.NStorage,
 	}
 
-	provisionState := "Provisioning"
+	provisionState := "OK"
 
 	allocationNN := req.NamespacedName
 	allocationNN.Name = allocationMeta.Spec.AllocationName

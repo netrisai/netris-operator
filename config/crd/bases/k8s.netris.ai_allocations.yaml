@@ -23,6 +23,9 @@ spec:
     - jsonPath: .spec.tenant
       name: Tenant
       type: string
+    - jsonPath: .status.status
+      name: Status
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date

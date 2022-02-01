@@ -46,6 +46,7 @@ type AllocationStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Prefix",type=string,JSONPath=`.spec.prefix`
 // +kubebuilder:printcolumn:name="Tenant",type=string,JSONPath=`.spec.tenant`
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // Allocation is the Schema for the allocations API
