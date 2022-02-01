@@ -1,6 +1,7 @@
 # Note
 Register the Netris [CRDs](https://github.com/netrisai/netris-operator/tree/master/deploy) in the Kubernetes cluster before creating objects.
 
+
 ### Site Attributes
 ```
 apiVersion: k8s.netris.ai/v1alpha1
@@ -26,6 +27,23 @@ Ref | Attribute                              | Default     | Description
 [6] | aclDefaultPolicy                       | ""          | Possible values: `permit` or `deny`. Deny - Layer-3 packet forwarding is denied by default. ACLs are required to permit necessary traffic flows. Deny ACLs will be applied before Permit ACLs. Permit - Layer-3 packet forwarding is allowed by default. ACLs are required to deny unwanted traffic flows. Permit ACLs will be applied before Deny ACLs.
 
 
+### Allocation Attributes
+```
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Allocation
+metadata:
+  name: my-allocation
+spec:
+  prefix: 192.0.2.0/24                                   # [1]
+  tenant: Admin                                          # [2]
+```
+
+Ref | Attribute                              | Default     | Description
+----| -------------------------------------- | ----------- | ----------------
+[1] | prefix                                 | ""          | Allocation ipv4/ipv6 prefix.
+[2] | tenant                                 | ""          | Users of this tenant will be permitted to manage subnets under this allocation.
+
+
 ### VNet Attributes
 
 ```
@@ -34,20 +52,19 @@ kind: VNet
 metadata:
   name: my-vnet
 spec:
-  ownerTenant: admin                                 # [1]
-  guestTenants: []                                   # [2]
-  state: active                                      # [3] optional
-  sites:                                             # [4]
-  - name: santa-clara                                # [5]
-    gateways:                                        # [6]
-    - 109.23.0.6/24
-    - 109.24.72.6/24
-    - 2001:db8:acad::fffe/64
-    switchPorts:                                     # [7]
-    - name: swp4@rlab-leaf1                          # [8]
-      vlanId: 1050                                   # [9] optional
-    - name: swp7@rlab-leaf1
-      state: disable                                 # [10] optional
+  ownerTenant: Admin                                     # [1]
+  guestTenants: []                                       # [2]
+  state: active                                          # [3] optional
+  sites:                                                 # [4]
+    - name: santa-clara                                  # [5]
+      gateways:                                          # [6]
+        - 192.0.2.1/24
+        - 2001:db8:acad::fffe/64
+      switchPorts:                                       # [7]
+        - name: swp4@rlab-leaf1                          # [8]
+          vlanId: 1050                                   # [9] optional
+        - name: swp7@rlab-leaf1
+          state: disable                                 # [10] optional
 ```
 
 Ref | Attribute                              | Default     | Description
@@ -101,7 +118,7 @@ spec:
     - deny 127.0.0.0/8 le 32
     - permit 0.0.0.0/0 le 24
   prefixListOutbound:                                # [27] optional. Ignoring when *RouteMap defined
-    - permit 192.168.0.0/23
+    - permit 192.0.2.0/24
   sendBGPCommunity:                                  # [28] optional. Ignoring when *RouteMap defined
     - 65501:777
     - 65501:779
@@ -153,10 +170,10 @@ spec:
   protocol: tcp                                      # [4]  optional
   frontend:
     port: 31434                                      # [5]
-    ip: 109.23.0.6                                   # [6]  optional
+    ip: 203.0.113.7                                  # [6]  optional
   backend:                                           # [7]
-    - 172.16.0.100:443
-    - 172.16.0.101:443
+    - 192.0.2.100:443
+    - 192.0.2.101:443
   check:                                             # [8]  optional. Ignoring when protocol == udp
     type: http                                       # [9] optional
     timeout: 3000                                    # [10] optional

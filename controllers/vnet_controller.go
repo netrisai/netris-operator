@@ -46,6 +46,7 @@ type VNetReconciler struct {
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnets/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnets/finalizers,verbs=update
 
 // Reconcile vnet events
 func (r *VNetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {

@@ -48,6 +48,7 @@ type L4LBMetaReconciler struct {
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta/finalizers,verbs=update
 
 // Reconcile is the main reconciler for the appropriate resource type
 func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {

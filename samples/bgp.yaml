@@ -32,7 +32,7 @@ spec:
     - deny 127.0.0.0/8 le 32
     - permit 0.0.0.0/0 le 24
   prefixListOutbound:
-    - permit 192.168.0.0/23
+    - permit 192.0.2.0/24
   sendBGPCommunity:
     - 65501:777
     - 65501:779

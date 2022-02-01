@@ -47,6 +47,7 @@ type VNetMetaReconciler struct {
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnetmeta,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnetmeta/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnetmeta/finalizers,verbs=update
 
 // Reconcile .
 func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {

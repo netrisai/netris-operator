@@ -44,6 +44,7 @@ type L4LBReconciler struct {
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbs/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch
 // +kubebuilder:rbac:groups=core,resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch

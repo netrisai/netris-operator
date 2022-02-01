@@ -9,10 +9,10 @@ spec:
   protocol: tcp
   frontend:
     port: 31434
-    ip: 109.23.0.6
+    ip: 203.0.113.7
   backend:
-    - 172.16.0.100:443
-    - 172.16.0.101:443
+    - 192.0.2.100:443
+    - 192.0.2.101:443
   check:
     type: http
     timeout: 3000

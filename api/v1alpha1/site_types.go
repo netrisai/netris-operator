@@ -66,6 +66,7 @@ type SiteSpec struct {
 // +kubebuilder:printcolumn:name="ROH Routing Profile",type=string,JSONPath=`.spec.rohRoutingProfile`
 // +kubebuilder:printcolumn:name="Site Mesh",type=string,JSONPath=`.spec.siteMesh`
 // +kubebuilder:printcolumn:name="ACL Default Policy",type=string,JSONPath=`.spec.aclDefaultPolicy`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // Site is the Schema for the sites API
 type Site struct {

@@ -185,6 +185,26 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "SiteMeta")
 		os.Exit(1)
 	}
+	if err = (&controllers.AllocationReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("Allocation"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Allocation")
+		os.Exit(1)
+	}
+	if err = (&controllers.AllocationMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("AllocationMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AllocationMeta")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	watcherLogLevel := "info"

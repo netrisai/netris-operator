@@ -6,34 +6,22 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
-  name: sites.k8s.netris.ai
+  name: allocations.k8s.netris.ai
 spec:
   group: k8s.netris.ai
   names:
-    kind: Site
-    listKind: SiteList
-    plural: sites
-    singular: site
+    kind: Allocation
+    listKind: AllocationList
+    plural: allocations
+    singular: allocation
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.publicAsn
-      name: Public ASN
-      type: integer
-    - jsonPath: .spec.rohAsn
-      name: ROH ASN
-      type: integer
-    - jsonPath: .spec.vmAsn
-      name: VM ASN
-      type: integer
-    - jsonPath: .spec.rohRoutingProfile
-      name: ROH Routing Profile
+    - jsonPath: .spec.prefix
+      name: Prefix
       type: string
-    - jsonPath: .spec.siteMesh
-      name: Site Mesh
-      type: string
-    - jsonPath: .spec.aclDefaultPolicy
-      name: ACL Default Policy
+    - jsonPath: .spec.tenant
+      name: Tenant
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -41,7 +29,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Site is the Schema for the sites API
+        description: Allocation is the Schema for the allocations API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -56,48 +44,19 @@ spec:
           metadata:
             type: object
           spec:
-            description: SiteSpec defines the desired state of Site
+            description: AllocationSpec defines the desired state of Allocation
             properties:
-              aclDefaultPolicy:
-                enum:
-                - permit
-                - deny
+              prefix:
+                pattern: (^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([0-9]|[12]\d|3[0-2]))?$)|(^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?(\/([1-9]|[1-5][0-9]|6[0-4]))?$)
                 type: string
-              publicAsn:
-                maximum: 65534
-                minimum: 0
-                type: integer
-              rohAsn:
-                maximum: 65534
-                minimum: 0
-                type: integer
-              rohRoutingProfile:
-                enum:
-                - default
-                - default_agg
-                - full
+              tenant:
                 type: string
-              siteMesh:
-                enum:
-                - disabled
-                - hub
-                - spoke
-                - dspoke
-                type: string
-              vmAsn:
-                maximum: 65534
-                minimum: 0
-                type: integer
             required:
-            - aclDefaultPolicy
-            - publicAsn
-            - rohAsn
-            - rohRoutingProfile
-            - siteMesh
-            - vmAsn
+            - prefix
+            - tenant
             type: object
           status:
-            description: SiteStatus defines the observed state of Site
+            description: AllocationStatus defines the observed state of Allocation
             properties:
               message:
                 type: string
