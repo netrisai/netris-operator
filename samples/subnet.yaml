@@ -8,5 +8,5 @@ spec:
   purpose: management                      # Possible values: common, loopback, management, load-balancer, nat, inactive
   defaultGateway: 192.168.0.1           # optional. Use when purpose is set to management
   sites:
-  - Artash
+  - Admin
   - Santa Clara
