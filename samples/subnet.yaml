@@ -1,12 +1,11 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: Subnet
 metadata:
-  name: my-subnett
+  name: my-subnet
 spec:
-  prefix: 192.168.0.0/16
+  prefix: 192.0.2.0/24
   tenant: Admin
-  purpose: management                      # Possible values: common, loopback, management, load-balancer, nat, inactive
-  defaultGateway: 192.168.0.1           # optional. Use when purpose is set to management
+  purpose: common                      # Possible values: common, loopback, management, load-balancer, nat, inactive
+  defaultGateway: 192.0.2.1            # optional. Use when purpose is set to management
   sites:
-  - Admin
-  - Santa Clara
+  - santa-clara
