@@ -375,7 +375,7 @@ func (w *Watcher) deleteProcess() error {
 		if err := w.Calico.DeleteBGPPeer(netrisPeer, w.restClient); err != nil {
 			return err
 		}
-		logger.Info("netris-controller pee deleted", "deleteMode", w.data.deleteMode)
+		logger.Info("Peers in netris-controller are deleted", "deleteMode", w.data.deleteMode)
 	}
 
 	return nil

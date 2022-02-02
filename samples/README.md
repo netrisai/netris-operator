@@ -44,6 +44,31 @@ Ref | Attribute                              | Default     | Description
 [2] | tenant                                 | ""          | Users of this tenant will be permitted to manage subnets under this allocation.
 
 
+### Subnet Attributes
+```
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Subnet
+metadata:
+  name: my-subnet
+spec:
+  prefix: 192.0.2.0/24                                   # [1]
+  tenant: Admin                                          # [2]
+  purpose: management                                    # [3]
+  defaultGateway: 192.0.2.1                              # [4] optional
+  sites:                                                 # [5]
+  - santa-clara
+
+```
+
+Ref | Attribute                              | Default     | Description
+----| -------------------------------------- | ----------- | ----------------
+[1] | prefix                                 | ""          | Subnet ipv4/ipv6 prefix.
+[2] | tenant                                 | ""          | Users of this tenant will be permitted to edit this subnet.
+[3] | purpose                                | ""          | Describes which kind of service will be able to use this subnet. Possible values: `common`, `loopback`, `management`, `load-balancer`, `nat`, `inactive`.
+[4] | defaultGateway                         | ""          | Optional. Use when purpose is set to `management`.
+[5] | sites                                  | []          | List of sites where this subnet is available.
+
+
 ### VNet Attributes
 
 ```

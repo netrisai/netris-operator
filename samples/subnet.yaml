@@ -1,0 +1,10 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Subnet
+metadata:
+  name: my-subnet
+spec:
+  prefix: 192.0.2.0/24
+  tenant: Admin
+  purpose: common
+  sites:
+  - santa-clara
