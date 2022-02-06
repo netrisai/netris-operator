@@ -1,0 +1,9 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Controller
+metadata:
+  name: my-controller
+spec:
+  tenant: Admin
+  description: some description
+  site: Santa Clara
+  mainIp: 1.0.1.5

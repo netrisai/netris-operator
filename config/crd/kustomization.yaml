@@ -18,6 +18,8 @@ resources:
 - bases/k8s.netris.ai_softgatemeta.yaml
 - bases/k8s.netris.ai_switches.yaml
 - bases/k8s.netris.ai_switchmeta.yaml
+- bases/k8s.netris.ai_controllers.yaml
+- bases/k8s.netris.ai_controllermeta.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -39,6 +41,8 @@ patchesStrategicMerge:
 #- patches/webhook_in_softgatemeta.yaml
 #- patches/webhook_in_switches.yaml
 #- patches/webhook_in_switchmeta.yaml
+#- patches/webhook_in_controllers.yaml
+#- patches/webhook_in_controllermeta.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
@@ -59,6 +63,8 @@ patchesStrategicMerge:
 #- patches/cainjection_in_softgatemeta.yaml
 #- patches/cainjection_in_switches.yaml
 #- patches/cainjection_in_switchmeta.yaml
+#- patches/cainjection_in_controllers.yaml
+#- patches/cainjection_in_controllermeta.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
