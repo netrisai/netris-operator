@@ -1,0 +1,20 @@
+# permissions for end users to view switches.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: switch-viewer-role
+rules:
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - switches
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - switches/status
+  verbs:
+  - get

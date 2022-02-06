@@ -1,0 +1,24 @@
+# permissions for end users to edit switchmeta.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: switchmeta-editor-role
+rules:
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - switchmeta
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - switchmeta/status
+  verbs:
+  - get

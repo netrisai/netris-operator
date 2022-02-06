@@ -1,0 +1,24 @@
+# permissions for end users to edit switches.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: switch-editor-role
+rules:
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - switches
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - switches/status
+  verbs:
+  - get

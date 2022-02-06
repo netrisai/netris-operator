@@ -1,0 +1,15 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Switch
+metadata:
+  name: my-sw01
+spec:
+  tenant: Admin
+  description: some description
+  nos: cumulus_linux
+  sites: Santa Clara
+  asn: 4200000018
+  profile: my-profile
+  mainIp: 192.168.5.5
+  mgmtIp: 192.168.6.5
+  portsCount: 16
+  macAddress: 11:cc:aa:33:fe:91
