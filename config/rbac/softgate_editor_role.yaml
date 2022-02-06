@@ -1,0 +1,24 @@
+# permissions for end users to edit softgates.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: softgate-editor-role
+rules:
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - softgates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - softgates/status
+  verbs:
+  - get

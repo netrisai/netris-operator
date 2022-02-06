@@ -64,6 +64,22 @@ func (p *HWsStorage) findByName(name string) (*inventory.HW, bool) {
 	return nil, false
 }
 
+// FindByName .
+func (p *HWsStorage) FindSoftgateByName(name string) (*inventory.HW, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findSoftgateByName(name)
+}
+
+func (p *HWsStorage) findSoftgateByName(name string) (*inventory.HW, bool) {
+	for _, hw := range p.HWs {
+		if hw.Name == name && hw.Type == "softgate" {
+			return hw, true
+		}
+	}
+	return nil, false
+}
+
 // FindByID .
 func (p *HWsStorage) FindByID(id int) (*inventory.HW, bool) {
 	p.Lock()
@@ -79,6 +95,27 @@ func (p *HWsStorage) FindByID(id int) (*inventory.HW, bool) {
 func (p *HWsStorage) findByID(id int) (*inventory.HW, bool) {
 	for _, hw := range p.HWs {
 		if hw.ID == id {
+			return hw, true
+		}
+	}
+	return nil, false
+}
+
+// FindByID .
+func (p *HWsStorage) FindSoftgateByID(id int) (*inventory.HW, bool) {
+	p.Lock()
+	defer p.Unlock()
+	item, ok := p.findSoftgateByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findSoftgateByID(id)
+	}
+	return item, ok
+}
+
+func (p *HWsStorage) findSoftgateByID(id int) (*inventory.HW, bool) {
+	for _, hw := range p.HWs {
+		if hw.ID == id && hw.Type == "softgate" {
 			return hw, true
 		}
 	}

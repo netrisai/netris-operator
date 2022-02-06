@@ -1,0 +1,11 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Softgate
+metadata:
+  name: my-sg01
+spec:
+  tenant: Admin
+  description: some description
+  site: Santa Clara
+  profile: YerevanProfile
+  mainIp: 1.0.1.5
+  mgmtIp: 3.0.0.6

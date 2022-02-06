@@ -288,6 +288,58 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
+  - softgatemeta
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - softgatemeta/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - softgatemeta/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - softgates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - softgates/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - softgates/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
   - subnetmeta
   verbs:
   - create

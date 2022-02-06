@@ -225,6 +225,26 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "SubnetMeta")
 		os.Exit(1)
 	}
+	if err = (&controllers.SoftgateReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("Softgate"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Softgate")
+		os.Exit(1)
+	}
+	if err = (&controllers.SoftgateMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("SoftgateMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SoftgateMeta")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	watcherLogLevel := "info"
