@@ -64,7 +64,7 @@ func (r *SoftgateReconciler) SoftgateToSoftgateMeta(softgate *k8sv1alpha1.Softga
 		}
 	}
 
-	if profileID == 0 {
+	if profileID == 0 && softgate.Spec.Profile != "" {
 		return nil, fmt.Errorf("Invalid profile '%s'", softgate.Spec.Profile)
 	}
 
