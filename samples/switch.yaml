@@ -6,7 +6,7 @@ spec:
   tenant: Admin
   description: some description
   nos: cumulus_linux
-  sites: Santa Clara
+  site: Santa Clara
   asn: 4200000018
   profile: my-profile
   mainIp: 192.168.5.5
