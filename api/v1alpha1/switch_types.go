@@ -45,7 +45,9 @@ type SwitchSpec struct {
 	MgmtIP string `json:"mgmtIp,omitempty"`
 
 	// +kubebuilder:validation:Enum=16;32;48;54;56
-	PortsCount int    `json:"portsCount,omitempty"`
+	PortsCount int `json:"portsCount,omitempty"`
+
+	// +kubebuilder:validation:Pattern=`^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$`
 	MacAddress string `json:"macAddress,omitempty"`
 }
 
