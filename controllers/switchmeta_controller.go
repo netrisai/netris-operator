@@ -139,10 +139,6 @@ func (r *SwitchMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		if apiSwitch, ok := r.NStorage.HWsStorage.FindSwitchByID(switchMeta.Spec.ID); ok {
 			debugLogger.Info("Comparing SwitchMeta with Netris Switch")
 
-			switchMeta.Spec.MainIP = apiSwitch.MainIP.Address
-			switchMeta.Spec.MgmtIP = apiSwitch.MgmtIP.Address
-			switchMeta.Spec.ASN = apiSwitch.Asn
-
 			if ok := compareSwitchMetaAPIESwitch(switchMeta, apiSwitch, u); ok {
 				debugLogger.Info("Nothing Changed")
 			} else {
@@ -164,6 +160,11 @@ func (r *SwitchMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 				}
 				logger.Info("Switch Updated")
 			}
+
+			switchMeta.Spec.MainIP = apiSwitch.MainIP.Address
+			switchMeta.Spec.MgmtIP = apiSwitch.MgmtIP.Address
+			switchMeta.Spec.ASN = apiSwitch.Asn
+
 		} else {
 			debugLogger.Info("Switch not found in Netris")
 			debugLogger.Info("Going to create Switch")
