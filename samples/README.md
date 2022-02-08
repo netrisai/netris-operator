@@ -57,7 +57,6 @@ spec:
   defaultGateway: 192.0.2.1                              # [4] optional
   sites:                                                 # [5]
   - santa-clara
-
 ```
 
 Ref | Attribute                              | Default     | Description
