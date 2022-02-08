@@ -64,6 +64,54 @@ func (p *HWsStorage) findByName(name string) (*inventory.HW, bool) {
 	return nil, false
 }
 
+// FindSoftgateByName .
+func (p *HWsStorage) FindSoftgateByName(name string) (*inventory.HW, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findSoftgateByName(name)
+}
+
+func (p *HWsStorage) findSoftgateByName(name string) (*inventory.HW, bool) {
+	for _, hw := range p.HWs {
+		if hw.Name == name && hw.Type == "softgate" {
+			return hw, true
+		}
+	}
+	return nil, false
+}
+
+// FindSwitchByName .
+func (p *HWsStorage) FindSwitchByName(name string) (*inventory.HW, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findSwitchByName(name)
+}
+
+func (p *HWsStorage) findSwitchByName(name string) (*inventory.HW, bool) {
+	for _, hw := range p.HWs {
+		if hw.Name == name && hw.Type == "switch" {
+			return hw, true
+		}
+	}
+	return nil, false
+}
+
+// FindControllerByName .
+func (p *HWsStorage) FindControllerByName(name string) (*inventory.HW, bool) {
+	p.Lock()
+	defer p.Unlock()
+	return p.findControllerByName(name)
+}
+
+func (p *HWsStorage) findControllerByName(name string) (*inventory.HW, bool) {
+	for _, hw := range p.HWs {
+		if hw.Name == name && hw.Type == "controller" {
+			return hw, true
+		}
+	}
+	return nil, false
+}
+
 // FindByID .
 func (p *HWsStorage) FindByID(id int) (*inventory.HW, bool) {
 	p.Lock()
@@ -79,6 +127,69 @@ func (p *HWsStorage) FindByID(id int) (*inventory.HW, bool) {
 func (p *HWsStorage) findByID(id int) (*inventory.HW, bool) {
 	for _, hw := range p.HWs {
 		if hw.ID == id {
+			return hw, true
+		}
+	}
+	return nil, false
+}
+
+// FindSoftgateByID .
+func (p *HWsStorage) FindSoftgateByID(id int) (*inventory.HW, bool) {
+	p.Lock()
+	defer p.Unlock()
+	item, ok := p.findSoftgateByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findSoftgateByID(id)
+	}
+	return item, ok
+}
+
+func (p *HWsStorage) findSoftgateByID(id int) (*inventory.HW, bool) {
+	for _, hw := range p.HWs {
+		if hw.ID == id && hw.Type == "softgate" {
+			return hw, true
+		}
+	}
+	return nil, false
+}
+
+// FindControllerByID .
+func (p *HWsStorage) FindControllerByID(id int) (*inventory.HW, bool) {
+	p.Lock()
+	defer p.Unlock()
+	item, ok := p.findControllerByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findControllerByID(id)
+	}
+	return item, ok
+}
+
+func (p *HWsStorage) findControllerByID(id int) (*inventory.HW, bool) {
+	for _, hw := range p.HWs {
+		if hw.ID == id && hw.Type == "controller" {
+			return hw, true
+		}
+	}
+	return nil, false
+}
+
+// FindSwitchByID .
+func (p *HWsStorage) FindSwitchByID(id int) (*inventory.HW, bool) {
+	p.Lock()
+	defer p.Unlock()
+	item, ok := p.findSwitchByID(id)
+	if !ok {
+		_ = p.download()
+		return p.findSwitchByID(id)
+	}
+	return item, ok
+}
+
+func (p *HWsStorage) findSwitchByID(id int) (*inventory.HW, bool) {
+	for _, hw := range p.HWs {
+		if hw.ID == id && hw.Type == "switch" {
 			return hw, true
 		}
 	}

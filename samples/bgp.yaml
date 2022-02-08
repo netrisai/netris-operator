@@ -4,35 +4,36 @@ metadata:
   name: my-bgp
 spec:
   site: santa-clara
-  hardware: softgate1
+  hardware: my-sw01
   neighborAs: 23456
   transport:
     type: port
-    name: swp5@rlab-spine1
+    name: swp15@my-sw01
     vlanId: 4
   localIP: 172.16.0.1/30
   remoteIP: 172.16.0.2/30
-  description: someDesc
-  state: enabled
-  multihop:
-    neighborAddress: 8.8.8.8
-    updateSource: 10.254.97.33
-    hops: 5
-  bgpPassword: somestrongpass
-  allowAsIn: 5
-  defaultOriginate: false
-  prefixInboundMax: 10000
-  inboundRouteMap: my-in-rm
-  outboundRouteMap: my-out-rm
-  localPreference: 100
-  weight: 0
-  prependInbound: 2
-  prependOutbound: 1
+  description: My BGP
+  # state: enabled
+  # multihop:
+  #   neighborAddress: 8.8.8.8
+  #   updateSource: 10.254.97.33
+  #   hops: 5
+  # bgpPassword: somestrongpass
+  # allowAsIn: 5
+  # defaultOriginate: false
+  # prefixInboundMax: 10000
+  # inboundRouteMap: my-in-rm
+  # outboundRouteMap: my-out-rm
+  # localPreference: 100
+  # weight: 0
+  # prependInbound: 2
+  # prependOutbound: 1
   prefixListInbound:
     - deny 127.0.0.0/8 le 32
     - permit 0.0.0.0/0 le 24
   prefixListOutbound:
     - permit 192.0.2.0/24
+    - permit 198.51.100.0/24
+    - permit 203.0.113.0/24 le 26
   sendBGPCommunity:
     - 65501:777
-    - 65501:779

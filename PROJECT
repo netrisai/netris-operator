@@ -115,4 +115,58 @@ resources:
   kind: SubnetMeta
   path: github.com/netrisai/netris-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: Softgate
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: SoftgateMeta
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: Switch
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: SwitchMeta
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: Controller
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: ControllerMeta
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

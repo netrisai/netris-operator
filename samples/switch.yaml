@@ -1,0 +1,29 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Switch
+metadata:
+  name: my-sw01
+spec:
+  tenant: Admin
+  description: My Switch01
+  nos: cumulus_linux
+  site: santa-clara
+  # asn: 4200000021
+  # profile: my-profile
+  # mainIp: 198.51.100.3
+  # mgmtIp: 192.0.2.3
+  portsCount: 16
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Switch
+metadata:
+  name: my-sw02
+spec:
+  tenant: Admin
+  description: My Switch02
+  nos: ubuntu_switch_dev
+  site: santa-clara
+  # asn: 4200000021
+  # profile: my-profile
+  # mainIp: 198.51.100.3
+  # mgmtIp: 192.0.2.3
+  portsCount: 16

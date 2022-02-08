@@ -1,9 +1,65 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: Subnet
 metadata:
-  name: my-subnet
+  name: my-subnet-mgmt
 spec:
   prefix: 192.0.2.0/24
+  tenant: Admin
+  purpose: management
+  defaultGateway: 192.0.2.1
+  sites:
+  - santa-clara
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Subnet
+metadata:
+  name: my-subnet-loopback
+spec:
+  prefix: 198.51.100.0/24
+  tenant: Admin
+  purpose: loopback
+  sites:
+  - santa-clara
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Subnet
+metadata:
+  name: my-subnet-common
+spec:
+  prefix: 203.0.113.0/25
+  tenant: Admin
+  purpose: common
+  sites:
+  - santa-clara
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Subnet
+metadata:
+  name: my-subnet-load-balancer
+spec:
+  prefix: 203.0.113.128/26
+  tenant: Admin
+  purpose: load-balancer
+  sites:
+  - santa-clara
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Subnet
+metadata:
+  name: my-subnet-nat
+spec:
+  prefix: 203.0.113.192/26
+  tenant: Admin
+  purpose: nat
+  sites:
+  - santa-clara
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Subnet
+metadata:
+  name: my-subnet-common-v6
+spec:
+  prefix: 2001:db8:acad::/64
   tenant: Admin
   purpose: common
   sites:

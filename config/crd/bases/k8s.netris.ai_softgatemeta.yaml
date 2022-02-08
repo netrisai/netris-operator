@@ -1,0 +1,82 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: softgatemeta.k8s.netris.ai
+spec:
+  group: k8s.netris.ai
+  names:
+    kind: SoftgateMeta
+    listKind: SoftgateMetaList
+    plural: softgatemeta
+    singular: softgatemeta
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: SoftgateMeta is the Schema for the softgatemeta API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SoftgateMetaSpec defines the desired state of SoftgateMeta
+            properties:
+              description:
+                type: string
+              id:
+                type: integer
+              imported:
+                type: boolean
+              mainIp:
+                type: string
+              mgmtIp:
+                type: string
+              profileid:
+                type: integer
+              reclaimPolicy:
+                type: boolean
+              siteid:
+                type: integer
+              softgateGeneration:
+                format: int64
+                type: integer
+              softgateName:
+                type: string
+              tenantid:
+                type: integer
+            required:
+            - id
+            - imported
+            - reclaimPolicy
+            - softgateGeneration
+            - softgateName
+            type: object
+          status:
+            description: SoftgateMetaStatus defines the observed state of SoftgateMeta
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

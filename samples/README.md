@@ -57,7 +57,6 @@ spec:
   defaultGateway: 192.0.2.1                              # [4] optional
   sites:                                                 # [5]
   - santa-clara
-
 ```
 
 Ref | Attribute                              | Default     | Description
@@ -67,6 +66,83 @@ Ref | Attribute                              | Default     | Description
 [3] | purpose                                | ""          | Describes which kind of service will be able to use this subnet. Possible values: `common`, `loopback`, `management`, `load-balancer`, `nat`, `inactive`.
 [4] | defaultGateway                         | ""          | Optional. Use when purpose is set to `management`.
 [5] | sites                                  | []          | List of sites where this subnet is available.
+
+
+### Switch Attributes
+```
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Switch
+metadata:
+  name: my-sw01
+spec:
+  tenant: Admin                                          # [1]
+  description: My Switch01                               # [2] optional
+  nos: cumulus_linux                                     # [3]
+  site: santa-clara                                      # [4]
+  asn: 4200000021                                        # [5] optional
+  profile: my-profile                                    # [6] optional
+  mainIp: 198.51.100.3                                   # [7] optional
+  mgmtIp: 192.0.2.3                                      # [8] optional
+  portsCount: 16                                         # [9]
+```
+
+Ref | Attribute                              | Default       | Description
+----| -------------------------------------- | ------------- | ----------------
+[1] | tenant                                 | ""            | Users of this tenant will be permitted to edit this unit.
+[2] | description                            | ""            | Optional. Switch description.
+[3] | nos                                    | ""            | Switch OS. Possible values: `cumulus_linux`, `sonic`, `ubuntu_switch_dev`.
+[4] | site                                   | ""            | The site where this device belongs.
+[5] | asn                                    | automatically | Optional. Switch AS numbers. If `asn` key isn't set, the controller will assign automatically from `System ASN range`.
+[6] | profile                                | ""            | Optional. An inventory profile name to define global configuration (NTP, DNS, timezone, etc…).
+[7] | mainIp                                 | automatically | Optional. A unique IP address which will be used as a loopback address of this unit. If `mainIp` key isn't set the controller will assign automatically from subnets with relevant purpose.
+[8] | mgmtIp                                 | automatically | Optional. A unique IP address to be used on out of band management interface. If `mgmtIp` key isn't set the controller will assign automatically from subnets with relevant purpose.
+[9] | portsCount                             | nil           | Preliminary port count is used for definition of topology. Possible values: `16`, `32`, `48`, `54`, `56`.
+
+
+### Softgate Attributes
+```
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Softgate
+metadata:
+  name: my-sg01
+spec:
+  tenant: Admin                                          # [1]
+  description: My Softgate01                             # [2] optional
+  site: santa-clara                                      # [3]
+  profile: my-profile                                    # [4] optional
+  mainIp: 198.51.100.2                                   # [5] optional
+  mgmtIp: 192.0.2.2                                      # [6] optional
+```
+
+Ref | Attribute                              | Default       | Description
+----| -------------------------------------- | ------------- | ----------------
+[1] | tenant                                 | ""            | Users of this tenant will be permitted to edit this unit.
+[2] | description                            | ""            | Optional. Softgate description.
+[3] | site                                   | ""            | The site where this device belongs.
+[4] | profile                                | ""            | Optional. An inventory profile name to define global configuration (NTP, DNS, timezone, etc…).
+[5] | mainIp                                 | automatically | Optional. A unique IP address which will be used as a loopback address of this unit. If `mainIp` key isn't set the controller will assign automatically from subnets with relevant purpose.
+[6] | mgmtIp                                 | automatically | Optional. A unique IP address to be used on out of band management interface. If `mgmtIp` key isn't set the controller will assign automatically from subnets with relevant purpose.
+
+
+### Controller Attributes
+```
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Controller
+metadata:
+  name: my-controller
+spec:
+  tenant: Admin                                          # [1]
+  description: My Controller                             # [2] optional
+  site: santa-clara                                      # [3]
+  mainIp: 198.51.100.10                                  # [4] optional
+```
+
+Ref | Attribute                              | Default       | Description
+----| -------------------------------------- | ------------- | ----------------
+[1] | tenant                                 | ""            | Users of this tenant will be permitted to edit this unit.
+[2] | description                            | ""            | Optional. Controller description.
+[3] | site                                   | ""            | The site where this controller belongs.
+[4] | mainIp                                 | automatically | Optional. A unique IP address which will be used as a loopback address of this unit. If `mainIp` key isn't set the controller will assign automatically from subnets with relevant purpose.
 
 
 ### VNet Attributes

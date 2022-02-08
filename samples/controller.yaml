@@ -1,0 +1,9 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Controller
+metadata:
+  name: my-controller
+spec:
+  tenant: Admin
+  description: My Controller
+  site: santa-clara
+  mainIp: 198.51.100.10

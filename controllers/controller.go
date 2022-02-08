@@ -161,3 +161,81 @@ func (u *uniReconciler) patchSubnetStatus(subnet *k8sv1alpha1.Subnet, status, me
 	}
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
+
+func (u *uniReconciler) patchSoftgateStatus(softgate *k8sv1alpha1.Softgate, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	softgate.Status.Status = status
+	softgate.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, softgate.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchSwitchStatus(switchH *k8sv1alpha1.Switch, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	switchH.Status.Status = status
+	switchH.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, switchH.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchControllerStatus(controller *k8sv1alpha1.Controller, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	controller.Status.Status = status
+	controller.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, controller.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchSoftgate(softgate *k8sv1alpha1.Softgate) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching")
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Patch(ctx, softgate.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Patch()}", "error", err)
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchSwitch(switchH *k8sv1alpha1.Switch) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching")
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Patch(ctx, switchH.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Patch()}", "error", err)
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchController(controller *k8sv1alpha1.Controller) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching")
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Patch(ctx, controller.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Patch()}", "error", err)
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}

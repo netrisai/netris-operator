@@ -1,7 +1,31 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: Allocation
 metadata:
-  name: my-allocation
+  name: my-allocation-mgmt
 spec:
   prefix: 192.0.2.0/24
+  tenant: Admin
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Allocation
+metadata:
+  name: my-allocation-loopback
+spec:
+  prefix: 198.51.100.0/24
+  tenant: Admin
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Allocation
+metadata:
+  name: my-allocation-common
+spec:
+  prefix: 203.0.113.0/24
+  tenant: Admin
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Allocation
+metadata:
+  name: my-allocation-common-v6
+spec:
+  prefix: 2001:db8:acad::/64
   tenant: Admin
