@@ -100,7 +100,7 @@ func (p *HWsStorage) findSwitchByName(name string) (*inventory.HW, bool) {
 func (p *HWsStorage) FindControllerByName(name string) (*inventory.HW, bool) {
 	p.Lock()
 	defer p.Unlock()
-	return p.findSwitchByName(name)
+	return p.findControllerByName(name)
 }
 
 func (p *HWsStorage) findControllerByName(name string) (*inventory.HW, bool) {
