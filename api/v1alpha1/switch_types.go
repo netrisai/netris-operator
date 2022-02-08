@@ -66,7 +66,7 @@ type SwitchStatus struct {
 // +kubebuilder:printcolumn:name="NOS",type=string,JSONPath=`.spec.nos`
 // +kubebuilder:printcolumn:name="Site",type=string,JSONPath=`.spec.site`
 // +kubebuilder:printcolumn:name="ASN",type=string,JSONPath=`.spec.asn`
-// +kubebuilder:printcolumn:name="Routing Profile",type=string,JSONPath=`.spec.profile`
+// +kubebuilder:printcolumn:name="Profile",type=string,JSONPath=`.spec.profile`
 // +kubebuilder:printcolumn:name="Main IP",type=string,JSONPath=`.spec.mainIp`
 // +kubebuilder:printcolumn:name="Management IP",type=string,JSONPath=`.spec.mgmtIp`
 // +kubebuilder:printcolumn:name="Ports Count",type=string,JSONPath=`.spec.portsCount`

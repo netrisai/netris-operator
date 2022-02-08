@@ -24,7 +24,7 @@ spec:
       name: Site
       type: string
     - jsonPath: .spec.profile
-      name: Routing Profile
+      name: Profile
       type: string
     - jsonPath: .spec.mainIp
       name: Main IP

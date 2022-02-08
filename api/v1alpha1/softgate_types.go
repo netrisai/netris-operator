@@ -52,7 +52,7 @@ type SoftgateStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Tenant",type=string,JSONPath=`.spec.tenant`
 // +kubebuilder:printcolumn:name="Site",type=string,JSONPath=`.spec.site`
-// +kubebuilder:printcolumn:name="Routing Profile",type=string,JSONPath=`.spec.profile`
+// +kubebuilder:printcolumn:name="Profile",type=string,JSONPath=`.spec.profile`
 // +kubebuilder:printcolumn:name="Main IP",type=string,JSONPath=`.spec.mainIp`
 // +kubebuilder:printcolumn:name="Management IP",type=string,JSONPath=`.spec.mgmtIp`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
