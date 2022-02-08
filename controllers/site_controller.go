@@ -177,7 +177,7 @@ func (r *SiteReconciler) deleteSite(site *k8sv1alpha1.Site, siteMeta *k8sv1alpha
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		if !resp.IsSuccess && resp.Meta.StatusCode != 400 {
+		if !resp.IsSuccess {
 			return ctrl.Result{}, fmt.Errorf("{deleteSite} %s", fmt.Errorf(resp.Message))
 		}
 	}
