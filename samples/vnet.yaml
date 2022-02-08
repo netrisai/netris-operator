@@ -3,14 +3,14 @@ kind: VNet
 metadata:
   name: my-vnet
 spec:
-  ownerTenant: Default
+  ownerTenant: Admin
   guestTenants: []
   sites:
     - name: santa-clara
       gateways:
-        - 192.0.2.1/24
+        - 203.0.113.1/25
         - 2001:db8:acad::fffe/64
       switchPorts:
-        - name: swp5@rlab-spine1
+        - name: swp5@my-sw01
           vlanId: 1050
-        - name: swp7@rlab-leaf1
+        - name: swp7@my-sw02

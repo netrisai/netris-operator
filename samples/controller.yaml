@@ -4,6 +4,6 @@ metadata:
   name: my-controller
 spec:
   tenant: Admin
-  description: some description
-  site: Santa Clara
-  mainIp: 1.0.1.5
+  description: My Controller
+  site: santa-clara
+  mainIp: 198.51.100.10
