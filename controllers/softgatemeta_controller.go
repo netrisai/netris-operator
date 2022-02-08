@@ -138,6 +138,13 @@ func (r *SoftgateMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		if apiSoftgate, ok := r.NStorage.HWsStorage.FindSoftgateByID(softgateMeta.Spec.ID); ok {
 			debugLogger.Info("Comparing SoftgateMeta with Netris Softgate")
 
+			if softgateMeta.Spec.MainIP == "" {
+				softgateMeta.Spec.MainIP = apiSoftgate.MainIP.Address
+			}
+			if softgateMeta.Spec.MgmtIP == "" {
+				softgateMeta.Spec.MgmtIP = apiSoftgate.MgmtIP.Address
+			}
+
 			if ok := compareSoftgateMetaAPIESoftgate(softgateMeta, apiSoftgate, u); ok {
 				debugLogger.Info("Nothing Changed")
 			} else {
@@ -159,8 +166,6 @@ func (r *SoftgateMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 				}
 				logger.Info("Softgate Updated")
 			}
-			softgateMeta.Spec.MainIP = apiSoftgate.MainIP.Address
-			softgateMeta.Spec.MgmtIP = apiSoftgate.MgmtIP.Address
 		} else {
 			debugLogger.Info("Softgate not found in Netris")
 			debugLogger.Info("Going to create Softgate")
