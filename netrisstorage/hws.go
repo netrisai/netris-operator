@@ -64,7 +64,7 @@ func (p *HWsStorage) findByName(name string) (*inventory.HW, bool) {
 	return nil, false
 }
 
-// FindByName .
+// FindSoftgateByName .
 func (p *HWsStorage) FindSoftgateByName(name string) (*inventory.HW, bool) {
 	p.Lock()
 	defer p.Unlock()
@@ -80,7 +80,7 @@ func (p *HWsStorage) findSoftgateByName(name string) (*inventory.HW, bool) {
 	return nil, false
 }
 
-// FindByName .
+// FindSwitchByName .
 func (p *HWsStorage) FindSwitchByName(name string) (*inventory.HW, bool) {
 	p.Lock()
 	defer p.Unlock()
@@ -96,7 +96,7 @@ func (p *HWsStorage) findSwitchByName(name string) (*inventory.HW, bool) {
 	return nil, false
 }
 
-// FindByName .
+// FindControllerByName .
 func (p *HWsStorage) FindControllerByName(name string) (*inventory.HW, bool) {
 	p.Lock()
 	defer p.Unlock()
@@ -133,7 +133,7 @@ func (p *HWsStorage) findByID(id int) (*inventory.HW, bool) {
 	return nil, false
 }
 
-// FindByID .
+// FindSoftgateByID .
 func (p *HWsStorage) FindSoftgateByID(id int) (*inventory.HW, bool) {
 	p.Lock()
 	defer p.Unlock()
@@ -154,7 +154,7 @@ func (p *HWsStorage) findSoftgateByID(id int) (*inventory.HW, bool) {
 	return nil, false
 }
 
-// FindByID .
+// FindControllerByID .
 func (p *HWsStorage) FindControllerByID(id int) (*inventory.HW, bool) {
 	p.Lock()
 	defer p.Unlock()
@@ -175,7 +175,7 @@ func (p *HWsStorage) findControllerByID(id int) (*inventory.HW, bool) {
 	return nil, false
 }
 
-// FindByID .
+// FindSwitchByID .
 func (p *HWsStorage) FindSwitchByID(id int) (*inventory.HW, bool) {
 	p.Lock()
 	defer p.Unlock()

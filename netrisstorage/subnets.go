@@ -63,10 +63,9 @@ func (p *SubnetsStorage) findByName(name string) (*ipam.IPAM, bool) {
 	for _, item := range p.Subnets {
 		if item.Name == name {
 			return item, true
-		} else {
-			if s, ok := p.findByNameInChildren(item, name); ok {
-				return s, true
-			}
+		}
+		if s, ok := p.findByNameInChildren(item, name); ok {
+			return s, true
 		}
 	}
 	return nil, false
@@ -76,8 +75,9 @@ func (p *SubnetsStorage) findByNameInChildren(ipam *ipam.IPAM, name string) (*ip
 	for _, item := range ipam.Children {
 		if item.Name == name {
 			return item, true
-		} else {
-			return p.findByNameInChildren(item, name)
+		}
+		if s, ok := p.findByNameInChildren(item, name); ok {
+			return s, true
 		}
 	}
 	return nil, false
@@ -99,8 +99,9 @@ func (p *SubnetsStorage) findInChildren(ipam *ipam.IPAM, id int) (*ipam.IPAM, bo
 	for _, item := range ipam.Children {
 		if item.ID == id {
 			return item, true
-		} else {
-			return p.findInChildren(item, id)
+		}
+		if s, ok := p.findInChildren(item, id); ok {
+			return s, true
 		}
 	}
 	return nil, false
@@ -110,10 +111,9 @@ func (p *SubnetsStorage) findByID(id int) (*ipam.IPAM, bool) {
 	for _, item := range p.Subnets {
 		if item.ID == id {
 			return item, true
-		} else {
-			if s, ok := p.findInChildren(item, id); ok {
-				return s, true
-			}
+		}
+		if s, ok := p.findInChildren(item, id); ok {
+			return s, true
 		}
 	}
 	return nil, false
