@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -62,6 +63,8 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 	if bgp.Spec.Transport.Type == "port" {
 		if port, ok := r.NStorage.PortsStorage.FindByName(bgp.Spec.Transport.Name); ok {
 			portID = port.ID
+		} else if bgp.Spec.Transport.Name != "" {
+			return nil, fmt.Errorf("Coundn't find port %s", bgp.Spec.Transport.Name)
 		}
 		vlanID = 1
 	} else {
