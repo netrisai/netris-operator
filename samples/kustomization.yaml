@@ -9,4 +9,4 @@ resources:
   - controller.yaml
   - vnet.yaml
   - l4lb.yaml
-  # - bgp.yaml
+  - bgp.yaml
