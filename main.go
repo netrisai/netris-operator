@@ -285,7 +285,26 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ControllerMeta")
 		os.Exit(1)
 	}
-
+	if err = (&controllers.LinkReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("Link"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Link")
+		os.Exit(1)
+	}
+	if err = (&controllers.LinkMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("LinkMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "LinkMeta")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	watcherLogLevel := "info"

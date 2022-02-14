@@ -1,0 +1,8 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Link
+metadata:
+  name: my-link
+spec:
+  ports:
+  - swp16@my-sw01
+  - swp16@my-sw02

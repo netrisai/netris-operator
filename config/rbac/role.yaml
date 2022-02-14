@@ -288,6 +288,58 @@ rules:
 - apiGroups:
   - k8s.netris.ai
   resources:
+  - linkmeta
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - linkmeta/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - linkmeta/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - links
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - links/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - links/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.netris.ai
+  resources:
   - sitemeta
   verbs:
   - create

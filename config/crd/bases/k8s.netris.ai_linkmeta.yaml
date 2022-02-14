@@ -1,0 +1,78 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: linkmeta.k8s.netris.ai
+spec:
+  group: k8s.netris.ai
+  names:
+    kind: LinkMeta
+    listKind: LinkMetaList
+    plural: linkmeta
+    singular: linkmeta
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: LinkMeta is the Schema for the linkmeta API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: LinkMetaSpec defines the desired state of LinkMeta
+            properties:
+              id:
+                type: string
+              imported:
+                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file'
+                type: boolean
+              linkGeneration:
+                format: int64
+                type: integer
+              linkName:
+                type: string
+              local:
+                type: integer
+              reclaimPolicy:
+                type: boolean
+              remote:
+                type: integer
+            required:
+            - id
+            - imported
+            - linkGeneration
+            - linkName
+            - local
+            - reclaimPolicy
+            - remote
+            type: object
+          status:
+            description: LinkMetaStatus defines the observed state of LinkMeta
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
