@@ -16,7 +16,17 @@ spec:
     singular: link
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.ports
+      name: Ports
+      type: string
+    - jsonPath: .status.status
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Link is the Schema for the links API
@@ -38,7 +48,7 @@ spec:
             properties:
               ports:
                 items:
-                  description: LinkSpec .
+                  description: LinkSpecPort .
                   type: string
                 maxItems: 2
                 minItems: 2
@@ -50,6 +60,8 @@ spec:
             description: LinkStatus defines the observed state of Link
             properties:
               message:
+                type: string
+              ports:
                 type: string
               status:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state

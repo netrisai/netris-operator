@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -212,6 +213,7 @@ func (u *uniReconciler) patchLinkStatus(link *k8sv1alpha1.Link, status, message 
 
 	link.Status.Status = status
 	link.Status.Message = message
+	link.Status.Ports = fmt.Sprintf("%s, %s", link.Spec.Ports[0], link.Spec.Ports[1])
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()

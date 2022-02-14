@@ -46,10 +46,14 @@ type LinkStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 	Status  string `json:"status,omitempty"`
 	Message string `json:"message,omitempty"`
+	Ports   string `json:"ports,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Ports",type=string,JSONPath=`.status.ports`
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // Link is the Schema for the links API
 type Link struct {
