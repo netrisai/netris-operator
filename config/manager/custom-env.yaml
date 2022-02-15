@@ -31,4 +31,4 @@ spec:
             - name: NOPERATOR_REQUEUE_INTERVAL
               value: "15"
             - name: NOPERATOR_CALICO_ASN_RANGE
-              value: "4200070000-4200079999"
+              value: "4230000000-4239999999"

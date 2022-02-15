@@ -6,4 +6,4 @@ controller:
 
 # logdevmode: false                               # overwrite env: NOPERATOR_DEV_MODE
 # requeueinterval: 15                             # overwrite env: NOPERATOR_REQUEUE_INTERVAL
-# calicoasnrange: 4200070000-4200079999           # overwrite env: NOPERATOR_CALICO_ASN_RANGE
+# calicoasnrange: 4230000000-4239999999           # overwrite env: NOPERATOR_CALICO_ASN_RANGE
