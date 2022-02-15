@@ -136,8 +136,8 @@ func (w *Watcher) start() {
 		w.data.asnStart = a
 		w.data.asnEnd = b
 	} else {
-		w.data.asnStart = 4200070000
-		w.data.asnEnd = 4200079999
+		w.data.asnStart = 4230000000
+		w.data.asnEnd = 4239999999
 	}
 	err = w.mainProcessing()
 	if err != nil {
