@@ -183,6 +183,58 @@ rules:
   - apiGroups:
       - k8s.netris.ai
     resources:
+      - controllermeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - controllermeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - controllermeta/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - controllers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - controllers/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - controllers/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
       - l4lbmeta
     verbs:
       - create
@@ -228,6 +280,58 @@ rules:
       - k8s.netris.ai
     resources:
       - l4lbs/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - linkmeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - linkmeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - linkmeta/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - links
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - links/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - links/status
     verbs:
       - get
       - patch
@@ -287,6 +391,58 @@ rules:
   - apiGroups:
       - k8s.netris.ai
     resources:
+      - softgatemeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - softgatemeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - softgatemeta/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - softgates
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - softgates/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - softgates/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
       - subnetmeta
     verbs:
       - create
@@ -332,6 +488,58 @@ rules:
       - k8s.netris.ai
     resources:
       - subnets/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - switches
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - switches/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - switches/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - switchmeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - switchmeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - switchmeta/status
     verbs:
       - get
       - patch
