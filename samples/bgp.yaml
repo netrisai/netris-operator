@@ -4,12 +4,12 @@ metadata:
   name: my-bgp
 spec:
   site: santa-clara
-  hardware: my-sw01
+  hardware: my-sg01
   neighborAs: 23456
   transport:
     type: port
-    name: swp15@my-sw01
-    vlanId: 4
+    name: swp14@my-sw01
+    vlanId: 3000
   localIP: 172.16.0.1/30
   remoteIP: 172.16.0.2/30
   description: My BGP

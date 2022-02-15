@@ -10,3 +10,4 @@ resources:
   - vnet.yaml
   - l4lb.yaml
   - bgp.yaml
+  - link.yaml

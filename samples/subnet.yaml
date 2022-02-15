@@ -6,7 +6,7 @@ spec:
   prefix: 192.0.2.0/24
   tenant: Admin
   purpose: management
-  defaultGateway: 192.0.2.1
+  defaultGateway: 192.0.2.254
   sites:
   - santa-clara
 ---
