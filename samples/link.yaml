@@ -1,0 +1,26 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Link
+metadata:
+  name: sw01-to-sw02
+spec:
+  ports:
+  - swp15@my-sw01
+  - swp15@my-sw02
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Link
+metadata:
+  name: sg01-to-sw01
+spec:
+  ports:
+  - swp1@my-sg01
+  - swp16@my-sw01
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Link
+metadata:
+  name: sg02-to-sw02
+spec:
+  ports:
+  - swp1@my-sg02
+  - swp16@my-sw02

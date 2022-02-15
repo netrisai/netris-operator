@@ -24,6 +24,6 @@ spec:
   site: santa-clara
   # asn: 4200000021
   # profile: my-profile
-  # mainIp: 198.51.100.3
-  # mgmtIp: 192.0.2.3
+  # mainIp: 198.51.100.4
+  # mgmtIp: 192.0.2.4
   portsCount: 16

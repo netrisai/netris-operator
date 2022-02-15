@@ -42,6 +42,7 @@ type Storage struct {
 	*L4LBStorage
 	*SubnetsStorage
 	*HWsStorage
+	*LinksStorage
 }
 
 // NewStorage .
@@ -56,6 +57,7 @@ func NewStorage(cred *api.Clientset) *Storage {
 		L4LBStorage:    NewL4LBStorage(),
 		SubnetsStorage: NewSubnetsStorage(),
 		HWsStorage:     NewHWsStorage(),
+		LinksStorage:   NewLinksStorage(),
 	}
 }
 
@@ -93,6 +95,10 @@ func (s *Storage) Download() error {
 	}
 	if err := s.HWsStorage.Download(); err != nil {
 		fmt.Println("HWsStorage", err)
+		return err
+	}
+	if err := s.LinksStorage.Download(); err != nil {
+		fmt.Println("LinksStorage", err)
 		return err
 	}
 	return nil

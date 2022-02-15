@@ -58,7 +58,7 @@ func (p *PortsStorage) FindByName(name string) (*port.Port, bool) {
 
 func (p *PortsStorage) findByName(name string) (*port.Port, bool) {
 	for _, port := range p.Ports {
-		portName := fmt.Sprintf("%s@%s", port.Port, port.SwitchName)
+		portName := fmt.Sprintf("%s@%s", port.Port_, port.SwitchName)
 		if portName == name {
 			return port, true
 		}

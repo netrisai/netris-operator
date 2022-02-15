@@ -54,7 +54,7 @@ spec:
   prefix: 192.0.2.0/24                                   # [1]
   tenant: Admin                                          # [2]
   purpose: management                                    # [3]
-  defaultGateway: 192.0.2.1                              # [4] optional
+  defaultGateway: 192.0.2.254                            # [4] optional
   sites:                                                 # [5]
   - santa-clara
 ```
@@ -143,6 +143,23 @@ Ref | Attribute                              | Default       | Description
 [2] | description                            | ""            | Optional. Controller description.
 [3] | site                                   | ""            | The site where this controller belongs.
 [4] | mainIp                                 | automatically | Optional. A unique IP address which will be used as a loopback address of this unit. If `mainIp` key isn't set the controller will assign automatically from subnets with relevant purpose.
+
+
+### Link Attributes
+```
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Link
+metadata:
+  name: sw01-to-sw02
+spec:
+  ports:                                                 # [1]              
+  - swp15@my-sw01
+  - swp15@my-sw02
+```
+
+Ref | Attribute                              | Default       | Description
+----| -------------------------------------- | ------------- | ----------------
+[1] | ports                                  | []            | List of two ports
 
 
 ### VNet Attributes
