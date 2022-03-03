@@ -65,7 +65,8 @@ func (w *Watcher) start() {
 		logger.Error(err, "")
 	}
 	cl := w.MGR.GetClient()
-	recorder, wtch, _ := eventRecorder(clientset)
+	recorder, wtch, broadcaster := eventRecorder(clientset)
+	defer broadcaster.Shutdown()
 	defer wtch.Stop()
 	w.loadBalancerProcess(clientset, cl, recorder)
 }
