@@ -1,0 +1,18 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Nat
+metadata:
+  name: my-nat
+spec:
+  comment: test SNATT			# optional
+  state: enabled			# optional. Valid value is `enabled` or `disabled`. Default value is `enabled`.
+  site: santa-clara
+  action: snat 				# Possible values: `dnat`, `snat`, `accept_snat`, `masquerade`
+  protocol: tcp	                       # Possible values: `all`, `tcp`, `udp`, `icmp`
+  srcAddress: 10.10.10.0/24
+  srcPort: 10000			# only when protocol == `tcp` or `udp`
+  dstAddress: 0.0.0.0/0
+  dstPort: 3000			# only when protocol == `tcp` or `udp`
+  snatToIp: 203.0.113.192             # only when action == `snat`. Possible to use either `snatToIp` or `snatToPool`
+  #snatToPool: 203.0.113.192/26      # only when action == `snat`. Possible to use either `snatToIp` or `snatToPool`
+  #dnatToIp: 10.10.10.60/32	        # only when action == `dnat`.
+  #dnatToPort: 80                    # only when action == `dnat` and protocol == `tcp` or `udp`.

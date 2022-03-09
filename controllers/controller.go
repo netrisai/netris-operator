@@ -208,6 +208,21 @@ func (u *uniReconciler) patchControllerStatus(controller *k8sv1alpha1.Controller
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
+func (u *uniReconciler) patchNatStatus(nat *k8sv1alpha1.Nat, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	nat.Status.Status = status
+	nat.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, nat.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
 func (u *uniReconciler) patchLinkStatus(link *k8sv1alpha1.Link, status, message string) (ctrl.Result, error) {
 	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
 

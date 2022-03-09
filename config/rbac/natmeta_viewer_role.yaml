@@ -1,0 +1,20 @@
+# permissions for end users to view natmeta.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: natmeta-viewer-role
+rules:
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - natmeta
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - natmeta/status
+  verbs:
+  - get
