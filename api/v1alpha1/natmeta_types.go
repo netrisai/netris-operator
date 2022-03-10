@@ -33,16 +33,16 @@ type NatMetaSpec struct {
 	ID              int    `json:"id"`
 	NatName         string `json:"natName"`
 
-	Comment    string `json:"comment"`
+	Comment    string `json:"comment,omitempty"`
 	State      string `json:"state"`
 	SiteID     int    `json:"siteID"`
 	Action     string `json:"action"`
 	Protocol   string `json:"protocol"`
 	SrcAddress string `json:"srcAddress"`
-	SrcPort    int    `json:"srcPort"`
+	SrcPort    int    `json:"srcPort,omitempty"`
 	DstAddress string `json:"dstAddress"`
-	DstPort    int    `json:"dstPort"`
-	SnatToIP   string `json:"snatToIp"`
+	DstPort    int    `json:"dstPort,omitempty"`
+	SnatToIP   string `json:"snatToIp,omitempty"`
 	SnatToPool string `json:"snatToPool,omitempty"`
 	DnatToIP   string `json:"dnatToIp,omitempty"`
 	DnatToPort int    `json:"dnatToPort,omitempty"`

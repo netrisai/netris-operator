@@ -77,9 +77,7 @@ spec:
                 type: string
             required:
             - action
-            - comment
             - dstAddress
-            - dstPort
             - id
             - imported
             - natGeneration
@@ -87,9 +85,7 @@ spec:
             - protocol
             - reclaimPolicy
             - siteID
-            - snatToIp
             - srcAddress
-            - srcPort
             - state
             type: object
           status:

@@ -135,14 +135,10 @@ spec:
                 type: string
             required:
             - action
-            - comment
             - dstAddress
-            - dstPort
             - protocol
             - site
-            - snatToIp
             - srcAddress
-            - srcPort
             - state
             type: object
           status:
