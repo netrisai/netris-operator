@@ -139,7 +139,6 @@ spec:
             - protocol
             - site
             - srcAddress
-            - state
             type: object
           status:
             description: NatStatus defines the observed state of Nat

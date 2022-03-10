@@ -31,7 +31,7 @@ type NatSpec struct {
 	Comment string `json:"comment,omitempty"`
 
 	// +kubebuilder:validation:Enum=enabled;disabled
-	State string `json:"state"`
+	State string `json:"state,omitempty"`
 	Site  string `json:"site"`
 
 	// +kubebuilder:validation:Enum=dnat;snat;acept_snat;masquarade

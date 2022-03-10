@@ -86,7 +86,6 @@ spec:
             - reclaimPolicy
             - siteID
             - srcAddress
-            - state
             type: object
           status:
             description: NatMetaStatus defines the observed state of NatMeta

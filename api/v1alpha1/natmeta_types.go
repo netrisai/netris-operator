@@ -34,7 +34,7 @@ type NatMetaSpec struct {
 	NatName         string `json:"natName"`
 
 	Comment    string `json:"comment,omitempty"`
-	State      string `json:"state"`
+	State      string `json:"state,omitempty"`
 	SiteID     int    `json:"siteID"`
 	Action     string `json:"action"`
 	Protocol   string `json:"protocol"`

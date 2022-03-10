@@ -52,6 +52,11 @@ func (r *NatReconciler) NatToNatMeta(nat *k8sv1alpha1.Nat) (*k8sv1alpha1.NatMeta
 		action = "ACCEPT"
 	}
 
+	state := nat.Spec.State
+	if nat.Spec.State == "" {
+		state = "enabled"
+	}
+
 	natMeta := &k8sv1alpha1.NatMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      string(nat.GetUID()),
@@ -63,7 +68,7 @@ func (r *NatReconciler) NatToNatMeta(nat *k8sv1alpha1.Nat) (*k8sv1alpha1.NatMeta
 			Reclaim:    reclaim,
 			NatName:    nat.Name,
 			Comment:    nat.Spec.Comment,
-			State:      nat.Spec.State,
+			State:      state,
 			SiteID:     siteID,
 			Action:     action,
 			Protocol:   nat.Spec.Protocol,
