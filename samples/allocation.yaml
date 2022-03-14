@@ -25,6 +25,14 @@ spec:
 apiVersion: k8s.netris.ai/v1alpha1
 kind: Allocation
 metadata:
+  name: my-allocation-vnet
+spec:
+  prefix: 172.28.51.0/24
+  tenant: Admin
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Allocation
+metadata:
   name: my-allocation-common-v6
 spec:
   prefix: 2001:db8:acad::/64

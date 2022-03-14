@@ -1,18 +1,44 @@
 apiVersion: k8s.netris.ai/v1alpha1
 kind: Nat
 metadata:
-  name: my-nat
+  name: my-snat
 spec:
-  comment: test SNATT			# optional
-  state: enabled			# optional. Valid value is `enabled` or `disabled`. Default value is `enabled`.
+  comment: MY SNAT
+  # state: enabled
   site: santa-clara
-  action: snat 				# Possible values: `dnat`, `snat`, `accept_snat`, `masquerade`
-  protocol: tcp	                       # Possible values: `all`, `tcp`, `udp`, `icmp`
-  srcAddress: 10.10.10.0/24
-  srcPort: 10000			# only when protocol == `tcp` or `udp`
+  action: snat
+  protocol: all
+  srcAddress: 172.28.51.0/24
   dstAddress: 0.0.0.0/0
-  dstPort: 3000			# only when protocol == `tcp` or `udp`
-  snatToIp: 203.0.113.192             # only when action == `snat`. Possible to use either `snatToIp` or `snatToPool`
-  #snatToPool: 203.0.113.192/26      # only when action == `snat`. Possible to use either `snatToIp` or `snatToPool`
-  #dnatToIp: 10.10.10.60/32	        # only when action == `dnat`.
-  #dnatToPort: 80                    # only when action == `dnat` and protocol == `tcp` or `udp`.
+  snatToIp: 203.0.113.192
+  #snatToPool: 203.0.113.192/26
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Nat
+metadata:
+  name: my-dnat
+spec:
+  comment: MY DNAT
+  # state: enabled
+  site: santa-clara
+  action: snat
+  protocol: tcp
+  srcAddress: 0.0.0.0/0
+  srcPort: 1-65535
+  dstAddress: 203.0.113.193/32
+  dstPort: 8080
+  dnatToIp: 172.28.51.150/32
+  dnatToPort: 80
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Nat
+metadata:
+  name: my-snat-accept
+spec:
+  comment: MY SNAT ACCEPT
+  # state: enabled
+  site: santa-clara
+  action: accept_snat
+  protocol: all
+  srcAddress: 172.28.51.0/24
+  dstAddress: 10.10.0.0/16
