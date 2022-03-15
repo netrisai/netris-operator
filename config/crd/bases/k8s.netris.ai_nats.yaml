@@ -87,7 +87,7 @@ spec:
                 enum:
                 - dnat
                 - snat
-                - acept_snat
+                - accept_snat
                 - masquarade
                 type: string
               comment:
