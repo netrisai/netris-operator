@@ -134,9 +134,9 @@ func NatMetaToNetris(natMeta *k8sv1alpha1.NatMeta) (*nat.NATw, error) {
 		Action:             natMeta.Spec.Action,
 		Protocol:           natMeta.Spec.Protocol,
 		SourceAddress:      natMeta.Spec.SrcAddress,
-		SourcePort:         strconv.Itoa(natMeta.Spec.SrcPort),
+		SourcePort:         natMeta.Spec.SrcPort,
 		DestinationAddress: natMeta.Spec.DstAddress,
-		DestinationPort:    strconv.Itoa(natMeta.Spec.DstPort),
+		DestinationPort:    natMeta.Spec.SrcPort,
 		SnatToIP:           natMeta.Spec.SnatToIP,
 		SnatToPool:         natMeta.Spec.SnatToPool,
 		DnatToIP:           natMeta.Spec.DnatToIP,
@@ -156,9 +156,9 @@ func NatMetaToNetrisUpdate(natMeta *k8sv1alpha1.NatMeta) (*nat.NATw, error) {
 		Action:             natMeta.Spec.Action,
 		Protocol:           natMeta.Spec.Protocol,
 		SourceAddress:      natMeta.Spec.SrcAddress,
-		SourcePort:         strconv.Itoa(natMeta.Spec.SrcPort),
+		SourcePort:         natMeta.Spec.SrcPort,
 		DestinationAddress: natMeta.Spec.DstAddress,
-		DestinationPort:    strconv.Itoa(natMeta.Spec.DstPort),
+		DestinationPort:    natMeta.Spec.DstPort,
 		SnatToIP:           natMeta.Spec.SnatToIP,
 		SnatToPool:         natMeta.Spec.SnatToPool,
 		DnatToIP:           natMeta.Spec.DnatToIP,
@@ -197,7 +197,7 @@ func compareNatMetaAPIENat(natMeta *k8sv1alpha1.NatMeta, apiNat *nat.NAT, u uniR
 		u.DebugLogger.Info("SourceAddress changed", "netrisValue", apiNat.SourceAddress, "k8sValue", natMeta.Spec.SrcAddress)
 		return false
 	}
-	if apiNat.SourcePort != strconv.Itoa(natMeta.Spec.SrcPort) {
+	if apiNat.SourcePort != natMeta.Spec.SrcPort {
 		u.DebugLogger.Info("SourcePort changed", "netrisValue", apiNat.SourcePort, "k8sValue", natMeta.Spec.SrcPort)
 		return false
 	}
@@ -205,7 +205,7 @@ func compareNatMetaAPIENat(natMeta *k8sv1alpha1.NatMeta, apiNat *nat.NAT, u uniR
 		u.DebugLogger.Info("DestinationAddress changed", "netrisValue", apiNat.DestinationAddress, "k8sValue", natMeta.Spec.DstAddress)
 		return false
 	}
-	if apiNat.DestinationPort != strconv.Itoa(natMeta.Spec.DstPort) {
+	if apiNat.DestinationPort != natMeta.Spec.DstPort {
 		u.DebugLogger.Info("DestinationPort changed", "netrisValue", apiNat.DestinationPort, "k8sValue", natMeta.Spec.DstPort)
 		return false
 	}

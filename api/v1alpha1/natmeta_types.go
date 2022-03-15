@@ -39,9 +39,9 @@ type NatMetaSpec struct {
 	Action     string `json:"action"`
 	Protocol   string `json:"protocol"`
 	SrcAddress string `json:"srcAddress"`
-	SrcPort    int    `json:"srcPort,omitempty"`
+	SrcPort    string `json:"srcPort,omitempty"`
 	DstAddress string `json:"dstAddress"`
-	DstPort    int    `json:"dstPort,omitempty"`
+	DstPort    string `json:"dstPort,omitempty"`
 	SnatToIP   string `json:"snatToIp,omitempty"`
 	SnatToPool string `json:"snatToPool,omitempty"`
 	DnatToIP   string `json:"dnatToIp,omitempty"`

@@ -47,7 +47,7 @@ spec:
               dstAddress:
                 type: string
               dstPort:
-                type: integer
+                type: string
               id:
                 type: integer
               imported:
@@ -72,7 +72,7 @@ spec:
               srcAddress:
                 type: string
               srcPort:
-                type: integer
+                type: string
               state:
                 type: string
             required:
