@@ -71,9 +71,9 @@ type ServiceClusterIPBlock struct {
 	CIDR string `json:"cidr,omitempty" validate:"omitempty,net"`
 }
 
-// IsCalicoNotDetected error message parser for missing calico case.
-func IsCalicoNotDetected(err error) bool {
-	return err.Error() == "Calico CNI not detected"
+// IsMissingResource error message parser for missing calico case.
+func IsMissingResource(err error) bool {
+	return err.Error() == "the server could not find the requested resource"
 }
 
 // GetBGPConfiguration .
@@ -93,7 +93,7 @@ func (c *Calico) GetBGPConfiguration(config *rest.Config) ([]*BGPConfiguration, 
 
 	list, err := dynClient.Resource(bgpConfigurationResource).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("Calico CNI not detected")
+		return nil, err
 	}
 
 	var bgpConfigurations []*BGPConfiguration

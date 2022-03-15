@@ -384,7 +384,7 @@ func (w *Watcher) deleteProcess() error {
 func (w *Watcher) mainProcessing() error {
 	var err error
 	if w.data.bgpConfs, err = w.Calico.GetBGPConfiguration(w.restClient); err != nil {
-		if calico.IsCalicoNotDetected(err) {
+		if calico.IsMissingResource(err) {
 			logger.Info(err.Error())
 			logger.Info("Calico Watcher Stopped")
 			w.stop <- struct{}{}
