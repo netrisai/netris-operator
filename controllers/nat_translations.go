@@ -197,7 +197,7 @@ func compareNatMetaAPIENat(natMeta *k8sv1alpha1.NatMeta, apiNat *nat.NAT, u uniR
 		u.DebugLogger.Info("SourceAddress changed", "netrisValue", apiNat.SourceAddress, "k8sValue", natMeta.Spec.SrcAddress)
 		return false
 	}
-	if apiNat.SourcePort != natMeta.Spec.SrcPort {
+	if (apiNat.Protocol.Value == "tcp" || apiNat.Protocol.Value == "udp") && apiNat.SourcePort != natMeta.Spec.SrcPort {
 		u.DebugLogger.Info("SourcePort changed", "netrisValue", apiNat.SourcePort, "k8sValue", natMeta.Spec.SrcPort)
 		return false
 	}
@@ -205,7 +205,7 @@ func compareNatMetaAPIENat(natMeta *k8sv1alpha1.NatMeta, apiNat *nat.NAT, u uniR
 		u.DebugLogger.Info("DestinationAddress changed", "netrisValue", apiNat.DestinationAddress, "k8sValue", natMeta.Spec.DstAddress)
 		return false
 	}
-	if apiNat.DestinationPort != natMeta.Spec.DstPort {
+	if (apiNat.Protocol.Value == "tcp" || apiNat.Protocol.Value == "udp") && apiNat.DestinationPort != natMeta.Spec.DstPort {
 		u.DebugLogger.Info("DestinationPort changed", "netrisValue", apiNat.DestinationPort, "k8sValue", natMeta.Spec.DstPort)
 		return false
 	}
