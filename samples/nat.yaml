@@ -21,12 +21,12 @@ spec:
   comment: MY DNAT
   # state: enabled
   site: santa-clara
-  action: snat
+  action: dnat
   protocol: tcp
   srcAddress: 0.0.0.0/0
   srcPort: 1-65535
   dstAddress: 203.0.113.193/32
-  dstPort: 8080
+  dstPort: "8080"
   dnatToIp: 172.28.51.150/32
   dnatToPort: 80
 ---
