@@ -88,7 +88,7 @@ spec:
                 - dnat
                 - snat
                 - accept_snat
-                - masquarade
+                - masquerade
                 type: string
               comment:
                 type: string
