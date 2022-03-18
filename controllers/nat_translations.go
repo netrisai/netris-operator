@@ -47,11 +47,6 @@ func (r *NatReconciler) NatToNatMeta(nat *k8sv1alpha1.Nat) (*k8sv1alpha1.NatMeta
 		return nil, fmt.Errorf("Invalid site '%s'", nat.Spec.Site)
 	}
 
-	action := strings.ToUpper(nat.Spec.Action)
-	if nat.Spec.Action == "accept_snat" {
-		action = "ACCEPT"
-	}
-
 	state := nat.Spec.State
 	if nat.Spec.State == "" {
 		state = "enabled"
@@ -70,7 +65,7 @@ func (r *NatReconciler) NatToNatMeta(nat *k8sv1alpha1.Nat) (*k8sv1alpha1.NatMeta
 			Comment:    nat.Spec.Comment,
 			State:      state,
 			SiteID:     siteID,
-			Action:     action,
+			Action:     strings.ToUpper(nat.Spec.Action),
 			Protocol:   nat.Spec.Protocol,
 			SrcAddress: nat.Spec.SrcAddress,
 			SrcPort:    nat.Spec.SrcPort,
