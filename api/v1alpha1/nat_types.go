@@ -34,7 +34,7 @@ type NatSpec struct {
 	State string `json:"state,omitempty"`
 	Site  string `json:"site"`
 
-	// +kubebuilder:validation:Enum=dnat;snat;accept_snat;masquarade
+	// +kubebuilder:validation:Enum=dnat;snat;accept_snat;masquerade
 	Action string `json:"action"`
 
 	// +kubebuilder:validation:Enum=all;tcp;udp;icmp

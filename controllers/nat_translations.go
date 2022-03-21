@@ -47,11 +47,6 @@ func (r *NatReconciler) NatToNatMeta(nat *k8sv1alpha1.Nat) (*k8sv1alpha1.NatMeta
 		return nil, fmt.Errorf("Invalid site '%s'", nat.Spec.Site)
 	}
 
-	action := strings.ToUpper(nat.Spec.Action)
-	if nat.Spec.Action == "accept_snat" {
-		action = "ACCEPT"
-	}
-
 	state := nat.Spec.State
 	if nat.Spec.State == "" {
 		state = "enabled"
@@ -70,7 +65,7 @@ func (r *NatReconciler) NatToNatMeta(nat *k8sv1alpha1.Nat) (*k8sv1alpha1.NatMeta
 			Comment:    nat.Spec.Comment,
 			State:      state,
 			SiteID:     siteID,
-			Action:     action,
+			Action:     strings.ToUpper(nat.Spec.Action),
 			Protocol:   nat.Spec.Protocol,
 			SrcAddress: nat.Spec.SrcAddress,
 			SrcPort:    nat.Spec.SrcPort,
@@ -185,7 +180,11 @@ func compareNatMetaAPIENat(natMeta *k8sv1alpha1.NatMeta, apiNat *nat.NAT, u uniR
 		u.DebugLogger.Info("Sote changed", "netrisValue", apiNat.Site.ID, "k8sValue", natMeta.Spec.SiteID)
 		return false
 	}
-	if apiNat.Action.Label != natMeta.Spec.Action {
+	apiAction := apiNat.Action.Label
+	if apiAction == "ACCEPT" {
+		apiAction = "ACCEPT_SNAT"
+	}
+	if apiAction != natMeta.Spec.Action {
 		u.DebugLogger.Info("Action changed", "netrisValue", apiNat.Action.Label, "k8sValue", natMeta.Spec.Action)
 		return false
 	}
@@ -202,8 +201,11 @@ func compareNatMetaAPIENat(natMeta *k8sv1alpha1.NatMeta, apiNat *nat.NAT, u uniR
 		return false
 	}
 	if apiNat.DestinationAddress != natMeta.Spec.DstAddress {
-		u.DebugLogger.Info("DestinationAddress changed", "netrisValue", apiNat.DestinationAddress, "k8sValue", natMeta.Spec.DstAddress)
-		return false
+		natMetaDst := strings.Split(natMeta.Spec.DstAddress, "/")[0]
+		if apiNat.DestinationAddress != natMetaDst {
+			u.DebugLogger.Info("DestinationAddress changed", "netrisValue", apiNat.DestinationAddress, "k8sValue", natMeta.Spec.DstAddress)
+			return false
+		}
 	}
 	if (apiNat.Protocol.Value == "tcp" || apiNat.Protocol.Value == "udp") && apiNat.DestinationPort != natMeta.Spec.DstPort {
 		u.DebugLogger.Info("DestinationPort changed", "netrisValue", apiNat.DestinationPort, "k8sValue", natMeta.Spec.DstPort)
