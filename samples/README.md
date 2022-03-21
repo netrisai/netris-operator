@@ -284,15 +284,15 @@ metadata:
 spec:
   ownerTenant: Admin                                 # [1]
   site: santa-clara                                  # [2]           
-  state: active                                      # [3]  optional
-  protocol: tcp                                      # [4]  optional
+  state: active                                      # [3] optional
+  protocol: tcp                                      # [4] optional
   frontend:
     port: 31434                                      # [5]
-    ip: 203.0.113.7                                  # [6]  optional
+    ip: 203.0.113.7                                  # [6] optional
   backend:                                           # [7]
     - 192.0.2.100:443
     - 192.0.2.101:443
-  check:                                             # [8]  optional. Ignoring when protocol == udp
+  check:                                             # [8] optional. Ignoring when protocol == udp
     type: http                                       # [9] optional
     timeout: 3000                                    # [10] optional
     requestPath: /                                   # [11] optional. Ignoring when check.type == tcp
@@ -311,6 +311,45 @@ Ref | Attribute                              | Default                | Descript
 [9]| check.type                              | tcp                    | Probe type. Possible values: `tcp`, `http` or `none`
 [10]| check.timeout                          | 2000                   | Probe timeout
 [11]| check.requestPath                      | /                      | Http probe path. Ignoring when check.type == tcp
+
+
+### Nat Attributes
+```
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Nat
+metadata:
+  name: my-dnat
+spec:
+  comment: MY DNAT                                 # [1]  optional
+  # state: enabled                                 # [2]  optional
+  site: santa-clara                                # [3]
+  action: dnat                                     # [4]
+  protocol: tcp                                    # [5]
+  srcAddress: 0.0.0.0/0                            # [6]
+  srcPort: 1-65535                                 # [7]
+  dstAddress: 203.0.113.193/32                     # [8]
+  dstPort: "8080"                                  # [9]
+  dnatToIp: 172.28.51.150/32                       # [10]
+  dnatToPort: 80                                   # [11]
+  # snatToIp: 203.0.113.192                        # [12]
+  # snatToPool: 203.0.113.192/26                   # [13]
+```
+
+Ref  | Attribute                              | Default       | Description
+-----| -------------------------------------- | ------------- | ----------------
+[1]  | comment                                | ""            | Users of this tenant will be permitted to edit this unit.
+[2]  | state                                  | enabled       | Optional. Controller description.
+[3]  | site                                   | ""            | The site where this ACL belongs.
+[4]  | action                                 | ""            | Possible values: `dnat`, `snat`, `accept_snat`, `masquerade`.
+[5]  | protocol                               | ""            | Possible values: `all`, `tcp`, `udp`, `icmp`.
+[6]  | srcAddress                             | ""            | Match traffic sourced from this subnet.
+[7]  | srcPort                                | ""            | Match traffic sourced from this port. Ignoring when protocol == `all` or `icmp`
+[8]  | dstAddress                             | ""            | Match traffic destined to this subnet.
+[9]  | dstPort                                | ""            | Match traffic destined to this port. Ignoring when protocol == `all` or `icmp`
+[10] | dnatToIp                               | ""            | The internal IP address to which external hosts will gain access as a result of a DNAT translation. Only when action == `dnat`
+[11] | dnatToPort                             | nil           | The internal port to which external port will gain access as a result of a DNAT translation. Only when action == `dnat`
+[12] | snatToIp                               | ""            | Replace the original address with the specified one. Only when action == `snat`
+[13] | snatToPool                             | ""            | Replace the original address with the pool of ip addresses. Only when action == `snat`
 
 
 # Annotations
