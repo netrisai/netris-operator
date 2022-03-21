@@ -11,7 +11,7 @@ spec:
   srcAddress: 172.28.51.0/24
   dstAddress: 0.0.0.0/0
   snatToIp: 203.0.113.192
-  #snatToPool: 203.0.113.192/26
+  # snatToPool: 203.0.113.192/26
 ---
 apiVersion: k8s.netris.ai/v1alpha1
 kind: Nat
