@@ -337,10 +337,10 @@ spec:
 
 Ref  | Attribute                              | Default       | Description
 -----| -------------------------------------- | ------------- | ----------------
-[1]  | comment                                | ""            | Users of this tenant will be permitted to edit this unit.
-[2]  | state                                  | enabled       | Optional. Controller description.
-[3]  | site                                   | ""            | The site where this ACL belongs.
-[4]  | action                                 | ""            | Possible values: `dnat`, `snat`, `accept_snat`, `masquerade`.
+[1]  | comment                                | ""            | Custom comment for NAT rule.
+[2]  | state                                  | enabled       | Possible values: `enabled` or `disabled`.
+[3]  | site                                   | ""            | The site where this rule belongs.
+[4]  | action                                 | ""            | Rule action. Possible values: `dnat`, `snat`, `accept_snat`, `masquerade`.
 [5]  | protocol                               | ""            | Possible values: `all`, `tcp`, `udp`, `icmp`.
 [6]  | srcAddress                             | ""            | Match traffic sourced from this subnet.
 [7]  | srcPort                                | ""            | Match traffic sourced from this port. Ignoring when protocol == `all` or `icmp`
