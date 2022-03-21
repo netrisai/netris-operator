@@ -43,6 +43,7 @@ type Storage struct {
 	*SubnetsStorage
 	*HWsStorage
 	*LinksStorage
+	*NATStorage
 }
 
 // NewStorage .
@@ -58,6 +59,7 @@ func NewStorage(cred *api.Clientset) *Storage {
 		SubnetsStorage: NewSubnetsStorage(),
 		HWsStorage:     NewHWsStorage(),
 		LinksStorage:   NewLinksStorage(),
+		NATStorage:     NewNATStorage(),
 	}
 }
 
@@ -99,6 +101,10 @@ func (s *Storage) Download() error {
 	}
 	if err := s.LinksStorage.Download(); err != nil {
 		fmt.Println("LinksStorage", err)
+		return err
+	}
+	if err := s.NATStorage.Download(); err != nil {
+		fmt.Println("NATStorage", err)
 		return err
 	}
 	return nil

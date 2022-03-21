@@ -305,6 +305,27 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "LinkMeta")
 		os.Exit(1)
 	}
+	if err = (&controllers.NatReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("Nat"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Nat")
+		os.Exit(1)
+	}
+	if err = (&controllers.NatMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("NatMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "NatMeta")
+		os.Exit(1)
+	}
+
 	// +kubebuilder:scaffold:builder
 
 	watcherLogLevel := "info"

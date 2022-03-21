@@ -11,3 +11,4 @@ resources:
   - l4lb.yaml
   - bgp.yaml
   - link.yaml
+  - nat.yaml

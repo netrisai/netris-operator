@@ -8,11 +8,11 @@ spec:
   state: active
   protocol: tcp
   frontend:
-    port: 31434
-    # ip: 203.0.113.150
+    port: 8443
+    ip: 203.0.113.150
   backend:
-    - 203.0.113.50:443
-    - 203.0.113.51:443
+    - 172.28.51.100:443
+    - 172.28.51.101:443
   check:
     type: http
     timeout: 3000

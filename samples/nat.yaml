@@ -1,0 +1,44 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Nat
+metadata:
+  name: my-snat
+spec:
+  comment: MY SNAT
+  # state: enabled
+  site: santa-clara
+  action: snat
+  protocol: all
+  srcAddress: 172.28.51.0/24
+  dstAddress: 0.0.0.0/0
+  snatToIp: 203.0.113.192
+  # snatToPool: 203.0.113.192/26
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Nat
+metadata:
+  name: my-dnat
+spec:
+  comment: MY DNAT
+  # state: enabled
+  site: santa-clara
+  action: dnat
+  protocol: tcp
+  srcAddress: 0.0.0.0/0
+  srcPort: 1-65535
+  dstAddress: 203.0.113.193/32
+  dstPort: "8080"
+  dnatToIp: 172.28.51.150/32
+  dnatToPort: 80
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Nat
+metadata:
+  name: my-snat-accept
+spec:
+  comment: MY SNAT ACCEPT
+  # state: enabled
+  site: santa-clara
+  action: accept_snat
+  protocol: all
+  srcAddress: 172.28.51.0/24
+  dstAddress: 10.10.0.0/16
