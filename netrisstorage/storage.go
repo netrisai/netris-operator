@@ -44,22 +44,24 @@ type Storage struct {
 	*HWsStorage
 	*LinksStorage
 	*NATStorage
+	*InventoryProfileStorage
 }
 
 // NewStorage .
 func NewStorage(cred *api.Clientset) *Storage {
 	Cred = cred
 	return &Storage{
-		PortsStorage:   NewPortStorage(),
-		SitesStorage:   NewSitesStorage(),
-		TenantsStorage: NewTenantsStorage(),
-		VNetStorage:    NewVNetStorage(),
-		BGPStorage:     NewBGPStorage(),
-		L4LBStorage:    NewL4LBStorage(),
-		SubnetsStorage: NewSubnetsStorage(),
-		HWsStorage:     NewHWsStorage(),
-		LinksStorage:   NewLinksStorage(),
-		NATStorage:     NewNATStorage(),
+		PortsStorage:            NewPortStorage(),
+		SitesStorage:            NewSitesStorage(),
+		TenantsStorage:          NewTenantsStorage(),
+		VNetStorage:             NewVNetStorage(),
+		BGPStorage:              NewBGPStorage(),
+		L4LBStorage:             NewL4LBStorage(),
+		SubnetsStorage:          NewSubnetsStorage(),
+		HWsStorage:              NewHWsStorage(),
+		LinksStorage:            NewLinksStorage(),
+		NATStorage:              NewNATStorage(),
+		InventoryProfileStorage: NewInventoryProfileStorage(),
 	}
 }
 
@@ -105,6 +107,10 @@ func (s *Storage) Download() error {
 	}
 	if err := s.NATStorage.Download(); err != nil {
 		fmt.Println("NATStorage", err)
+		return err
+	}
+	if err := s.InventoryProfileStorage.Download(); err != nil {
+		fmt.Println("InventoryProfileStorage", err)
 		return err
 	}
 	return nil

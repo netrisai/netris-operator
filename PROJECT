@@ -205,4 +205,22 @@ resources:
   kind: NatMeta
   path: github.com/netrisai/netris-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: InventoryProfile
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: netris.ai
+  group: k8s
+  kind: InventoryProfileMeta
+  path: github.com/netrisai/netris-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

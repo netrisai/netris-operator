@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -217,6 +218,55 @@ func (u *uniReconciler) patchNatStatus(nat *k8sv1alpha1.Nat, status, message str
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	err := u.Status().Patch(ctx, nat.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchInventoryProfileStatus(inventoryProfile *k8sv1alpha1.InventoryProfile, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	ntpServers := []string{}
+	for _, s := range inventoryProfile.Spec.NTPServers {
+		ntpServers = append(ntpServers, string(s))
+	}
+
+	dnsServers := []string{}
+	for _, s := range inventoryProfile.Spec.DNSServers {
+		dnsServers = append(dnsServers, string(s))
+	}
+
+	customRules := []string{}
+	for _, rule := range inventoryProfile.Spec.CustomRules {
+		srcPort := "*"
+		dstPort := "*"
+		if rule.SrcPort != "" {
+			srcPort = rule.SrcPort
+		}
+		if rule.DstPort != "" {
+			dstPort = rule.DstPort
+		}
+		customRule := ""
+		if rule.Protocol == "any" {
+			customRule = fmt.Sprintf("%s:%s", rule.SrcSubnet, rule.Protocol)
+		} else {
+			customRule = fmt.Sprintf("%s:%s:%s:%s", rule.SrcSubnet, srcPort, dstPort, rule.Protocol)
+		}
+		customRules = append(customRules, customRule)
+	}
+
+	inventoryProfile.Status.Status = status
+	inventoryProfile.Status.Message = message
+	inventoryProfile.Status.IPv4List = "[" + strings.Join(inventoryProfile.Spec.AllowSSHFromIPv4, ",") + "]"
+	inventoryProfile.Status.IPv6List = "[" + strings.Join(inventoryProfile.Spec.AllowSSHFromIPv6, ",") + "]"
+	inventoryProfile.Status.NTPServers = "[" + strings.Join(ntpServers, ",") + "]"
+	inventoryProfile.Status.DNSServers = "[" + strings.Join(dnsServers, ",") + "]"
+	inventoryProfile.Status.CustomRules = "[" + strings.Join(customRules, ",") + "]"
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, inventoryProfile.DeepCopyObject(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}

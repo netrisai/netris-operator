@@ -1,0 +1,24 @@
+# permissions for end users to edit inventoryprofiles.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: inventoryprofile-editor-role
+rules:
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - inventoryprofiles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.netris.ai
+  resources:
+  - inventoryprofiles/status
+  verbs:
+  - get

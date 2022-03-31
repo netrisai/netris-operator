@@ -1,0 +1,25 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: InventoryProfile
+metadata:
+  name: my-profile
+spec:
+  description: My First Inventory Profile # optional
+  timezone: America/Los_Angeles # optional
+  allowSshFromIpv4:
+    - 10.171.56.0/24
+    - 203.0.113.0/24 # optional
+  allowSshFromIpv6:
+    - 2001:db8:acad::/64
+  ntpServers: # optional
+    - 0.pool.ntp.org
+    - 132.163.96.5
+  dnsServers: # optional
+    - 1.1.1.1
+    - 8.8.8.8
+  customRules: # optional
+    - srcSubnet: 10.0.0.0/8
+      # srcPort: ""				          # optional, default - emtpy
+      dstPort: "8443" # optional, default - emtpy
+      protocol: tcp # Valid value is `udp`, `tcp` or `any`
+    - srcSubnet: 100.64.0.0/10
+      protocol: any
