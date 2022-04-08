@@ -27,9 +27,9 @@ import (
 type InventoryProfileSpec struct {
 	Description string `json:"description,omitempty"`
 
-	Timezone string `json:"timezone"`
+	Timezone string `json:"timezone,omitempty"`
 
-	AllowSSHFromIPv4 []string                     `json:"allowSshFromIpv4,omitempty"`
+	AllowSSHFromIPv4 []string                     `json:"allowSshFromIpv4"`
 	AllowSSHFromIPv6 []string                     `json:"allowSshFromIpv6,omitempty"`
 	NTPServers       []NTPServer                  `json:"ntpServers,omitempty"`
 	DNSServers       []DNSServer                  `json:"dnsServers,omitempty"`
