@@ -325,6 +325,26 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "NatMeta")
 		os.Exit(1)
 	}
+	if err = (&controllers.InventoryProfileReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("InventoryProfile"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "InventoryProfile")
+		os.Exit(1)
+	}
+	if err = (&controllers.InventoryProfileMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("InventoryProfileMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "InventoryProfileMeta")
+		os.Exit(1)
+	}
 
 	// +kubebuilder:scaffold:builder
 

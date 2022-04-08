@@ -235,6 +235,58 @@ rules:
   - apiGroups:
       - k8s.netris.ai
     resources:
+      - inventoryprofilemeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - inventoryprofilemeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - inventoryprofilemeta/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - inventoryprofiles
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - inventoryprofiles/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - inventoryprofiles/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
       - l4lbmeta
     verbs:
       - create

@@ -162,6 +162,48 @@ Ref | Attribute                              | Default       | Description
 [1] | ports                                  | []            | List of two ports
 
 
+### InventoryProfile Attributes
+```
+apiVersion: k8s.netris.ai/v1alpha1
+kind: InventoryProfile
+metadata:
+  name: my-profile
+spec:
+  description: My First Inventory Profile                # [1] optional
+  timezone: America/Los_Angeles                          # [2] optional
+  allowSshFromIpv4:                                      # [3]
+    - 172.28.51.1/24
+    - 203.0.113.0/24
+  allowSshFromIpv6:                                      # [4] optional
+    - 2001:db8:acad::/64
+  ntpServers:                                            # [5] optional
+    - 0.pool.ntp.org
+    - 132.163.96.5
+  dnsServers:                                            # [6] optional
+    - 1.1.1.1
+    - 8.8.8.8
+  customRules:                                           # [7] optional
+    - srcSubnet: 10.0.0.0/8                              # [8] optional
+      # srcPort: ""                                      # [9] optional
+      dstPort: "8443"                                    # [10] optional
+      protocol: tcp                                      # [11] optional
+```
+
+Ref  | Attribute                              | Default       | Description
+-----| -------------------------------------- | ------------- | ----------------
+[1]  | description                            | ""            | Inventory profile description
+[2]  | timezone                               | ""            | Devices using this inventory profile will adjust their system time to the selected timezone. Valid value is a name from the TZ [database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+[3]  | allowSshFromIpv4                       | []            | List of IPv4 subnets allowed to ssh
+[4]  | allowSshFromIpv6                       | []            | List of IPv6 subnets allowed to ssh
+[5]  | ntpServers                             | []            | List of domain names or IP addresses of NTP servers
+[6]  | dnsServers                             | []            | List of IP addresses of DNS servers
+[7]  | customRules                            | []            | List of custom rules. User defined rules to allow certain traffic
+[8]  | customRules[n].srcSubnet               | ""            | Source Subnet
+[9]  | customRules[n].srcPort                 | ""            | Source port. 1-65535, or empty for any
+[10] | customRules[n].dstPort                 | ""            | Destination port. 1-65535, or empty for any
+[11] | customRules[n].protocol                | ""            | Protocol. Valid value is `udp`, `tcp` or `any`
+
+
 ### VNet Attributes
 
 ```

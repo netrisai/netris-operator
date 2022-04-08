@@ -8,7 +8,7 @@ spec:
   nos: cumulus_linux
   site: santa-clara
   # asn: 4200000021
-  # profile: my-profile
+  profile: my-profile
   # mainIp: 198.51.100.3
   # mgmtIp: 192.0.2.3
   portsCount: 16
@@ -23,7 +23,7 @@ spec:
   nos: ubuntu_switch_dev
   site: santa-clara
   # asn: 4200000021
-  # profile: my-profile
+  profile: my-profile
   # mainIp: 198.51.100.4
   # mgmtIp: 192.0.2.4
   portsCount: 16

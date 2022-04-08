@@ -6,7 +6,7 @@ spec:
   tenant: Admin
   description: My Softgate01
   site: santa-clara
-  # profile: my-profile
+  profile: my-profile
   # mainIp: 198.51.100.1
   # mgmtIp: 192.0.2.1
 ---
@@ -18,6 +18,6 @@ spec:
   tenant: Admin
   description: My Softgate02
   site: santa-clara
-  # profile: my-profile
+  profile: my-profile
   # mainIp: 198.51.100.2
   # mgmtIp: 192.0.2.2
