@@ -257,7 +257,7 @@ func (w *Watcher) process() error {
 		}
 	}
 
-	bgpActive := true
+	bgpActive := len(w.data.bgpList) > 0
 	for _, bgp := range w.data.bgpList {
 		if !((bgp.Status.BGPStatus == "Active" || bgp.Status.BGPStatus == "Established") && bgp.Status.BGPPrefixes > 0) {
 			bgpActive = false

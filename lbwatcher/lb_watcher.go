@@ -59,15 +59,7 @@ func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Op
 	return watcher, nil
 }
 
-func (w *Watcher) start() {
-	clientset, err := getClientset()
-	if err != nil {
-		logger.Error(err, "")
-	}
-	cl := w.MGR.GetClient()
-	recorder, wtch, broadcaster := eventRecorder(clientset)
-	defer broadcaster.Shutdown()
-	defer wtch.Stop()
+func (w *Watcher) start(clientset *kubernetes.Clientset, cl client.Client, recorder record.EventRecorder) {
 	w.loadBalancerProcess(clientset, cl, recorder)
 }
 
@@ -87,11 +79,18 @@ func (w *Watcher) Start() {
 		contextTimeout = requeueInterval
 	}
 
+	clientset, err := getClientset()
+	if err != nil {
+		logger.Error(err, "")
+	}
+	cl := w.MGR.GetClient()
+	recorder, _, _ := eventRecorder(clientset)
+
 	ticker := time.NewTicker(requeueInterval)
-	w.start()
+	w.start(clientset, cl, recorder)
 	for {
 		<-ticker.C
-		w.start()
+		w.start(clientset, cl, recorder)
 	}
 }
 
