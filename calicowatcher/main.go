@@ -431,7 +431,7 @@ func (w *Watcher) generateBGPs() error {
 		if err != nil {
 			return err
 		}
-		PrefixListInboundList := []string{fmt.Sprintf("permit %s le %d", w.data.clusterCIDR, w.data.blockSize)}
+		PrefixListInboundList := []string{fmt.Sprintf("permit %s/%d", node.IPIP, w.data.blockSize)}
 		for _, cidr := range w.data.serviceCIDRs {
 			PrefixListInboundList = append(PrefixListInboundList, fmt.Sprintf("permit %s le %d", cidr, 32))
 		}
