@@ -371,7 +371,7 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, u uni
 		return false
 	}
 	prefixLimit, _ := strconv.Atoi(bgpMeta.Spec.PrefixLimit)
-	if apiBGP.PrefixLimit != prefixLimit {
+	if apiBGP.PrefixLimit != prefixLimit && !(apiBGP.PrefixLimit == 1000 && prefixLimit == 0 && apiBGP.TerminateOnSwitch == "yes") {
 		u.DebugLogger.Info("PrefixLimit changed", "netrisValue", apiBGP.PrefixLimit, "k8sValue", prefixLimit)
 		return false
 	}
