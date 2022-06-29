@@ -59,7 +59,7 @@ kind: Subnet
 metadata:
   name: my-subnet-vnet
 spec:
-  prefix: 172.28.51.0/24
+  prefix: 100.71.56.0/24
   tenant: Admin
   purpose: common
   sites:
