@@ -172,7 +172,7 @@ spec:
   description: My First Inventory Profile                # [1] optional
   timezone: America/Los_Angeles                          # [2] optional
   allowSshFromIpv4:                                      # [3]
-    - 172.28.51.1/24
+    - 100.71.56.1/24
     - 203.0.113.0/24
   allowSshFromIpv6:                                      # [4] optional
     - 2001:db8:acad::/64
@@ -371,7 +371,7 @@ spec:
   srcPort: 1-65535                                 # [7]
   dstAddress: 203.0.113.193/32                     # [8]
   dstPort: "8080"                                  # [9]
-  dnatToIp: 172.28.51.150/32                       # [10]
+  dnatToIp: 100.71.56.150/32                       # [10]
   dnatToPort: 80                                   # [11]
   # snatToIp: 203.0.113.192                        # [12]
   # snatToPool: 203.0.113.192/26                   # [13]
