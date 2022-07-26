@@ -33,8 +33,8 @@ import (
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
 	"github.com/netrisai/netriswebapi/http"
-	"github.com/netrisai/netriswebapi/v1/types/l4lb"
 	api "github.com/netrisai/netriswebapi/v2"
+	"github.com/netrisai/netriswebapi/v2/types/l4lb"
 )
 
 // L4LBMetaReconciler reconciles a L4LBMeta object
@@ -151,7 +151,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					logger.Error(fmt.Errorf("{VnetMetaToNetrisUpdate} %s", err), "")
 					return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
 				}
-				if _, err, errMsg := r.updateL4LB(l4lbUpdate); err != nil {
+				if _, err, errMsg := r.updateL4LB(l4lbMeta.Spec.ID, l4lbUpdate); err != nil {
 					logger.Error(fmt.Errorf("{updateL4LB} %s", err), "")
 					return u.patchL4LBStatus(l4lbCR, "Failure", errMsg.Error())
 				}
@@ -225,8 +225,8 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	return ctrl.Result{}, nil, nil
 }
 
-func (r *L4LBMetaReconciler) updateL4LB(l4lb *l4lb.LoadBalancerUpdate) (ctrl.Result, error, error) {
-	reply, err := r.Cred.L4LB().Update(l4lb)
+func (r *L4LBMetaReconciler) updateL4LB(id int, l4lb *l4lb.LoadBalancerUpdate) (ctrl.Result, error, error) {
+	reply, err := r.Cred.L4LB().Update(id, l4lb)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateL4LB} %s", err), err
 	}
