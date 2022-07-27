@@ -23,7 +23,7 @@ import (
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	"github.com/netrisai/netriswebapi/v1/types/vnet"
+	"github.com/netrisai/netriswebapi/v2/types/vnet"
 )
 
 func init() {
@@ -35,15 +35,11 @@ func init() {
 
 func (r *VNetReconciler) getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([]k8sv1alpha1.VNetMetaMember, error) {
 	members := []k8sv1alpha1.VNetMetaMember{}
-	hwPorts := make(map[string]*vnet.VNetMember)
-	portIsUntagged := false
+	hwPorts := make(map[string]*vnet.VNetAddPort)
 	for _, port := range portNames {
-		vlanID := 1
-		if port.VlanID > 0 {
+		vlanID := "1"
+		if port.VlanID != "" {
 			vlanID = port.VlanID
-		}
-		if vlanID == 1 {
-			portIsUntagged = true
 		}
 
 		state := "active"
@@ -53,21 +49,18 @@ func (r *VNetReconciler) getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([
 			}
 		}
 
-		hwPorts[port.Name] = &vnet.VNetMember{
-			VLANID:         vlanID,
-			PortIsUntagged: portIsUntagged,
-			MemberState:    state,
+		hwPorts[port.Name] = &vnet.VNetAddPort{
+			Vlan:  vlanID,
+			Lacp:  "off",
+			State: state,
 		}
 
 	}
 	for portName := range hwPorts {
 		if port, yes := r.NStorage.PortsStorage.FindByName(portName); yes {
-			hwPorts[portName].PortID = port.ID
-			hwPorts[portName].PortName = portName
-			hwPorts[portName].TenantID = port.Tenant.ID
-			hwPorts[portName].LACP = "off"
-			hwPorts[portName].ParentPort = port.ParentPort
-			// hwPorts[portName].Name = port.SlavePortName
+			hwPorts[portName].ID = port.ID
+			hwPorts[portName].Name = portName
+			hwPorts[portName].Lacp = "off"
 		} else {
 			return members, fmt.Errorf("port '%s' not found", portName)
 		}
@@ -75,15 +68,11 @@ func (r *VNetReconciler) getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([
 
 	for _, member := range hwPorts {
 		members = append(members, k8sv1alpha1.VNetMetaMember{
-			ChildPort:      member.ChildPort,
-			LACP:           member.LACP,
-			MemberState:    member.MemberState,
-			ParentPort:     member.ParentPort,
-			PortIsUntagged: member.PortIsUntagged,
-			PortID:         member.PortID,
-			PortName:       member.PortName,
-			TenantID:       member.TenantID,
-			VLANID:         member.VLANID,
+			Name:  member.Name,
+			Lacp:  member.Lacp,
+			State: member.State,
+			ID:    member.ID,
+			Vlan:  member.Vlan,
 		})
 	}
 	return members, nil

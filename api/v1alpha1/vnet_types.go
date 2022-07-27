@@ -81,6 +81,7 @@ type VNetSpec struct {
 
 	GuestTenants []string   `json:"guestTenants"`
 	Sites        []VNetSite `json:"sites"`
+	VlanID       string     `json:"vlanid"`
 }
 
 // VNetSite .
@@ -108,9 +109,7 @@ type VNetSwitchPort struct {
 	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$`
 	Name string `json:"name"`
 
-	// +kubebuilder:validation:Minimum=2
-	// +kubebuilder:validation:Maximum=4094
-	VlanID int    `json:"vlanId,omitempty"`
+	VlanID string `json:"vlanId,omitempty"`
 	State  string `json:"state,omitempty"`
 }
 

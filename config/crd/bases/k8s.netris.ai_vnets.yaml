@@ -91,9 +91,7 @@ spec:
                           state:
                             type: string
                           vlanId:
-                            maximum: 4094
-                            minimum: 2
-                            type: integer
+                            type: string
                         required:
                         - name
                         type: object
@@ -107,10 +105,13 @@ spec:
                 - active
                 - disabled
                 type: string
+              vlanid:
+                type: string
             required:
             - guestTenants
             - ownerTenant
             - sites
+            - vlanid
             type: object
           status:
             description: VNetStatus defines the observed state of VNet

@@ -41,6 +41,7 @@ type VNetMetaSpec struct {
 	VaMode           bool              `json:"vaMode"`
 	VaNativeVLAN     int               `json:"vaNativeVlan"`
 	VaVLANs          string            `json:"vaVlans"`
+	VlanID           string            `json:"vlanid"`
 }
 
 // VNetMetaSite .
@@ -51,15 +52,12 @@ type VNetMetaSite struct {
 
 // VNetMetaMember .
 type VNetMetaMember struct {
-	ChildPort      int    `json:"childPort"`
-	LACP           string `json:"lacp"`
-	MemberState    string `json:"member_state"`
-	ParentPort     int    `json:"parentPort"`
-	PortIsUntagged bool   `json:"portIsUntagged"`
-	PortID         int    `json:"port_id"`
-	PortName       string `json:"port_name"`
-	TenantID       int    `json:"tenant_id"`
-	VLANID         int    `json:"vlan_id"`
+	Name   string `json:"name"`
+	Access bool   `json:"access"`
+	ID     int    `json:"id"`
+	Lacp   string `json:"lacp"`
+	State  string `json:"state"`
+	Vlan   string `json:"vlan"`
 }
 
 // VNetMetaGateway .
