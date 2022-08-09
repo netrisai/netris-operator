@@ -27,7 +27,7 @@ kind: Allocation
 metadata:
   name: my-allocation-vnet
 spec:
-  prefix: 172.28.51.0/24
+  prefix: 100.71.56.0/24
   tenant: Admin
 ---
 apiVersion: k8s.netris.ai/v1alpha1

@@ -265,6 +265,10 @@ func (w *Watcher) process() error {
 		}
 	}
 
+	if w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled == nil {
+		w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled = &bgpActive
+	}
+
 	if bgpActive {
 		if *w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled {
 			debugLogger.Info("All BGPs are established", "deleteMode", w.data.deleteMode)
@@ -328,6 +332,10 @@ func (w *Watcher) deleteNodesASNs() error {
 }
 
 func (w *Watcher) deleteProcess() error {
+	f := false
+	if w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled == nil {
+		w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled = &f
+	}
 	if !*w.data.bgpConfs[0].Spec.NodeToNodeMeshEnabled {
 		if err := w.updateBGPConfMesh(true); err != nil {
 			return err
@@ -416,7 +424,7 @@ func (w *Watcher) mainProcessing() error {
 func (w *Watcher) updateBGPConfMesh(enabled bool) error {
 	if len(w.data.bgpConfs) > 0 {
 		bgpConf := w.data.bgpConfs[0]
-		bgpConf.Spec.NodeToNodeMeshEnabled = &enabled
+		*bgpConf.Spec.NodeToNodeMeshEnabled = enabled
 		return w.Calico.UpdateBGPConfiguration(bgpConf, w.restClient)
 	}
 	return fmt.Errorf("BGPConfiguration is missing in calico")

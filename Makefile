@@ -125,7 +125,7 @@ helm-push: helm
 	set -e ;\
 	HELM_CHART_GEN_TMP_DIR=$$(mktemp -d) ;\
 	git clone git@github.com:netrisai/charts.git --depth 1 $$HELM_CHART_GEN_TMP_DIR ;\
-	if [[ -z "$${HELM_CHART_REPO_COMMIT_MSG}" ]]; then HELM_CHART_REPO_COMMIT_MSG=Update-$$(date '+%F_%T' -u); fi ;\
+	if [[ -z "$${HELM_CHART_REPO_COMMIT_MSG}" ]]; then HELM_CHART_REPO_COMMIT_MSG=Update-$$(date -u +'%Y-%m-%d_%H:%M:%S'); fi ;\
 	rm -rf $$HELM_CHART_GEN_TMP_DIR/charts/netris-operator ;\
 	cp -r deploy/charts $$HELM_CHART_GEN_TMP_DIR ;\
 	cd $$HELM_CHART_GEN_TMP_DIR ;\
