@@ -84,35 +84,36 @@ func (p *SubnetsStorage) findByNameInChildren(ipam *ipam.IPAM, name string) (*ip
 }
 
 // FindByID .
-func (p *SubnetsStorage) FindByID(id int) (*ipam.IPAM, bool) {
+func (p *SubnetsStorage) FindByID(id int, typo string) (*ipam.IPAM, bool) {
 	p.Lock()
 	defer p.Unlock()
-	item, ok := p.findByID(id)
+	item, ok := p.findByID(id, typo)
 	if !ok {
 		_ = p.download()
-		return p.findByID(id)
+		return p.findByID(id, typo)
 	}
 	return item, ok
 }
 
-func (p *SubnetsStorage) findInChildren(ipam *ipam.IPAM, id int) (*ipam.IPAM, bool) {
+func (p *SubnetsStorage) findInChildren(ipam *ipam.IPAM, id int, typo string) (*ipam.IPAM, bool) {
 	for _, item := range ipam.Children {
-		if item.ID == id {
+		if item.ID == id && item.Type == typo {
 			return item, true
 		}
-		if s, ok := p.findInChildren(item, id); ok {
+
+		if s, ok := p.findInChildren(item, id, typo); ok {
 			return s, true
 		}
 	}
 	return nil, false
 }
 
-func (p *SubnetsStorage) findByID(id int) (*ipam.IPAM, bool) {
+func (p *SubnetsStorage) findByID(id int, typo string) (*ipam.IPAM, bool) {
 	for _, item := range p.Subnets {
-		if item.ID == id {
+		if item.ID == id && item.Type == typo {
 			return item, true
 		}
-		if s, ok := p.findInChildren(item, id); ok {
+		if s, ok := p.findInChildren(item, id, typo); ok {
 			return s, true
 		}
 	}

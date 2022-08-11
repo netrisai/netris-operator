@@ -129,7 +129,7 @@ func (r *AllocationMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 		}
 		logger.Info("Allocation Created")
 	} else {
-		if apiAllocation, ok := r.NStorage.SubnetsStorage.FindByID(allocationMeta.Spec.ID); ok {
+		if apiAllocation, ok := r.NStorage.SubnetsStorage.FindByID(allocationMeta.Spec.ID, "allocation"); ok {
 
 			debugLogger.Info("Comparing AllocationMeta with Netris Allocation")
 			if ok := compareAllocationMetaAPIEAllocation(allocationMeta, apiAllocation, u); ok {
