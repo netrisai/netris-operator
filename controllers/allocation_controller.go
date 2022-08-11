@@ -182,7 +182,7 @@ func (r *AllocationReconciler) deleteAllocation(allocation *k8sv1alpha1.Allocati
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		if !resp.IsSuccess && resp.Meta.StatusCode != 400 {
+		if !resp.IsSuccess && resp.Meta.StatusCode != 404 {
 			return ctrl.Result{}, fmt.Errorf("{deleteAllocation} %s", fmt.Errorf(resp.Message))
 		}
 	}
