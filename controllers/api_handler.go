@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
@@ -38,8 +39,8 @@ func (r *VNetReconciler) getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([
 	hwPorts := make(map[string]*vnet.VNetAddPort)
 	for _, port := range portNames {
 		vlanID := "1"
-		if port.VlanID != "" {
-			vlanID = port.VlanID
+		if port.VlanID > 1 {
+			vlanID = strconv.Itoa(port.VlanID)
 		}
 
 		state := "active"
