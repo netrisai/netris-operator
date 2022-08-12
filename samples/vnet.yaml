@@ -3,7 +3,6 @@ kind: VNet
 metadata:
   name: my-vnet
 spec:
-  vlanId: "400"
   ownerTenant: Admin
   guestTenants: []
   sites:
