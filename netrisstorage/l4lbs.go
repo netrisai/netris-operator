@@ -19,7 +19,7 @@ package netrisstorage
 import (
 	"sync"
 
-	"github.com/netrisai/netriswebapi/v1/types/l4lb"
+	"github.com/netrisai/netriswebapi/v2/types/l4lb"
 )
 
 // L4LBStorage .

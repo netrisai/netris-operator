@@ -182,7 +182,7 @@ func (r *SubnetReconciler) deleteSubnet(subnet *k8sv1alpha1.Subnet, subnetMeta *
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		if !resp.IsSuccess && resp.Meta.StatusCode != 400 {
+		if !resp.IsSuccess && resp.Meta.StatusCode != 404 {
 			return ctrl.Result{}, fmt.Errorf("{deleteSubnet} %s", fmt.Errorf(resp.Message))
 		}
 	}

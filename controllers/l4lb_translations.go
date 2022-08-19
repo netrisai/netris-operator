@@ -24,8 +24,8 @@ import (
 	"strings"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
-	"github.com/netrisai/netriswebapi/v1/types/l4lb"
 	"github.com/netrisai/netriswebapi/v2/types/ipam"
+	"github.com/netrisai/netriswebapi/v2/types/l4lb"
 	"github.com/r3labs/diff/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -324,7 +324,6 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*l4lb.LoadBalancerU
 	}
 
 	l4lbUpdate := &l4lb.LoadBalancerUpdate{
-		ID:          l4lbMeta.Spec.ID,
 		Name:        l4lbMeta.Spec.L4LBName,
 		TenantID:    l4lbMeta.Spec.Tenant,
 		SiteID:      l4lbMeta.Spec.SiteID,

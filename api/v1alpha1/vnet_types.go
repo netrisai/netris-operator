@@ -81,6 +81,7 @@ type VNetSpec struct {
 
 	GuestTenants []string   `json:"guestTenants"`
 	Sites        []VNetSite `json:"sites"`
+	VlanID       string     `json:"vlanId,omitempty"`
 }
 
 // VNetSite .

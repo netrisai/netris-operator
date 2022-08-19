@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"fmt"
-	"strconv"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netriswebapi/v2/types/vnet"
@@ -42,6 +41,15 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	prts, err := r.getPortsMeta(ports)
 	if err != nil {
 		return nil, err
+	}
+
+	portsList := []k8sv1alpha1.VNetMetaMember{}
+	for _, port := range prts {
+		p := port
+		if (port.Vlan == "" || port.Vlan == "1") && vnet.Spec.VlanID != "" {
+			p.Vlan = vnet.Spec.VlanID
+		}
+		portsList = append(portsList, p)
 	}
 
 	sites := getSites(siteNames, r.NStorage)
@@ -87,11 +95,12 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 			Owner:        vnet.Spec.Owner,
 			Tenants:      vnet.Spec.GuestTenants,
 			Gateways:     apiGateways,
-			Members:      prts,
+			Members:      portsList,
 			Provisioning: 1,
 			VaMode:       false,
 			VaNativeVLAN: 1,
 			VaVLANs:      "",
+			VlanID:       vnet.Spec.VlanID,
 		},
 	}
 
@@ -127,6 +136,7 @@ func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*
 		Gateways:     apiGateways,
 		Ports:        k8sMemberToAPIMember(vnetMeta.Spec.Members),
 		NativeVlan:   1,
+		Vlan:         vnetMeta.Spec.VlanID,
 	}
 
 	return vnetAdd, nil
@@ -160,6 +170,7 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 		Gateways:     apiGateways,
 		Ports:        k8sMemberToAPIMemberUpdate(vnetMeta.Spec.Members),
 		NativeVlan:   1,
+		Vlan:         vnetMeta.Spec.VlanID,
 	}
 
 	return vnetUpdate, nil
@@ -192,10 +203,8 @@ func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGatew
 
 func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember, apiVnetMembers []vnet.VNetDetailedPort) bool {
 	type member struct {
-		PortID   int    `diff:"port_id"`
-		TenantID int    `diff:"tenant_id"`
-		VLANID   int    `diff:"vlan_id"`
-		State    string `diff:"state"`
+		PortID int    `diff:"port_id"`
+		VLANID string `diff:"vlan_id"`
 	}
 
 	vnetMembers := []member{}
@@ -203,18 +212,15 @@ func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember,
 
 	for _, m := range vnetMetaMembers {
 		vnetMembers = append(vnetMembers, member{
-			PortID:   m.PortID,
-			TenantID: m.TenantID,
-			VLANID:   m.VLANID,
+			PortID: m.ID,
+			VLANID: m.Vlan,
 		})
 	}
 
 	for _, m := range apiVnetMembers {
-		vlan, _ := strconv.Atoi(m.Vlan)
 		apiMembers = append(apiMembers, member{
-			PortID:   m.ID,
-			TenantID: m.Tenant.ID,
-			VLANID:   vlan,
+			PortID: m.ID,
+			VLANID: m.Vlan,
 		})
 	}
 
@@ -253,7 +259,14 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *vnet.VNetDe
 	if ok := compareVNetMetaAPIVnetGateways(vnetMeta.Spec.Gateways, apiVnet.Gateways); !ok {
 		return false
 	}
-	if ok := compareVNetMetaAPIVnetMembers(vnetMeta.Spec.Members, apiVnet.Ports); !ok {
+	vlanAuto := false
+	for _, port := range vnetMeta.Spec.Members {
+		if port.Vlan == "auto" {
+			vlanAuto = true
+			break
+		}
+	}
+	if ok := compareVNetMetaAPIVnetMembers(vnetMeta.Spec.Members, apiVnet.Ports); !ok && !vlanAuto {
 		return false
 	}
 
@@ -282,11 +295,11 @@ func k8sMemberToAPIMember(portNames []k8sv1alpha1.VNetMetaMember) []vnet.VNetAdd
 	for _, port := range portNames {
 		members = append(members, vnet.VNetAddPort{
 			// Port:   port.ChildPort,
-			Lacp:  port.LACP,
-			State: port.MemberState,
-			ID:    port.PortID,
-			Name:  port.PortName,
-			Vlan:  strconv.Itoa(port.VLANID),
+			Lacp:  port.Lacp,
+			State: port.State,
+			ID:    port.ID,
+			Name:  port.Name,
+			Vlan:  port.Vlan,
 		})
 	}
 	return members
@@ -297,11 +310,11 @@ func k8sMemberToAPIMemberUpdate(portNames []k8sv1alpha1.VNetMetaMember) []vnet.V
 	for _, port := range portNames {
 		members = append(members, vnet.VNetUpdatePort{
 			// Port:   port.ChildPort,
-			Lacp:  port.LACP,
-			State: port.MemberState,
-			ID:    port.PortID,
-			Name:  port.PortName,
-			Vlan:  strconv.Itoa(port.VLANID),
+			Lacp:  port.Lacp,
+			State: port.State,
+			ID:    port.ID,
+			Name:  port.Name,
+			Vlan:  port.Vlan,
 		})
 	}
 	return members

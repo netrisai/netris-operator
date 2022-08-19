@@ -107,6 +107,8 @@ spec:
                 - active
                 - disabled
                 type: string
+              vlanId:
+                type: string
             required:
             - guestTenants
             - ownerTenant

@@ -65,34 +65,25 @@ spec:
                 items:
                   description: VNetMetaMember .
                   properties:
-                    childPort:
+                    access:
+                      type: boolean
+                    id:
                       type: integer
                     lacp:
                       type: string
-                    member_state:
+                    name:
                       type: string
-                    parentPort:
-                      type: integer
-                    port_id:
-                      type: integer
-                    port_name:
+                    state:
                       type: string
-                    portIsUntagged:
-                      type: boolean
-                    tenant_id:
-                      type: integer
-                    vlan_id:
-                      type: integer
+                    vlan:
+                      type: string
                   required:
-                  - childPort
+                  - access
+                  - id
                   - lacp
-                  - member_state
-                  - parentPort
-                  - portIsUntagged
-                  - port_id
-                  - port_name
-                  - tenant_id
-                  - vlan_id
+                  - name
+                  - state
+                  - vlan
                   type: object
                 type: array
               name:
@@ -125,6 +116,8 @@ spec:
                 type: integer
               vaVlans:
                 type: string
+              vlanid:
+                type: string
               vnetGeneration:
                 format: int64
                 type: integer
@@ -145,6 +138,7 @@ spec:
             - vaMode
             - vaNativeVlan
             - vaVlans
+            - vlanid
             - vnetGeneration
             - vnetName
             type: object

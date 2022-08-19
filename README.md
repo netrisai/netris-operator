@@ -32,7 +32,9 @@ Netris Operator managing resources samples are available in the `samples/` [fold
   | Operator version | Controller version |
   | -----------------| -------------------|
   | `v0.X`           | `v2.9.X`           |
-  | `v1.X`           | `v3.X`             |
+  | `v1.X`           | `v3.0.X`           |
+  | `v2.X`           | `v3.1.X`           |
+
 
 ## Features
 * Managing Netris Controller via CRD

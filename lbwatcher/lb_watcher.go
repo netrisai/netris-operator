@@ -135,6 +135,7 @@ func (w *Watcher) loadBalancerProcess(clientset *kubernetes.Clientset, cl client
 	serviceLBs, err := w.generateLoadBalancers(clientset, ipAuto, lbTimeout)
 	if err != nil {
 		logger.Error(err, "")
+		return
 	}
 
 	lbsToCreate, lbsToUpdate, lbsToDelete, ingressIPsMap := compareLoadBalancers(filteerdL4LBs, serviceLBs)
