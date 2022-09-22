@@ -31,9 +31,9 @@ Netris Operator managing resources samples are available in the `samples/` [fold
 ## Compatibility with Netris-Controller
   | Operator version | Controller version |
   | -----------------| -------------------|
-  | `v0.X`           | `v2.9.X`           |
-  | `v1.X`           | `v3.0.X`           |
-  | `v2.X`           | `v3.1.X`           |
+  | `v0.X`           | `v2.9`             |
+  | `v1.X`           | `v3.0`             |
+  | `v2.X`           | `v3.1+`            |
 
 
 ## Features
