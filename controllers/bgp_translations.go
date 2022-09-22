@@ -244,6 +244,7 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
 		UpdateSource:       bgpMeta.Spec.UpdateSource,
 		Vlan:               bgpMeta.Spec.Vlan,
 		Weight:             bgpMeta.Spec.Weight,
+		Tags:               []string{},
 	}
 
 	return bgpAdd, nil
@@ -294,6 +295,7 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPUpdate, error
 		UpdateSource:       bgpMeta.Spec.UpdateSource,
 		Vlan:               bgpMeta.Spec.Vlan,
 		Weight:             bgpMeta.Spec.Weight,
+		Tags:               []string{},
 	}
 
 	return bgpAdd, nil
