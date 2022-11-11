@@ -7,3 +7,4 @@ controller:
 # logdevmode: false                               # overwrite env: NOPERATOR_DEV_MODE
 # requeueinterval: 15                             # overwrite env: NOPERATOR_REQUEUE_INTERVAL
 # calicoasnrange: 4230000000-4239999999           # overwrite env: NOPERATOR_CALICO_ASN_RANGE
+# l4lbtenant:                                     # overwrite env: NOPERATOR_L4LB_TENANT

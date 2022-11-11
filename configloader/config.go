@@ -11,6 +11,7 @@ type config struct {
 	LogDevMode      bool       `yaml:"logdevmode" envconfig:"NOPERATOR_DEV_MODE"`
 	RequeueInterval int        `yaml:"requeueinterval" envconfig:"NOPERATOR_REQUEUE_INTERVAL"`
 	CalicoASNRange  string     `yaml:"calicoasnrange" envconfig:"NOPERATOR_CALICO_ASN_RANGE"`
+	L4lbTenant      string     `yaml:"l4lbtenant" envconfig:"NOPERATOR_L4LB_TENANT"`
 }
 
 type controller struct {

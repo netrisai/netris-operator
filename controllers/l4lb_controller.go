@@ -36,10 +36,11 @@ import (
 // L4LBReconciler reconciles a L4LB object
 type L4LBReconciler struct {
 	client.Client
-	Log      logr.Logger
-	Scheme   *runtime.Scheme
-	Cred     *api.Clientset
-	NStorage *netrisstorage.Storage
+	Log        logr.Logger
+	Scheme     *runtime.Scheme
+	Cred       *api.Clientset
+	NStorage   *netrisstorage.Storage
+	L4LBTenant string
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbs,verbs=get;list;watch;create;update;patch;delete

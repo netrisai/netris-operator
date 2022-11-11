@@ -58,11 +58,15 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	}
 
 	if l4lb.Spec.OwnerTenant == "" {
-		tenantid, err := r.findTenantByIP(ipForTenant)
-		if err != nil {
-			return nil, err
+		if r.L4LBTenant != "" {
+			l4lb.Spec.OwnerTenant = r.L4LBTenant
+		} else {
+			tenantid, err := r.findTenantByIP(ipForTenant)
+			if err != nil {
+				return nil, err
+			}
+			tenantID = tenantid
 		}
-		tenantID = tenantid
 	}
 
 	if tenantID == 0 {
