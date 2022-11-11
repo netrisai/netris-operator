@@ -117,4 +117,6 @@ Create netris-opeator controller envs
   value: {{ .Values.requeueInterval | default 15 | quote }}
 - name: NOPERATOR_CALICO_ASN_RANGE
   value: {{ .Values.calicoASNRange | default "4230000000-4239999999" }}
+- name: NOPERATOR_L4LB_TENANT
+  value: {{ .Values.l4lbTenant | default "" | quote }}
 {{- end -}}
