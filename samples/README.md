@@ -172,7 +172,7 @@ spec:
   description: My First Inventory Profile                # [1] optional
   timezone: America/Los_Angeles                          # [2] optional
   allowSshFromIpv4:                                      # [3]
-    - 100.71.56.1/24
+    - 100.71.56.0/24
     - 203.0.113.0/24
   allowSshFromIpv6:                                      # [4] optional
     - 2001:db8:acad::/64
