@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netris-operator/calicowatcher"
 	"github.com/netrisai/netriswebapi/v2/types/ipam"
 	"github.com/netrisai/netriswebapi/v2/types/l4lb"
 	"github.com/r3labs/diff/v2"
@@ -61,11 +62,12 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		if r.L4LBTenant != "" {
 			l4lb.Spec.OwnerTenant = r.L4LBTenant
 		} else {
-			tenantid, err := r.findTenantByIP(ipForTenant)
+			subnet, err := calicowatcher.FindIPAMByIP(ipForTenant, r.NStorage.SubnetsStorage.GetAll())
 			if err != nil {
 				return nil, err
 			}
-			tenantID = tenantid
+
+			tenantID = subnet.Tenant.ID
 		}
 	}
 
