@@ -23,31 +23,6 @@ import (
 	"github.com/netrisai/netriswebapi/v2/types/ipam"
 )
 
-func (w *Watcher) findSiteByIP(ip string) (int, string, error) {
-	siteID := 0
-	subnets := w.NStorage.SubnetsStorage.GetAll()
-
-	subnetChilds := []*ipam.IPAM{}
-	for _, subnet := range subnets {
-		subnetChilds = append(subnetChilds, subnet.Children...)
-	}
-
-	for _, subnet := range subnetChilds {
-		ipAddr := net.ParseIP(ip)
-		_, ipNet, err := net.ParseCIDR(subnet.Prefix)
-		if err != nil {
-			return siteID, "", err
-		}
-		if ipNet.Contains(ipAddr) {
-			if len(subnet.Sites) > 0 {
-				return subnet.Sites[0].ID, ipNet.String(), nil
-			}
-		}
-	}
-
-	return siteID, "", fmt.Errorf("There are no sites for specified IP address %s", ip)
-}
-
 func findIPAMByIP(ip string, subnets []*ipam.IPAM) (*ipam.IPAM, error) {
 	for _, subnet := range subnets {
 		ipAddr := net.ParseIP(ip)
