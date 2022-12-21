@@ -733,30 +733,30 @@ func (w *Watcher) nodesProcessing() error {
 		}
 
 		if siteName == "" {
-			subnet, err := findIPAMByIP(ip, w.NStorage.SubnetsStorage.GetAll())
+			sbnt, err := findIPAMByIP(ip, w.NStorage.SubnetsStorage.GetAll())
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
 
-			_, ipNet, err := net.ParseCIDR(subnet.Prefix)
+			_, ipNet, err := net.ParseCIDR(sbnt.Prefix)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
 
-			gateway := ipNet.String()
+			subnet = ipNet.String()
 			id := 0
 
-			if len(subnet.Sites) > 0 {
-				id = subnet.Sites[0].ID
+			if len(sbnt.Sites) > 0 {
+				id = sbnt.Sites[0].ID
 			}
 
 			var ok bool
 			if site, ok = w.NStorage.SitesStorage.FindByID(id); ok {
 				siteName = site.Name
 			}
-			if vn, ok := w.NStorage.VNetStorage.FindByGateway(gateway); ok {
+			if vn, ok := w.NStorage.VNetStorage.FindByGateway(subnet); ok {
 				vnet = vn
 			}
 		}
