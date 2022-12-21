@@ -438,7 +438,14 @@ func (w *Watcher) generateBGPs() error {
 		if err != nil {
 			return err
 		}
-		PrefixListInboundList := []string{fmt.Sprintf("permit %s/%d", node.IPIP, w.data.blockSize)}
+
+		// Get the network address using node IP
+		_, ipipNetAddr, err := net.ParseCIDR(fmt.Sprintf("%s/%d", node.IPIP, w.data.blockSize))
+		if err != nil {
+			return fmt.Errorf("node ip: %s", err)
+		}
+
+		PrefixListInboundList := []string{fmt.Sprintf("permit %s", ipipNetAddr.String())}
 		for _, cidr := range w.data.serviceCIDRs {
 			PrefixListInboundList = append(PrefixListInboundList, fmt.Sprintf("permit %s le %d", cidr, 32))
 		}
@@ -467,7 +474,7 @@ func (w *Watcher) generateBGPs() error {
 				PrefixListInbound: PrefixListInboundList,
 				PrefixListOutbound: []string{
 					"permit 0.0.0.0/0",
-					fmt.Sprintf("deny %s/%d", node.IPIP, w.data.blockSize),
+					fmt.Sprintf("deny %s", ipipNetAddr.String()),
 					fmt.Sprintf("permit %s le %d", w.data.clusterCIDR, w.data.blockSize),
 				},
 			},
