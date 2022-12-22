@@ -91,22 +91,23 @@ The following table lists the configurable parameters of the netris-operator cha
 | `affinity`                            | Node affinity for pod assignment                                                                          | `{}`                       |
 
 ### Netris-Operator parameters
-| Parameter                             | Description                                                                                               | Default                    |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `imagePullSecrets`                    | Reference to one or more secrets to be used when pulling images                                           | `[]`                       |
-| `image.repository`                    | Image repository                                                                                          | `netrisai/netris-operator` |
-| `image.tag`                           | Image tag. Overrides the image tag whose default is the chart appVersion                                  | `""`                       |
-| `image.pullPolicy`                    | Image pull policy                                                                                         | `Always`                   |
-| `controller.host`                     | Netris controller host url (`http://example.com`)                                                         | `""`                       |
-| `controller.login`                    | Netris controller login                                                                                   | `""`                       |
-| `controller.password`                 | Netris controller password                                                                                | `""`                       |
-| `controller.insecure`                 | Allow insecure server connections when using SSL                                                          | `false`                    |
-| `controllerCreds.host.secretName`     | Name of existing secret to use for Netris controller host. Ignored if `controller.host` is set            | `netris-creds`             |
-| `controllerCreds.host.key`            | Netris controller host key in existing secret. Ignored if `controller.host` is set                        | `host`                     |
-| `controllerCreds.login.secretName`    | Name of existing secret to use for Netris controller login. Ignored if `controller.login` is set          | `netris-creds`             |
-| `controllerCreds.login.key`           | Netris controller login key in existing secret. Ignored if `controller.login` is set                      | `login`                    |
-| `controllerCreds.password.secretName` | Name of existing secret to use for Netris controller password. Ignored if `controller.password` is set    | `netris-creds`             |
-| `controllerCreds.password.key`        | Netris controller password key in existing secret. Ignored if `controller.password` is set                | `password`                 |
-| `logLevel`                            | Log level of netris-operator. Allowed values: `info` or `debug`                                           | `info`                     |
-| `requeueInterval`                     | Requeue interval in seconds for the netris-operator                                                       | `15`                       |
-| `calicoASNRange`                      | Set Nodes ASN range. Used when Netris-Operator manages Calico CNI                                         | `4230000000-4239999999`    |
+| Parameter                             | Description                                                                                                   | Default                    |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `imagePullSecrets`                    | Reference to one or more secrets to be used when pulling images                                               | `[]`                       |
+| `image.repository`                    | Image repository                                                                                              | `netrisai/netris-operator` |
+| `image.tag`                           | Image tag. Overrides the image tag whose default is the chart appVersion                                      | `""`                       |
+| `image.pullPolicy`                    | Image pull policy                                                                                             | `Always`                   |
+| `controller.host`                     | Netris controller host url (`http://example.com`)                                                             | `""`                       |
+| `controller.login`                    | Netris controller login                                                                                       | `""`                       |
+| `controller.password`                 | Netris controller password                                                                                    | `""`                       |
+| `controller.insecure`                 | Allow insecure server connections when using SSL                                                              | `false`                    |
+| `controllerCreds.host.secretName`     | Name of existing secret to use for Netris controller host. Ignored if `controller.host` is set                | `netris-creds`             |
+| `controllerCreds.host.key`            | Netris controller host key in existing secret. Ignored if `controller.host` is set                            | `host`                     |
+| `controllerCreds.login.secretName`    | Name of existing secret to use for Netris controller login. Ignored if `controller.login` is set              | `netris-creds`             |
+| `controllerCreds.login.key`           | Netris controller login key in existing secret. Ignored if `controller.login` is set                          | `login`                    |
+| `controllerCreds.password.secretName` | Name of existing secret to use for Netris controller password. Ignored if `controller.password` is set        | `netris-creds`             |
+| `controllerCreds.password.key`        | Netris controller password key in existing secret. Ignored if `controller.password` is set                    | `password`                 |
+| `logLevel`                            | Log level of netris-operator. Allowed values: `info` or `debug`                                               | `info`                     |
+| `requeueInterval`                     | Requeue interval in seconds for the netris-operator                                                           | `15`                       |
+| `calicoASNRange`                      | Set Nodes ASN range. Used when Netris-Operator manages Calico CNI                                             | `4230000000-4239999999`    |
+| `l4lbTenant`                          | Set the default Tenant for L4LB resources. If set, a tenant autodetection for L4LB resources will be disabled | `""`                       |

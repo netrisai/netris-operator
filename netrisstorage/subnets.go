@@ -34,17 +34,15 @@ func NewSubnetsStorage() *SubnetsStorage {
 }
 
 // GetAll .
-func (p *SubnetsStorage) GetAll() []ipam.IPAM {
+func (p *SubnetsStorage) GetAll() []*ipam.IPAM {
 	p.Lock()
 	defer p.Unlock()
 	return p.getAll()
 }
 
-func (p *SubnetsStorage) getAll() []ipam.IPAM {
-	subnets := []ipam.IPAM{}
-	for _, subnet := range p.Subnets {
-		subnets = append(subnets, *subnet)
-	}
+func (p *SubnetsStorage) getAll() []*ipam.IPAM {
+	subnets := []*ipam.IPAM{}
+	subnets = append(subnets, p.Subnets...)
 	return subnets
 }
 

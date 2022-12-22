@@ -32,3 +32,5 @@ spec:
               value: "15"
             - name: NOPERATOR_CALICO_ASN_RANGE
               value: "4230000000-4239999999"
+            - name: NOPERATOR_L4LB_TENANT
+              value: ""

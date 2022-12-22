@@ -28,7 +28,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/netrisai/netris-operator/api/v1alpha1"
-	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/calicowatcher/calico"
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/netrisstorage"
@@ -70,8 +69,8 @@ type Watcher struct {
 
 type data struct {
 	deleteMode    bool
-	generatedBGPs []*k8sv1alpha1.BGP
-	bgpList       []*k8sv1alpha1.BGP
+	generatedBGPs []*v1alpha1.BGP
+	bgpList       []*v1alpha1.BGP
 	bgpConfs      []*calico.BGPConfiguration
 
 	nodesMap   map[string]*nodeIP
@@ -98,7 +97,7 @@ type Options struct {
 // NewWatcher is the main initialization function.
 func NewWatcher(nStorage *netrisstorage.Storage, mgr manager.Manager, options Options) (*Watcher, error) {
 	if nStorage == nil {
-		return nil, fmt.Errorf("Please provide NStorage")
+		return nil, fmt.Errorf("please provide NStorage")
 	}
 
 	watcher := &Watcher{
@@ -170,7 +169,7 @@ func (w *Watcher) Start() {
 		case <-w.stop:
 			ticker.Stop()
 			close(w.stop)
-			break
+			return
 		}
 	}
 }
@@ -347,7 +346,7 @@ func (w *Watcher) deleteProcess() error {
 		return err
 	}
 
-	w.data.generatedBGPs = []*k8sv1alpha1.BGP{}
+	w.data.generatedBGPs = []*v1alpha1.BGP{}
 
 	debugLogger.Info("Geting BGPs from k8s", "deleteMode", w.data.deleteMode)
 	bgps, err := w.getBGPs()
@@ -431,7 +430,7 @@ func (w *Watcher) updateBGPConfMesh(enabled bool) error {
 }
 
 func (w *Watcher) generateBGPs() error {
-	generatedBGPs := []*k8sv1alpha1.BGP{}
+	generatedBGPs := []*v1alpha1.BGP{}
 
 	nameReg, _ := regexp.Compile("[^a-z0-9.]+")
 	for name, node := range w.data.nodesMap {
@@ -439,14 +438,21 @@ func (w *Watcher) generateBGPs() error {
 		if err != nil {
 			return err
 		}
-		PrefixListInboundList := []string{fmt.Sprintf("permit %s/%d", node.IPIP, w.data.blockSize)}
+
+		// Get the network address using node IP
+		_, ipipNetAddr, err := net.ParseCIDR(fmt.Sprintf("%s/%d", node.IPIP, w.data.blockSize))
+		if err != nil {
+			return fmt.Errorf("node ip: %s", err)
+		}
+
+		PrefixListInboundList := []string{fmt.Sprintf("permit %s", ipipNetAddr.String())}
 		for _, cidr := range w.data.serviceCIDRs {
 			PrefixListInboundList = append(PrefixListInboundList, fmt.Sprintf("permit %s le %d", cidr, 32))
 		}
 
 		name := fmt.Sprintf("%s-%s", name, strings.Split(node.IP, "/")[0])
 
-		bgp := &k8sv1alpha1.BGP{
+		bgp := &v1alpha1.BGP{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      nameReg.ReplaceAllString(name, "-"),
 				Namespace: "default",
@@ -455,7 +461,7 @@ func (w *Watcher) generateBGPs() error {
 				Kind:       "BGP",
 				APIVersion: "k8s.netris.ai/v1alpha1",
 			},
-			Spec: k8sv1alpha1.BGPSpec{
+			Spec: v1alpha1.BGPSpec{
 				Site:       w.data.site.Name,
 				NeighborAS: asn,
 				Hardware:   w.data.switchName,
@@ -468,7 +474,7 @@ func (w *Watcher) generateBGPs() error {
 				PrefixListInbound: PrefixListInboundList,
 				PrefixListOutbound: []string{
 					"permit 0.0.0.0/0",
-					fmt.Sprintf("deny %s/%d", node.IPIP, w.data.blockSize),
+					fmt.Sprintf("deny %s", ipipNetAddr.String()),
 					fmt.Sprintf("permit %s le %d", w.data.clusterCIDR, w.data.blockSize),
 				},
 			},
@@ -483,7 +489,7 @@ func (w *Watcher) generateBGPs() error {
 	return nil
 }
 
-func (w *Watcher) createBGPs(BGPs []*k8sv1alpha1.BGP) []error {
+func (w *Watcher) createBGPs(BGPs []*v1alpha1.BGP) []error {
 	var errors []error
 	for _, bgp := range BGPs {
 		if err := w.createBGP(bgp); err != nil {
@@ -493,13 +499,13 @@ func (w *Watcher) createBGPs(BGPs []*k8sv1alpha1.BGP) []error {
 	return errors
 }
 
-func (w *Watcher) createBGP(bgp *k8sv1alpha1.BGP) error {
+func (w *Watcher) createBGP(bgp *v1alpha1.BGP) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	return w.client.Create(ctx, bgp.DeepCopyObject(), &client.CreateOptions{})
 }
 
-func (w *Watcher) updateBGPs(BGPs []*k8sv1alpha1.BGP) []error {
+func (w *Watcher) updateBGPs(BGPs []*v1alpha1.BGP) []error {
 	var errors []error
 	for _, bgp := range BGPs {
 		if err := w.updateBGP(bgp); err != nil {
@@ -509,13 +515,13 @@ func (w *Watcher) updateBGPs(BGPs []*k8sv1alpha1.BGP) []error {
 	return errors
 }
 
-func (w *Watcher) updateBGP(bgp *k8sv1alpha1.BGP) error {
+func (w *Watcher) updateBGP(bgp *v1alpha1.BGP) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	return w.client.Update(ctx, bgp.DeepCopyObject(), &client.UpdateOptions{})
 }
 
-func (w *Watcher) deleteBGPs(BGPs []*k8sv1alpha1.BGP) []error {
+func (w *Watcher) deleteBGPs(BGPs []*v1alpha1.BGP) []error {
 	var errors []error
 	for _, bgp := range BGPs {
 		if err := w.deleteBGP(bgp); err != nil {
@@ -525,19 +531,19 @@ func (w *Watcher) deleteBGPs(BGPs []*k8sv1alpha1.BGP) []error {
 	return errors
 }
 
-func (w *Watcher) deleteBGP(bgp *k8sv1alpha1.BGP) error {
+func (w *Watcher) deleteBGP(bgp *v1alpha1.BGP) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
 	return w.client.Delete(ctx, bgp.DeepCopyObject(), &client.DeleteAllOfOptions{})
 }
 
-func (w *Watcher) compareBGPs() ([]*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP) {
-	genBGPsMap := make(map[string]*k8sv1alpha1.BGP)
-	BGPsMap := make(map[string]*k8sv1alpha1.BGP)
+func (w *Watcher) compareBGPs() ([]*v1alpha1.BGP, []*v1alpha1.BGP, []*v1alpha1.BGP) {
+	genBGPsMap := make(map[string]*v1alpha1.BGP)
+	BGPsMap := make(map[string]*v1alpha1.BGP)
 
-	bgpsForCreate := []*k8sv1alpha1.BGP{}
-	bgpsForDelete := []*k8sv1alpha1.BGP{}
-	bgpsForUpdate := []*k8sv1alpha1.BGP{}
+	bgpsForCreate := []*v1alpha1.BGP{}
+	bgpsForDelete := []*v1alpha1.BGP{}
+	bgpsForUpdate := []*v1alpha1.BGP{}
 
 	for _, bgp := range w.data.generatedBGPs {
 		genBGPsMap[bgp.Name] = bgp
@@ -568,10 +574,10 @@ func (w *Watcher) compareBGPs() ([]*k8sv1alpha1.BGP, []*k8sv1alpha1.BGP, []*k8sv
 	return bgpsForCreate, bgpsForDelete, bgpsForUpdate
 }
 
-func (w *Watcher) getBGPs() (*k8sv1alpha1.BGPList, error) {
+func (w *Watcher) getBGPs() (*v1alpha1.BGPList, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	bgps := &k8sv1alpha1.BGPList{}
+	bgps := &v1alpha1.BGPList{}
 	err := w.client.List(ctx, bgps, &client.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -605,7 +611,7 @@ func (w *Watcher) getNodes() error {
 	}
 
 	if len(nodes.Items) == 0 {
-		return fmt.Errorf("Nodes are missing")
+		return fmt.Errorf("nodes are missing")
 	}
 	w.data.nodes = nodes
 	return nil
@@ -716,7 +722,7 @@ func (w *Watcher) nodesProcessing() error {
 		asn := ""
 
 		if _, ok := anns["projectcalico.org/ASNumber"]; !ok {
-			return fmt.Errorf("Couldn't get as number for node %s", node.Name)
+			return fmt.Errorf("couldn't get as number for node %s", node.Name)
 		}
 
 		asn = anns["projectcalico.org/ASNumber"]
@@ -734,17 +740,30 @@ func (w *Watcher) nodesProcessing() error {
 		}
 
 		if siteName == "" {
-			id, gateway, err := w.findSiteByIP(ip)
+			sbnt, err := findIPAMByIP(ip, w.NStorage.SubnetsStorage.GetAll())
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
+
+			_, ipNet, err := net.ParseCIDR(sbnt.Prefix)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			subnet = ipNet.String()
+			id := 0
+
+			if len(sbnt.Sites) > 0 {
+				id = sbnt.Sites[0].ID
+			}
+
 			var ok bool
 			if site, ok = w.NStorage.SitesStorage.FindByID(id); ok {
 				siteName = site.Name
 			}
-			subnet = gateway
-			if vn, ok := w.NStorage.VNetStorage.FindByGateway(gateway); ok {
+			if vn, ok := w.NStorage.VNetStorage.FindByGateway(subnet); ok {
 				vnet = vn
 			}
 		}
@@ -753,14 +772,14 @@ func (w *Watcher) nodesProcessing() error {
 	}
 
 	if siteName == "" {
-		return fmt.Errorf("Couldn't find site")
+		return fmt.Errorf("couldn't find site")
 	}
 
 	if vnet == nil {
-		return fmt.Errorf("Couldn't find vnet")
+		return fmt.Errorf("couldn't find vnet")
 	}
 	if vnet.ID == 0 {
-		return fmt.Errorf("Couldn't find vnet")
+		return fmt.Errorf("couldn't find vnet")
 	}
 
 	vnetName = vnet.Name
@@ -816,7 +835,7 @@ func (w *Watcher) validateASNRange(asns string) (int, int, error) {
 	return a, b, nil
 }
 
-//  patchStringValue specifies a patch operation for a string.
+// patchStringValue specifies a patch operation for a string.
 type patchStringValue struct {
 	Op    string `json:"op"`
 	Path  string `json:"path"`

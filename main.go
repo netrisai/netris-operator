@@ -146,11 +146,12 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.L4LBReconciler{
-		Client:   mgr.GetClient(),
-		Log:      ctrl.Log.WithName("L4LB"),
-		Scheme:   mgr.GetScheme(),
-		Cred:     cred,
-		NStorage: nStorage,
+		Client:     mgr.GetClient(),
+		Log:        ctrl.Log.WithName("L4LB"),
+		Scheme:     mgr.GetScheme(),
+		Cred:       cred,
+		NStorage:   nStorage,
+		L4LBTenant: configloader.Root.L4lbTenant,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L4LB")
 		os.Exit(1)

@@ -40,6 +40,9 @@ requeueInterval: 15
 # Set Nodes asn range. Used when Netris-Operator manages Calico CNI 
 calicoASNRange: 4230000000-4239999999
 
+# Set the default Tenant for L4LB resources. If set, a tenant autodetection for L4LB resources will be disabled
+l4lbTenant: ""
+
 rbac:
   # Specifies whether RBAC resources should be created
   create: true
