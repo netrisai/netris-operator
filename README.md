@@ -8,9 +8,9 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
-[Netris Operator](https://github.com/netrisai/netris-operator) is a Kubernetes Operator for managing and automating tasks related to managing a Netris Cloud.
+[Netris Operator](https://github.com/netrisai/netris-operator) is a Kubernetes Operator for managing and automating tasks related to managing Netris VPC.
 
-[Netris](https://netris.ai) is an automatic netops platform that turns your physical network into a service. Netris uses application service metadata, simple rules, and an understanding of the organizational structure to satisfy your applications’ connectivity needs. Netris ensures that your applications can communicate through continuous monitoring and analyses, and remediates any anomalies that may arise, resulting in up to a 90% reduction in ops time, and also reducing ops costs by up to 80%. 
+[Netris](https://netris.ai) automatically operates the physical switching network in your data center, bare metal cloud, or at the edge. Netris automatically enables routing, elastic load balancer, firewall, DHCP, NAT, and other essential network services utilizing ordinary servers and SmartNICs. Netris makes your network automatic, resilient, and uncomplicated - just like the cloud but very cost-efficient.
 
 
 ![](diagram.png)
