@@ -205,7 +205,7 @@ func deleteL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB) []error {
 func deleteL4LB(cl client.Client, lb k8sv1alpha1.L4LB) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	return cl.Delete(ctx, lb.DeepCopyObject(), &client.DeleteOptions{})
+	return client.IgnoreNotFound(cl.Delete(ctx, lb.DeepCopyObject(), &client.DeleteOptions{}))
 }
 
 func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
