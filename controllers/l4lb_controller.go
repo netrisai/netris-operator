@@ -181,8 +181,8 @@ func (r *L4LBReconciler) deleteL4LB(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		if resp.Meta.StatusCode != 200 && !resp.IsSuccess {
-			fmt.Printf("{deleteL4LB} %s\n", resp.Message)
+		if !resp.IsSuccess && resp.Message != "Invalid load balancer" {
+			return ctrl.Result{}, fmt.Errorf(resp.Message)
 		}
 	}
 	return r.deleteCRs(l4lb, l4lbMeta)
