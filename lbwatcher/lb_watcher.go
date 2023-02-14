@@ -387,7 +387,9 @@ func (w *Watcher) generateLoadBalancers(clientset *kubernetes.Clientset, autoIPs
 			}
 
 			for _, pod := range podList.Items {
-				hostIPs[pod.Status.HostIP] = 1
+				if pod.Status.HostIP != "" {
+					hostIPs[pod.Status.HostIP] = 1
+				}
 			}
 
 			var lbIPs []lbIP
