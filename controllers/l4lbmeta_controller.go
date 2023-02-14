@@ -95,6 +95,18 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
+	if l4lbMeta.GetFinalizers() == nil {
+		l4lbMeta.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
+		l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer l4lbCancel()
+		err := r.Patch(l4lbCtx, l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		if err != nil {
+			logger.Error(fmt.Errorf("{Patch L4LBMeta Finalizer} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+		return ctrl.Result{}, nil
+	}
+
 	if l4lbMeta.Spec.ID == 0 {
 		debugLogger.Info("ID Not found in meta")
 		if l4lbMeta.Spec.Imported {

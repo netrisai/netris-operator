@@ -159,6 +159,7 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 
 		l4lbMeta.Spec.L4LBCRGeneration = l4lb.GetGeneration()
+		l4lbMeta.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 
 		l4lbCreateCtx, l4lbCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer l4lbCreateCancel()
@@ -217,6 +218,15 @@ func (r *L4LBReconciler) deleteL4LBMetaCR(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.
 	if err := r.Delete(ctx, l4lbMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteL4LBMetaCR} %s", err)
 	}
+
+	l4lbMeta.SetFinalizers(nil)
+	l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
+	defer l4lbCancel()
+	err := r.Update(l4lbCtx, l4lbMeta.DeepCopyObject(), &client.UpdateOptions{})
+	if client.IgnoreNotFound(err) != nil {
+		return ctrl.Result{RequeueAfter: requeueInterval}, fmt.Errorf("{DeleteL4LBMetaCR Finalizer} %s", err)
+	}
+
 	return ctrl.Result{}, nil
 }
 
