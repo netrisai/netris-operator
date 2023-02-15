@@ -29,7 +29,6 @@ import (
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	"github.com/netrisai/netriswebapi/http"
 	api "github.com/netrisai/netriswebapi/v2"
 )
 
@@ -173,19 +172,6 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 
 func (r *L4LBReconciler) deleteL4LB(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Result, error) {
-	if l4lbMeta != nil && l4lbMeta.Spec.ID > 0 && !l4lbMeta.Spec.Reclaim {
-		reply, err := r.Cred.L4LB().Delete(l4lbMeta.Spec.ID)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("{deleteL4LB} %s", err)
-		}
-		resp, err := http.ParseAPIResponse(reply.Data)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		if !resp.IsSuccess && resp.Message != "Invalid load balancer" {
-			return ctrl.Result{}, fmt.Errorf(resp.Message)
-		}
-	}
 	return r.deleteCRs(l4lb, l4lbMeta)
 }
 
@@ -218,15 +204,6 @@ func (r *L4LBReconciler) deleteL4LBMetaCR(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.
 	if err := r.Delete(ctx, l4lbMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteL4LBMetaCR} %s", err)
 	}
-
-	l4lbMeta.SetFinalizers(nil)
-	l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
-	defer l4lbCancel()
-	err := r.Update(l4lbCtx, l4lbMeta.DeepCopyObject(), &client.UpdateOptions{})
-	if client.IgnoreNotFound(err) != nil {
-		return ctrl.Result{RequeueAfter: requeueInterval}, fmt.Errorf("{DeleteL4LBMetaCR Finalizer} %s", err)
-	}
-
 	return ctrl.Result{}, nil
 }
 
