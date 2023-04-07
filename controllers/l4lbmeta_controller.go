@@ -69,6 +69,43 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", fmt.Sprintf("%s/%s", req.NamespacedName.Namespace, l4lbMeta.Spec.L4LBName))
 	debugLogger = logger.V(int(zapcore.WarnLevel))
 
+	if l4lbMeta.DeletionTimestamp != nil {
+		if l4lbMeta.Spec.ID > 0 && !l4lbMeta.Spec.Reclaim {
+			reply, err := r.Cred.L4LB().Delete(l4lbMeta.Spec.ID)
+			if err != nil {
+				return ctrl.Result{}, fmt.Errorf("{deleteL4LB} %s", err)
+			}
+			resp, err := http.ParseAPIResponse(reply.Data)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+			if !resp.IsSuccess && resp.Message != "Invalid load balancer" {
+				return ctrl.Result{}, fmt.Errorf(resp.Message)
+			}
+		}
+
+		l4lbMeta.SetFinalizers(nil)
+		l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer l4lbCancel()
+		err := r.Update(l4lbCtx, l4lbMeta.DeepCopyObject(), &client.UpdateOptions{})
+		if client.IgnoreNotFound(err) != nil {
+			return ctrl.Result{RequeueAfter: requeueInterval}, fmt.Errorf("{DeleteL4LBMetaCR Finalizer} %s", err)
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	if l4lbMeta.GetFinalizers() == nil {
+		l4lbMeta.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
+		l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer l4lbCancel()
+		err := r.Patch(l4lbCtx, l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		if err != nil {
+			logger.Error(fmt.Errorf("{Patch L4LBMeta Finalizer} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+	}
+
 	u := uniReconciler{
 		Client:      r.Client,
 		Logger:      logger,
@@ -89,10 +126,6 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
-	}
-
-	if l4lbMeta.DeletionTimestamp != nil {
-		return ctrl.Result{}, nil
 	}
 
 	if l4lbMeta.Spec.ID == 0 {

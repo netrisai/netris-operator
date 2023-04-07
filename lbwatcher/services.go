@@ -29,6 +29,7 @@ import (
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/tools/reference"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func getServices(clientset *kubernetes.Clientset, namespace string) (*v1.ServiceList, error) {
@@ -87,12 +88,18 @@ func createEvent(clientset *kubernetes.Clientset, recorder record.EventRecorder,
 	defer cancel()
 	service, err := clientset.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
-		return fmt.Errorf("{createEvent} %s", err)
+		if client.IgnoreNotFound(err) != nil {
+			return fmt.Errorf("{createEvent GetService} %s", err)
+		}
+		return nil
 	}
 
 	ref, err := reference.GetReference(scheme.Scheme, service)
 	if err != nil {
-		return fmt.Errorf("{createEvent} %s", err)
+		if client.IgnoreNotFound(err) != nil {
+			return fmt.Errorf("{createEvent GetReference} %s", err)
+		}
+		return nil
 	}
 	recorder.Event(ref, v1.EventTypeWarning, reason, message)
 

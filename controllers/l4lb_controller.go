@@ -29,7 +29,6 @@ import (
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	"github.com/netrisai/netriswebapi/http"
 	api "github.com/netrisai/netriswebapi/v2"
 )
 
@@ -94,13 +93,15 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if l4lb.DeletionTimestamp != nil {
 		logger.Info("Go to delete")
-		_, err := r.deleteL4LB(l4lb, l4lbMeta)
+		result, err := r.deleteL4LB(l4lb, l4lbMeta)
 		if err != nil {
 			logger.Error(fmt.Errorf("{deleteL4LB} %s", err), "")
 			return u.patchL4LBStatus(l4lb, "Failure", err.Error())
 		}
-		logger.Info("L4LB deleted")
-		return ctrl.Result{}, nil
+		if result.IsZero() {
+			logger.Info("L4LB deleted")
+		}
+		return result, nil
 	}
 
 	if l4lbMustUpdateAnnotations(l4lb) {
@@ -159,6 +160,7 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 
 		l4lbMeta.Spec.L4LBCRGeneration = l4lb.GetGeneration()
+		l4lbMeta.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 
 		l4lbCreateCtx, l4lbCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer l4lbCreateCancel()
@@ -172,19 +174,6 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 
 func (r *L4LBReconciler) deleteL4LB(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Result, error) {
-	if l4lbMeta != nil && l4lbMeta.Spec.ID > 0 && !l4lbMeta.Spec.Reclaim {
-		reply, err := r.Cred.L4LB().Delete(l4lbMeta.Spec.ID)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("{deleteL4LB} %s", err)
-		}
-		resp, err := http.ParseAPIResponse(reply.Data)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		if resp.Meta.StatusCode != 200 && !resp.IsSuccess {
-			fmt.Printf("{deleteL4LB} %s\n", resp.Message)
-		}
-	}
 	return r.deleteCRs(l4lb, l4lbMeta)
 }
 
@@ -194,9 +183,11 @@ func (r *L4LBReconciler) deleteCRs(l4lb *k8sv1alpha1.L4LB, l4lbMeta *k8sv1alpha1
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteCRs} %s", err)
 		}
+	} else {
+		return r.deleteL4LBCR(l4lb)
 	}
 
-	return r.deleteL4LBCR(l4lb)
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
 func (r *L4LBReconciler) deleteL4LBCR(l4lb *k8sv1alpha1.L4LB) (ctrl.Result, error) {
@@ -217,7 +208,7 @@ func (r *L4LBReconciler) deleteL4LBMetaCR(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.
 	if err := r.Delete(ctx, l4lbMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteL4LBMetaCR} %s", err)
 	}
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
 // SetupWithManager .
