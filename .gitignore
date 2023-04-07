@@ -26,3 +26,4 @@ k8s
 .netrc
 testbin
 config/samples
+.vscode
