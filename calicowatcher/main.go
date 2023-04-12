@@ -31,7 +31,7 @@ import (
 	"github.com/netrisai/netris-operator/calicowatcher/calico"
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	"github.com/netrisai/netriswebapi/v1/types/site"
+	"github.com/netrisai/netriswebapi/v2/types/site"
 	"github.com/netrisai/netriswebapi/v2/types/vnet"
 	"github.com/r3labs/diff/v2"
 	"go.uber.org/zap/zapcore"
@@ -236,7 +236,7 @@ func (w *Watcher) process() error {
 	}
 
 	debugLogger.Info("Generating netris-controller peer", "deleteMode", w.data.deleteMode)
-	peer := w.Calico.GenerateBGPPeer("netris-controller", "", w.data.vnetGWIP, w.data.site.ASN)
+	peer := w.Calico.GenerateBGPPeer("netris-controller", "", w.data.vnetGWIP, w.data.site.PublicAsn)
 
 	if netrisPeer == nil {
 		debugLogger.Info("Creating netris-controller peer", "deleteMode", w.data.deleteMode)

@@ -18,7 +18,7 @@ package controllers
 
 import (
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
-	"github.com/netrisai/netriswebapi/v1/types/site"
+	"github.com/netrisai/netriswebapi/v2/types/site"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -103,31 +103,31 @@ func siteUpdateDefaultAnnotations(site *k8sv1alpha1.Site) {
 }
 
 // SiteMetaToNetris converts the k8s Site resource to Netris type and used for add the Site for Netris API.
-func SiteMetaToNetris(siteMeta *k8sv1alpha1.SiteMeta) (*site.SiteAdd, error) {
-	siteAdd := &site.SiteAdd{
-		Name:                siteMeta.Spec.SiteName,
-		PublicASN:           siteMeta.Spec.PublicASN,
-		PhysicalInstanceASN: siteMeta.Spec.RohASN,
-		VirtualInstanceASN:  siteMeta.Spec.VMASN,
-		VPN:                 siteMeta.Spec.SiteMesh,
-		ACLPolicy:           siteMeta.Spec.ACLDefaultPolicy,
-		RoutingProfileID:    siteMeta.Spec.RohRoutingProfileID,
+func SiteMetaToNetris(siteMeta *k8sv1alpha1.SiteMeta) (*site.Site, error) {
+	siteAdd := &site.Site{
+		Name:       siteMeta.Spec.SiteName,
+		PublicAsn:  siteMeta.Spec.PublicASN,
+		RohAsn:     siteMeta.Spec.RohASN,
+		VMAsn:      siteMeta.Spec.VMASN,
+		SiteMesh:   site.IDName{Value: siteMeta.Spec.SiteMesh},
+		AclPolicy:  siteMeta.Spec.ACLDefaultPolicy,
+		RohProfile: &site.RohProfile{ID: siteMeta.Spec.RohRoutingProfileID},
 	}
 
 	return siteAdd, nil
 }
 
 // SiteMetaToNetrisUpdate converts the k8s Site resource to Netris type and used for update the Site for Netris API.
-func SiteMetaToNetrisUpdate(siteMeta *k8sv1alpha1.SiteMeta) (*site.SiteAdd, error) {
-	siteAdd := &site.SiteAdd{
-		ID:                  siteMeta.Spec.ID,
-		Name:                siteMeta.Spec.SiteName,
-		PublicASN:           siteMeta.Spec.PublicASN,
-		PhysicalInstanceASN: siteMeta.Spec.RohASN,
-		VirtualInstanceASN:  siteMeta.Spec.VMASN,
-		VPN:                 siteMeta.Spec.SiteMesh,
-		ACLPolicy:           siteMeta.Spec.ACLDefaultPolicy,
-		RoutingProfileID:    siteMeta.Spec.RohRoutingProfileID,
+func SiteMetaToNetrisUpdate(siteMeta *k8sv1alpha1.SiteMeta) (*site.Site, error) {
+	siteAdd := &site.Site{
+		ID:         siteMeta.Spec.ID,
+		Name:       siteMeta.Spec.SiteName,
+		PublicAsn:  siteMeta.Spec.PublicASN,
+		RohAsn:     siteMeta.Spec.RohASN,
+		VMAsn:      siteMeta.Spec.VMASN,
+		SiteMesh:   site.IDName{Value: siteMeta.Spec.SiteMesh},
+		AclPolicy:  siteMeta.Spec.ACLDefaultPolicy,
+		RohProfile: &site.RohProfile{ID: siteMeta.Spec.RohRoutingProfileID},
 	}
 
 	return siteAdd, nil
@@ -138,28 +138,28 @@ func compareSiteMetaAPIESite(siteMeta *k8sv1alpha1.SiteMeta, apiSite *site.Site,
 		u.DebugLogger.Info("Name changed", "netrisValue", apiSite.Name, "k8sValue", siteMeta.Spec.SiteName)
 		return false
 	}
-	if apiSite.PublicASN != siteMeta.Spec.PublicASN {
-		u.DebugLogger.Info("PublicASN changed", "netrisValue", apiSite.PublicASN, "k8sValue", siteMeta.Spec.PublicASN)
+	if apiSite.PublicAsn != siteMeta.Spec.PublicASN {
+		u.DebugLogger.Info("PublicASN changed", "netrisValue", apiSite.PublicAsn, "k8sValue", siteMeta.Spec.PublicASN)
 		return false
 	}
-	if apiSite.PhysicalInstanceAsn != siteMeta.Spec.RohASN {
-		u.DebugLogger.Info("RohASN changed", "netrisValue", apiSite.PhysicalInstanceAsn, "k8sValue", siteMeta.Spec.RohASN)
+	if apiSite.RohAsn != siteMeta.Spec.RohASN {
+		u.DebugLogger.Info("RohASN changed", "netrisValue", apiSite.RohProfile.ID, "k8sValue", siteMeta.Spec.RohASN)
 		return false
 	}
-	if apiSite.VirtualInstanceASN != siteMeta.Spec.VMASN {
-		u.DebugLogger.Info("VMASN changed", "netrisValue", apiSite.VirtualInstanceASN, "k8sValue", siteMeta.Spec.VMASN)
+	if apiSite.VMAsn != siteMeta.Spec.VMASN {
+		u.DebugLogger.Info("VMASN changed", "netrisValue", apiSite.VMAsn, "k8sValue", siteMeta.Spec.VMASN)
 		return false
 	}
-	if apiSite.RoutingProfileID != siteMeta.Spec.RohRoutingProfileID {
-		u.DebugLogger.Info("RoutingProfile changed", "netrisValue", apiSite.RoutingProfileID, "k8sValue", siteMeta.Spec.RohRoutingProfileID)
+	if apiSite.RohProfile.ID != siteMeta.Spec.RohRoutingProfileID {
+		u.DebugLogger.Info("RoutingProfile changed", "netrisValue", apiSite.RohProfile.ID, "k8sValue", siteMeta.Spec.RohRoutingProfileID)
 		return false
 	}
-	if apiSite.VPN != siteMeta.Spec.SiteMesh {
-		u.DebugLogger.Info("SiteMesh changed", "netrisValue", apiSite.VPN, "k8sValue", siteMeta.Spec.SiteMesh)
+	if apiSite.SiteMesh.Value != siteMeta.Spec.SiteMesh {
+		u.DebugLogger.Info("SiteMesh changed", "netrisValue", apiSite.SiteMesh.Value, "k8sValue", siteMeta.Spec.SiteMesh)
 		return false
 	}
-	if apiSite.ACLPolicy != siteMeta.Spec.ACLDefaultPolicy {
-		u.DebugLogger.Info("ACLDefaultPolicy changed", "netrisValue", apiSite.ACLPolicy, "k8sValue", siteMeta.Spec.ACLDefaultPolicy)
+	if apiSite.AclPolicy != siteMeta.Spec.ACLDefaultPolicy {
+		u.DebugLogger.Info("ACLDefaultPolicy changed", "netrisValue", apiSite.AclPolicy, "k8sValue", siteMeta.Spec.ACLDefaultPolicy)
 		return false
 	}
 
