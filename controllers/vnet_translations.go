@@ -112,10 +112,27 @@ func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*
 	apiGateways := []vnet.VNetAddGateway{}
 
 	sites := []vnet.VNetAddSite{}
+	vlanid := vnetMeta.Spec.VlanID
+	members := []vnet.VNetAddPort{}
 
 	for _, site := range vnetMeta.Spec.Sites {
 		sites = append(sites, vnet.VNetAddSite{Name: site.Name})
 	}
+
+	for _, port := range vnetMeta.Spec.Members {
+		vID := vlanid
+		if (port.Vlan != "1" || vlanid == "") && vlanid != "auto" {
+			vID = port.Vlan
+		}
+		members = append(members, vnet.VNetAddPort{
+			Name:  port.Name,
+			Vlan:  vID,
+			Lacp:  port.Lacp,
+			State: "active",
+			ID:    port.ID,
+		})
+	}
+
 	for _, gateway := range vnetMeta.Spec.Gateways {
 		apiGateways = append(apiGateways, vnet.VNetAddGateway{
 			Prefix: fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength),
@@ -134,9 +151,10 @@ func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*
 		State:        vnetMeta.Spec.State,
 		GuestTenants: guestTenants,
 		Gateways:     apiGateways,
-		Ports:        k8sMemberToAPIMember(vnetMeta.Spec.Members),
+		Ports:        members,
 		NativeVlan:   1,
 		Vlan:         vnetMeta.Spec.VlanID,
+		Tags:         []string{},
 	}
 
 	return vnetAdd, nil
@@ -147,10 +165,27 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 	apiGateways := []vnet.VNetUpdateGateway{}
 
 	sites := []vnet.VNetUpdateSite{}
+	vlanid := vnetMeta.Spec.VlanID
+	members := []vnet.VNetUpdatePort{}
 
 	for _, site := range vnetMeta.Spec.Sites {
 		sites = append(sites, vnet.VNetUpdateSite{Name: site.Name})
 	}
+
+	for _, port := range vnetMeta.Spec.Members {
+		vID := vlanid
+		if (port.Vlan != "1" || vlanid == "") && vlanid != "auto" {
+			vID = port.Vlan
+		}
+		members = append(members, vnet.VNetUpdatePort{
+			Name:  port.Name,
+			Vlan:  vID,
+			Lacp:  port.Lacp,
+			State: "active",
+			ID:    port.ID,
+		})
+	}
+
 	for _, gateway := range vnetMeta.Spec.Gateways {
 		apiGateways = append(apiGateways, vnet.VNetUpdateGateway{
 			Prefix: fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength),
@@ -168,9 +203,10 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 		State:        vnetMeta.Spec.State,
 		GuestTenants: guestTenants,
 		Gateways:     apiGateways,
-		Ports:        k8sMemberToAPIMemberUpdate(vnetMeta.Spec.Members),
+		Ports:        members,
 		NativeVlan:   1,
 		Vlan:         vnetMeta.Spec.VlanID,
+		Tags:         []string{},
 	}
 
 	return vnetUpdate, nil
@@ -288,36 +324,6 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *vnet.VNetDe
 	}
 
 	return true
-}
-
-func k8sMemberToAPIMember(portNames []k8sv1alpha1.VNetMetaMember) []vnet.VNetAddPort {
-	members := []vnet.VNetAddPort{}
-	for _, port := range portNames {
-		members = append(members, vnet.VNetAddPort{
-			// Port:   port.ChildPort,
-			Lacp:  port.Lacp,
-			State: port.State,
-			ID:    port.ID,
-			Name:  port.Name,
-			Vlan:  port.Vlan,
-		})
-	}
-	return members
-}
-
-func k8sMemberToAPIMemberUpdate(portNames []k8sv1alpha1.VNetMetaMember) []vnet.VNetUpdatePort {
-	members := []vnet.VNetUpdatePort{}
-	for _, port := range portNames {
-		members = append(members, vnet.VNetUpdatePort{
-			// Port:   port.ChildPort,
-			Lacp:  port.Lacp,
-			State: port.State,
-			ID:    port.ID,
-			Name:  port.Name,
-			Vlan:  port.Vlan,
-		})
-	}
-	return members
 }
 
 func findGatewayDuplicates(items []k8sv1alpha1.VNetGateway) (string, bool) {
