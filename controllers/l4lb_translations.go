@@ -389,32 +389,6 @@ func l4lbUpdateDefaultAnnotations(l4lb *k8sv1alpha1.L4LB) {
 	l4lb.SetAnnotations(annotations)
 }
 
-func (r *L4LBReconciler) findTenantByIP(ip string) (int, error) {
-	tenantID := 0
-	subnets, err := r.Cred.IPAM().Get()
-	if err != nil {
-		return tenantID, err
-	}
-
-	subnetChilds := []*ipam.IPAM{}
-	for _, subnet := range subnets {
-		subnetChilds = append(subnetChilds, subnet.Children...)
-	}
-
-	for _, subnet := range subnetChilds {
-		ipAddr := net.ParseIP(ip)
-		_, ipNet, err := net.ParseCIDR(subnet.Prefix)
-		if err != nil {
-			return tenantID, err
-		}
-		if ipNet.Contains(ipAddr) {
-			return subnet.Tenant.ID, nil
-		}
-	}
-
-	return tenantID, fmt.Errorf("there are no subnets for specified IP address %s", ip)
-}
-
 func (r *L4LBReconciler) findSiteByIP(ip string) (int, error) {
 	siteID := 0
 	subnets, err := r.Cred.IPAM().Get()
