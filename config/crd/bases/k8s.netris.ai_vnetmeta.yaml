@@ -40,6 +40,14 @@ spec:
                 items:
                   description: VNetMetaGateway .
                   properties:
+                    dhcp:
+                      type: boolean
+                    dhcpEndIP:
+                      type: string
+                    dhcpOptionSet:
+                      type: string
+                    dhcpStartIP:
+                      type: string
                     gateway:
                       type: string
                     gwLength:

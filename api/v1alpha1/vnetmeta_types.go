@@ -62,12 +62,16 @@ type VNetMetaMember struct {
 
 // VNetMetaGateway .
 type VNetMetaGateway struct {
-	Gateway  string `json:"gateway"`
-	GwLength int    `json:"gwLength"`
-	ID       int    `json:"id,omitempty"`
-	VaVLANID int    `json:"vaVlanId,omitempty"`
-	Nos      string `json:"nos,omitempty"`
-	Version  string `json:"version,omitempty"`
+	Gateway       string `json:"gateway"`
+	GwLength      int    `json:"gwLength"`
+	ID            int    `json:"id,omitempty"`
+	VaVLANID      int    `json:"vaVlanId,omitempty"`
+	Nos           string `json:"nos,omitempty"`
+	Version       string `json:"version,omitempty"`
+	DHCP          bool   `json:"dhcp,omitempty"`
+	DHCPOptionSet string `json:"dhcpOptionSet,omitempty"`
+	DHCPStartIP   string `json:"dhcpStartIP,omitempty"`
+	DHCPEndIP     string `json:"dhcpEndIP,omitempty"`
 }
 
 // VNetMetaStatus defines the observed state of VNetMeta
