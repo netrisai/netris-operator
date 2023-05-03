@@ -29,7 +29,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/netrisai/netris-operator/api/v1alpha1"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
 	"github.com/netrisai/netriswebapi/http"
@@ -281,7 +280,7 @@ func (r *L4LBMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *v1alpha1.L4LB, l4lbMeta v1alpha1.L4LBMeta) (ctrl.Result, error) {
+func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *k8sv1alpha1.L4LB, l4lbMeta k8sv1alpha1.L4LBMeta) (ctrl.Result, error) {
 	shouldUpdateCR := false
 	if l4lbCR.Spec.Frontend.IP != l4lbMeta.Spec.IP {
 		l4lbCR.Spec.Frontend.IP = l4lbMeta.Spec.IP

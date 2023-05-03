@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/go-logr/logr"
-	"github.com/netrisai/netris-operator/api/v1alpha1"
+
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
 	"github.com/netrisai/netriswebapi/http"
@@ -262,7 +262,7 @@ func (r *SwitchMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (u *uniReconciler) updateSwitchIfNeccesarry(switchCR *v1alpha1.Switch, switchMeta v1alpha1.SwitchMeta) (ctrl.Result, error) {
+func (u *uniReconciler) updateSwitchIfNeccesarry(switchCR *k8sv1alpha1.Switch, switchMeta k8sv1alpha1.SwitchMeta) (ctrl.Result, error) {
 	shouldUpdateCR := false
 	if switchCR.Spec.MainIP == "" && switchCR.Spec.MainIP != switchMeta.Spec.MainIP {
 		switchCR.Spec.MainIP = switchMeta.Spec.MainIP

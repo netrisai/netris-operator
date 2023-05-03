@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/go-logr/logr"
-	"github.com/netrisai/netris-operator/api/v1alpha1"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
 	"github.com/netrisai/netriswebapi/http"
@@ -251,7 +250,7 @@ func (r *ControllerMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (u *uniReconciler) updateControllerIfNeccesarry(controllerCR *v1alpha1.Controller, controllerMeta v1alpha1.ControllerMeta) (ctrl.Result, error) {
+func (u *uniReconciler) updateControllerIfNeccesarry(controllerCR *k8sv1alpha1.Controller, controllerMeta k8sv1alpha1.ControllerMeta) (ctrl.Result, error) {
 	shouldUpdateCR := false
 	if controllerCR.Spec.MainIP == "" && controllerCR.Spec.MainIP != controllerMeta.Spec.MainIP {
 		controllerCR.Spec.MainIP = controllerMeta.Spec.MainIP
