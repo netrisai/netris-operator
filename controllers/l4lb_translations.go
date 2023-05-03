@@ -74,7 +74,7 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 	if tenantID == 0 {
 		tenant, ok := r.NStorage.TenantsStorage.FindByName(l4lb.Spec.OwnerTenant)
 		if !ok {
-			return nil, fmt.Errorf("Tenant '%s' not found", l4lb.Spec.OwnerTenant)
+			return nil, fmt.Errorf("tenant '%s' not found", l4lb.Spec.OwnerTenant)
 		}
 		tenantID = tenant.ID
 	}
@@ -412,7 +412,7 @@ func (r *L4LBReconciler) findTenantByIP(ip string) (int, error) {
 		}
 	}
 
-	return tenantID, fmt.Errorf("There are no subnets for specified IP address %s", ip)
+	return tenantID, fmt.Errorf("there are no subnets for specified IP address %s", ip)
 }
 
 func (r *L4LBReconciler) findSiteByIP(ip string) (int, error) {
@@ -440,5 +440,5 @@ func (r *L4LBReconciler) findSiteByIP(ip string) (int, error) {
 		}
 	}
 
-	return siteID, fmt.Errorf("There are no sites for specified IP address %s", ip)
+	return siteID, fmt.Errorf("there are no sites for specified IP address %s", ip)
 }

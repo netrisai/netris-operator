@@ -44,7 +44,7 @@ func (r *NatReconciler) NatToNatMeta(nat *k8sv1alpha1.Nat) (*k8sv1alpha1.NatMeta
 	if site, ok := r.NStorage.SitesStorage.FindByName(nat.Spec.Site); ok {
 		siteID = site.ID
 	} else {
-		return nil, fmt.Errorf("Invalid site '%s'", nat.Spec.Site)
+		return nil, fmt.Errorf("invalid site '%s'", nat.Spec.Site)
 	}
 
 	state := nat.Spec.State

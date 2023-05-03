@@ -42,14 +42,14 @@ func (r *SoftgateReconciler) SoftgateToSoftgateMeta(softgate *k8sv1alpha1.Softga
 	if site, ok := r.NStorage.SitesStorage.FindByName(softgate.Spec.Site); ok {
 		siteID = site.ID
 	} else {
-		return nil, fmt.Errorf("Invalid site '%s'", softgate.Spec.Site)
+		return nil, fmt.Errorf("invalid site '%s'", softgate.Spec.Site)
 	}
 
 	tenantID := 0
 	if tenant, ok := r.NStorage.TenantsStorage.FindByName(softgate.Spec.Tenant); ok {
 		tenantID = tenant.ID
 	} else {
-		return nil, fmt.Errorf("Invalid tenant '%s'", softgate.Spec.Tenant)
+		return nil, fmt.Errorf("invalid tenant '%s'", softgate.Spec.Tenant)
 	}
 
 	profileID := 0
@@ -65,7 +65,7 @@ func (r *SoftgateReconciler) SoftgateToSoftgateMeta(softgate *k8sv1alpha1.Softga
 	}
 
 	if profileID == 0 && softgate.Spec.Profile != "" {
-		return nil, fmt.Errorf("Invalid profile '%s'", softgate.Spec.Profile)
+		return nil, fmt.Errorf("invalid profile '%s'", softgate.Spec.Profile)
 	}
 
 	softgateMeta := &k8sv1alpha1.SoftgateMeta{

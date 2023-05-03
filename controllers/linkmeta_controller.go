@@ -142,13 +142,13 @@ func (r *LinkMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if o, ok := r.NStorage.PortsStorage.FindByName(string(linkCR.Spec.Ports[0])); ok {
 				local = o.ID
 			} else {
-				logger.Error(fmt.Errorf("Couldn't find port %s", linkCR.Spec.Ports[0]), "")
+				logger.Error(fmt.Errorf("couldn't find port %s", linkCR.Spec.Ports[0]), "")
 				return u.patchLinkStatus(linkCR, "Failure", fmt.Sprintf("Couldn't find port %s", linkCR.Spec.Ports[0]))
 			}
 			if d, ok := r.NStorage.PortsStorage.FindByName(string(linkCR.Spec.Ports[1])); ok {
 				remote = d.ID
 			} else {
-				logger.Error(fmt.Errorf("Couldn't find port %s", linkCR.Spec.Ports[0]), "")
+				logger.Error(fmt.Errorf("couldn't find port %s", linkCR.Spec.Ports[0]), "")
 				return u.patchLinkStatus(linkCR, "Failure", fmt.Sprintf("Couldn't find port %s", linkCR.Spec.Ports[0]))
 			}
 

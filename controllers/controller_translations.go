@@ -42,14 +42,14 @@ func (r *ControllerReconciler) ControllerToControllerMeta(controller *k8sv1alpha
 	if site, ok := r.NStorage.SitesStorage.FindByName(controller.Spec.Site); ok {
 		siteID = site.ID
 	} else {
-		return nil, fmt.Errorf("Invalid site '%s'", controller.Spec.Site)
+		return nil, fmt.Errorf("invalid site '%s'", controller.Spec.Site)
 	}
 
 	tenantID := 0
 	if tenant, ok := r.NStorage.TenantsStorage.FindByName(controller.Spec.Tenant); ok {
 		tenantID = tenant.ID
 	} else {
-		return nil, fmt.Errorf("Invalid tenant '%s'", controller.Spec.Tenant)
+		return nil, fmt.Errorf("invalid tenant '%s'", controller.Spec.Tenant)
 	}
 
 	controllerMeta := &k8sv1alpha1.ControllerMeta{

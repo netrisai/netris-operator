@@ -54,14 +54,14 @@ func (r *SwitchReconciler) SwitchToSwitchMeta(switchH *k8sv1alpha1.Switch) (*k8s
 	if site, ok := r.NStorage.SitesStorage.FindByName(switchH.Spec.Site); ok {
 		siteID = site.ID
 	} else {
-		return nil, fmt.Errorf("Invalid site '%s'", switchH.Spec.Site)
+		return nil, fmt.Errorf("invalid site '%s'", switchH.Spec.Site)
 	}
 
 	tenantID := 0
 	if tenant, ok := r.NStorage.TenantsStorage.FindByName(switchH.Spec.Tenant); ok {
 		tenantID = tenant.ID
 	} else {
-		return nil, fmt.Errorf("Invalid tenant '%s'", switchH.Spec.Tenant)
+		return nil, fmt.Errorf("invalid tenant '%s'", switchH.Spec.Tenant)
 	}
 
 	profileID := 0
@@ -77,7 +77,7 @@ func (r *SwitchReconciler) SwitchToSwitchMeta(switchH *k8sv1alpha1.Switch) (*k8s
 	}
 
 	if profileID == 0 && switchH.Spec.Profile != "" {
-		return nil, fmt.Errorf("Invalid profile '%s'", switchH.Spec.Profile)
+		return nil, fmt.Errorf("invalid profile '%s'", switchH.Spec.Profile)
 	}
 
 	switchMeta := &k8sv1alpha1.SwitchMeta{

@@ -44,12 +44,12 @@ func (r *LinkReconciler) LinkToLinkMeta(link *k8sv1alpha1.Link) (*k8sv1alpha1.Li
 	if o, ok := r.NStorage.PortsStorage.FindByName(string(link.Spec.Ports[0])); ok {
 		local = o.ID
 	} else {
-		return nil, fmt.Errorf("Couldn't find port %s", link.Spec.Ports[0])
+		return nil, fmt.Errorf("couldn't find port %s", link.Spec.Ports[0])
 	}
 	if d, ok := r.NStorage.PortsStorage.FindByName(string(link.Spec.Ports[1])); ok {
 		remote = d.ID
 	} else {
-		return nil, fmt.Errorf("Couldn't find port %s", link.Spec.Ports[1])
+		return nil, fmt.Errorf("couldn't find port %s", link.Spec.Ports[1])
 	}
 
 	linkMeta := &k8sv1alpha1.LinkMeta{

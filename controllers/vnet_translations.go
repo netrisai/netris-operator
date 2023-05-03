@@ -65,7 +65,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	state := "active"
 	if len(vnet.Spec.State) > 0 {
 		if !(vnet.Spec.State == "active" || vnet.Spec.State == "disabled") {
-			return nil, fmt.Errorf("Invalid spec.state field")
+			return nil, fmt.Errorf("invalid spec.state field")
 		}
 		state = vnet.Spec.State
 	}
