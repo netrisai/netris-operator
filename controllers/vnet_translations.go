@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netriswebapi/v2/types/dhcp"
 	"github.com/netrisai/netriswebapi/v2/types/vnet"
 	"github.com/r3labs/diff/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,11 +32,22 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	siteNames := []string{}
 	apiGateways := []k8sv1alpha1.VNetMetaGateway{}
 
+	dhcpOptionSetList, err := r.Cred.DHCP().Get()
+	if err != nil {
+		return nil, err
+	}
+
+	dhcpOptionSetsByNames := make(map[string]*dhcp.DHCPOptionSet)
+
+	for _, d := range dhcpOptionSetList {
+		dhcpOptionSetsByNames[d.Name] = d
+	}
+
 	for _, site := range vnet.Spec.Sites {
 		siteNames = append(siteNames, site.Name)
 		ports = append(ports, site.SwitchPorts...)
 		for _, gateway := range site.Gateways {
-			apiGateways = append(apiGateways, makeGateway(gateway))
+			apiGateways = append(apiGateways, makeGateway(gateway, dhcpOptionSetsByNames))
 		}
 	}
 	prts, err := r.getPortsMeta(ports)
@@ -142,7 +154,7 @@ func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*
 			apiGateway.DHCPLeaseCount = 2
 			if gateway.DHCPStartIP != "" {
 				apiGateway.DHCP = &vnet.VNetGatewayDHCP{
-					OptionSet: vnet.IDName{Name: gateway.DHCPOptionSet},
+					OptionSet: vnet.IDName{ID: gateway.DHCPOptionSetID},
 					Start:     gateway.DHCPStartIP,
 					End:       gateway.DHCPEndIP,
 				}
@@ -208,7 +220,7 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 			apiGateway.DHCPLeaseCount = 2
 			if gateway.DHCPStartIP != "" {
 				apiGateway.DHCP = &vnet.VNetGatewayDHCP{
-					OptionSet: vnet.IDName{Name: gateway.DHCPOptionSet},
+					OptionSet: vnet.IDName{ID: gateway.DHCPOptionSetID},
 					Start:     gateway.DHCPStartIP,
 					End:       gateway.DHCPEndIP,
 				}
@@ -239,11 +251,11 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 
 func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGateway, apiVnetGateways []vnet.VNetDetailedGateway) bool {
 	type compareGateway struct {
-		Prefix        string `diff:"gateway"`
-		DHCP          bool   `json:"dhcp"`
-		DHCPOptionSet string `json:"dhcpOptionSet"`
-		DHCPStartIP   string `json:"dhcpStartIP"`
-		DHCPEndIP     string `json:"dhcpEndIP"`
+		Prefix          string `diff:"gateway"`
+		DHCP            bool   `json:"dhcp"`
+		DHCPOptionSetID int    `json:"dhcpOptionSet"`
+		DHCPStartIP     string `json:"dhcpStartIP"`
+		DHCPEndIP       string `json:"dhcpEndIP"`
 	}
 
 	vnetGateways := []compareGateway{}
@@ -255,7 +267,7 @@ func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGatew
 		}
 		if gateway.DHCP {
 			apiGateway.DHCP = true
-			apiGateway.DHCPOptionSet = gateway.DHCPOptionSet
+			apiGateway.DHCPOptionSetID = gateway.DHCPOptionSetID
 			apiGateway.DHCPStartIP = gateway.DHCPStartIP
 			apiGateway.DHCPEndIP = gateway.DHCPEndIP
 		}
@@ -268,7 +280,7 @@ func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGatew
 		}
 		if gateway.DHCP != nil && gateway.DHCPEnabled {
 			vnetGateway.DHCP = true
-			vnetGateway.DHCPOptionSet = gateway.DHCP.OptionSet.Name
+			vnetGateway.DHCPOptionSetID = gateway.DHCP.OptionSet.ID
 			vnetGateway.DHCPStartIP = gateway.DHCP.Start
 			vnetGateway.DHCPEndIP = gateway.DHCP.End
 		}

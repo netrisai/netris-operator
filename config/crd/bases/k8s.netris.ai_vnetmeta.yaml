@@ -44,8 +44,8 @@ spec:
                       type: boolean
                     dhcpEndIP:
                       type: string
-                    dhcpOptionSet:
-                      type: string
+                    dhcpOptionSetID:
+                      type: integer
                     dhcpStartIP:
                       type: string
                     gateway:
