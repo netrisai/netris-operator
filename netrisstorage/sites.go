@@ -19,7 +19,7 @@ package netrisstorage
 import (
 	"sync"
 
-	"github.com/netrisai/netriswebapi/v1/types/site"
+	"github.com/netrisai/netriswebapi/v2/types/site"
 )
 
 // SitesStorage .

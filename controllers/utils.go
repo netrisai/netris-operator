@@ -21,11 +21,12 @@ import (
 	"net"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netriswebapi/v2/types/dhcp"
 )
 
-func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
+func makeGateway(gateway k8sv1alpha1.VNetGateway, dhcpOptionSetsByNames map[string]*dhcp.DHCPOptionSet) k8sv1alpha1.VNetMetaGateway {
 	version := ""
-	ip, ipNet, err := net.ParseCIDR(gateway.String())
+	ip, ipNet, err := net.ParseCIDR(gateway.Prefix)
 	if err != nil {
 		fmt.Println(err)
 		return k8sv1alpha1.VNetMetaGateway{}
@@ -42,6 +43,16 @@ func makeGateway(gateway k8sv1alpha1.VNetGateway) k8sv1alpha1.VNetMetaGateway {
 		Gateway:  ip.String(),
 		GwLength: gwLength,
 		Version:  version,
+	}
+
+	if gateway.DHCP == "enabled" {
+		apiGateway.DHCP = true
+		apiGateway.DHCPStartIP = gateway.DHCPStartIP
+		apiGateway.DHCPEndIP = gateway.DHCPEndIP
+
+		if optionSet, ok := dhcpOptionSetsByNames[gateway.DHCPOptionSet]; ok && optionSet != nil {
+			apiGateway.DHCPOptionSetID = optionSet.ID
+		}
 	}
 	return apiGateway
 }

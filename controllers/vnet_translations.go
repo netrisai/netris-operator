@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
+	"github.com/netrisai/netriswebapi/v2/types/dhcp"
 	"github.com/netrisai/netriswebapi/v2/types/vnet"
 	"github.com/r3labs/diff/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,11 +32,22 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	siteNames := []string{}
 	apiGateways := []k8sv1alpha1.VNetMetaGateway{}
 
+	dhcpOptionSetList, err := r.Cred.DHCP().Get()
+	if err != nil {
+		return nil, err
+	}
+
+	dhcpOptionSetsByNames := make(map[string]*dhcp.DHCPOptionSet)
+
+	for _, d := range dhcpOptionSetList {
+		dhcpOptionSetsByNames[d.Name] = d
+	}
+
 	for _, site := range vnet.Spec.Sites {
 		siteNames = append(siteNames, site.Name)
 		ports = append(ports, site.SwitchPorts...)
 		for _, gateway := range site.Gateways {
-			apiGateways = append(apiGateways, makeGateway(gateway))
+			apiGateways = append(apiGateways, makeGateway(gateway, dhcpOptionSetsByNames))
 		}
 	}
 	prts, err := r.getPortsMeta(ports)
@@ -65,7 +77,7 @@ func (r *VNetReconciler) VnetToVnetMeta(vnet *k8sv1alpha1.VNet) (*k8sv1alpha1.VN
 	state := "active"
 	if len(vnet.Spec.State) > 0 {
 		if !(vnet.Spec.State == "active" || vnet.Spec.State == "disabled") {
-			return nil, fmt.Errorf("Invalid spec.state field")
+			return nil, fmt.Errorf("invalid spec.state field")
 		}
 		state = vnet.Spec.State
 	}
@@ -112,14 +124,44 @@ func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*
 	apiGateways := []vnet.VNetAddGateway{}
 
 	sites := []vnet.VNetAddSite{}
+	vlanid := vnetMeta.Spec.VlanID
+	members := []vnet.VNetAddPort{}
 
 	for _, site := range vnetMeta.Spec.Sites {
 		sites = append(sites, vnet.VNetAddSite{Name: site.Name})
 	}
-	for _, gateway := range vnetMeta.Spec.Gateways {
-		apiGateways = append(apiGateways, vnet.VNetAddGateway{
-			Prefix: fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength),
+
+	for _, port := range vnetMeta.Spec.Members {
+		vID := vlanid
+		if (port.Vlan != "1" || vlanid == "") && vlanid != "auto" {
+			vID = port.Vlan
+		}
+		members = append(members, vnet.VNetAddPort{
+			Name:  port.Name,
+			Vlan:  vID,
+			Lacp:  port.Lacp,
+			State: "active",
+			ID:    port.ID,
 		})
+	}
+
+	for _, gateway := range vnetMeta.Spec.Gateways {
+		apiGateway := vnet.VNetAddGateway{
+			Prefix: fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength),
+		}
+		if gateway.DHCP {
+			apiGateway.DHCPEnabled = true
+			apiGateway.DHCPLeaseCount = 2
+			if gateway.DHCPStartIP != "" {
+				apiGateway.DHCP = &vnet.VNetGatewayDHCP{
+					OptionSet: vnet.IDName{ID: gateway.DHCPOptionSetID},
+					Start:     gateway.DHCPStartIP,
+					End:       gateway.DHCPEndIP,
+				}
+			}
+
+		}
+		apiGateways = append(apiGateways, apiGateway)
 	}
 
 	guestTenants := []vnet.VNetAddTenant{}
@@ -134,9 +176,10 @@ func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*
 		State:        vnetMeta.Spec.State,
 		GuestTenants: guestTenants,
 		Gateways:     apiGateways,
-		Ports:        k8sMemberToAPIMember(vnetMeta.Spec.Members),
+		Ports:        members,
 		NativeVlan:   1,
 		Vlan:         vnetMeta.Spec.VlanID,
+		Tags:         []string{},
 	}
 
 	return vnetAdd, nil
@@ -147,14 +190,43 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 	apiGateways := []vnet.VNetUpdateGateway{}
 
 	sites := []vnet.VNetUpdateSite{}
+	vlanid := vnetMeta.Spec.VlanID
+	members := []vnet.VNetUpdatePort{}
 
 	for _, site := range vnetMeta.Spec.Sites {
 		sites = append(sites, vnet.VNetUpdateSite{Name: site.Name})
 	}
-	for _, gateway := range vnetMeta.Spec.Gateways {
-		apiGateways = append(apiGateways, vnet.VNetUpdateGateway{
-			Prefix: fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength),
+
+	for _, port := range vnetMeta.Spec.Members {
+		vID := vlanid
+		if (port.Vlan != "1" || vlanid == "") && vlanid != "auto" {
+			vID = port.Vlan
+		}
+		members = append(members, vnet.VNetUpdatePort{
+			Name:  port.Name,
+			Vlan:  vID,
+			Lacp:  port.Lacp,
+			State: "active",
+			ID:    port.ID,
 		})
+	}
+
+	for _, gateway := range vnetMeta.Spec.Gateways {
+		apiGateway := vnet.VNetUpdateGateway{
+			Prefix: fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength),
+		}
+		if gateway.DHCP {
+			apiGateway.DHCPEnabled = true
+			apiGateway.DHCPLeaseCount = 2
+			if gateway.DHCPStartIP != "" {
+				apiGateway.DHCP = &vnet.VNetGatewayDHCP{
+					OptionSet: vnet.IDName{ID: gateway.DHCPOptionSetID},
+					Start:     gateway.DHCPStartIP,
+					End:       gateway.DHCPEndIP,
+				}
+			}
+		}
+		apiGateways = append(apiGateways, apiGateway)
 	}
 
 	guestTenants := []vnet.VNetUpdateGuestTenant{}
@@ -168,32 +240,51 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 		State:        vnetMeta.Spec.State,
 		GuestTenants: guestTenants,
 		Gateways:     apiGateways,
-		Ports:        k8sMemberToAPIMemberUpdate(vnetMeta.Spec.Members),
+		Ports:        members,
 		NativeVlan:   1,
 		Vlan:         vnetMeta.Spec.VlanID,
+		Tags:         []string{},
 	}
 
 	return vnetUpdate, nil
 }
 
 func compareVNetMetaAPIVnetGateways(vnetMetaGateways []k8sv1alpha1.VNetMetaGateway, apiVnetGateways []vnet.VNetDetailedGateway) bool {
-	type gateway struct {
-		Prefix string `diff:"gateway"`
+	type compareGateway struct {
+		Prefix          string `diff:"gateway"`
+		DHCP            bool   `json:"dhcp"`
+		DHCPOptionSetID int    `json:"dhcpOptionSet"`
+		DHCPStartIP     string `json:"dhcpStartIP"`
+		DHCPEndIP       string `json:"dhcpEndIP"`
 	}
 
-	vnetGateways := []gateway{}
-	apiGateways := []gateway{}
+	vnetGateways := []compareGateway{}
+	apiGateways := []compareGateway{}
 
-	for _, g := range vnetMetaGateways {
-		vnetGateways = append(vnetGateways, gateway{
-			Prefix: fmt.Sprintf("%s/%d", g.Gateway, g.GwLength),
-		})
+	for _, gateway := range vnetMetaGateways {
+		apiGateway := compareGateway{
+			Prefix: fmt.Sprintf("%s/%d", gateway.Gateway, gateway.GwLength),
+		}
+		if gateway.DHCP {
+			apiGateway.DHCP = true
+			apiGateway.DHCPOptionSetID = gateway.DHCPOptionSetID
+			apiGateway.DHCPStartIP = gateway.DHCPStartIP
+			apiGateway.DHCPEndIP = gateway.DHCPEndIP
+		}
+		apiGateways = append(apiGateways, apiGateway)
 	}
 
-	for _, g := range apiVnetGateways {
-		apiGateways = append(apiGateways, gateway{
-			Prefix: g.Prefix,
-		})
+	for _, gateway := range apiVnetGateways {
+		vnetGateway := compareGateway{
+			Prefix: gateway.Prefix,
+		}
+		if gateway.DHCP != nil && gateway.DHCPEnabled {
+			vnetGateway.DHCP = true
+			vnetGateway.DHCPOptionSetID = gateway.DHCP.OptionSet.ID
+			vnetGateway.DHCPStartIP = gateway.DHCP.Start
+			vnetGateway.DHCPEndIP = gateway.DHCP.End
+		}
+		vnetGateways = append(vnetGateways, vnetGateway)
 	}
 
 	changelog, _ := diff.Diff(vnetGateways, apiGateways)
@@ -290,40 +381,10 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *vnet.VNetDe
 	return true
 }
 
-func k8sMemberToAPIMember(portNames []k8sv1alpha1.VNetMetaMember) []vnet.VNetAddPort {
-	members := []vnet.VNetAddPort{}
-	for _, port := range portNames {
-		members = append(members, vnet.VNetAddPort{
-			// Port:   port.ChildPort,
-			Lacp:  port.Lacp,
-			State: port.State,
-			ID:    port.ID,
-			Name:  port.Name,
-			Vlan:  port.Vlan,
-		})
-	}
-	return members
-}
-
-func k8sMemberToAPIMemberUpdate(portNames []k8sv1alpha1.VNetMetaMember) []vnet.VNetUpdatePort {
-	members := []vnet.VNetUpdatePort{}
-	for _, port := range portNames {
-		members = append(members, vnet.VNetUpdatePort{
-			// Port:   port.ChildPort,
-			Lacp:  port.Lacp,
-			State: port.State,
-			ID:    port.ID,
-			Name:  port.Name,
-			Vlan:  port.Vlan,
-		})
-	}
-	return members
-}
-
 func findGatewayDuplicates(items []k8sv1alpha1.VNetGateway) (string, bool) {
 	tmpMap := make(map[string]int)
 	for _, s := range items {
-		str := s.String()
+		str := s.Prefix
 		tmpMap[str]++
 		if tmpMap[str] > 1 {
 			return str, true

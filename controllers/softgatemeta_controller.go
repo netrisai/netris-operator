@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/go-logr/logr"
-	"github.com/netrisai/netris-operator/api/v1alpha1"
+
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
 	"github.com/netrisai/netriswebapi/http"
@@ -258,7 +258,7 @@ func (r *SoftgateMetaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (u *uniReconciler) updateSoftgateIfNeccesarry(softgateCR *v1alpha1.Softgate, softgateMeta v1alpha1.SoftgateMeta) (ctrl.Result, error) {
+func (u *uniReconciler) updateSoftgateIfNeccesarry(softgateCR *k8sv1alpha1.Softgate, softgateMeta k8sv1alpha1.SoftgateMeta) (ctrl.Result, error) {
 	shouldUpdateCR := false
 	if softgateCR.Spec.MainIP == "" && softgateCR.Spec.MainIP != softgateMeta.Spec.MainIP {
 		softgateCR.Spec.MainIP = softgateMeta.Spec.MainIP

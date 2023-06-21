@@ -81,6 +81,7 @@ func main() {
 	err = cred.Client.LoginUser()
 	if err != nil {
 		log.Printf("LoginUser error %v", err)
+		os.Exit(1)
 	}
 	go cred.Client.CheckAuthWithInterval()
 

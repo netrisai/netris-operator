@@ -23,8 +23,8 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/netrisai/netriswebapi/http"
-	"github.com/netrisai/netriswebapi/v1/types/site"
 	api "github.com/netrisai/netriswebapi/v2"
+	"github.com/netrisai/netriswebapi/v2/types/site"
 	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -66,6 +66,43 @@ func (r *SiteMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	logger := r.Log.WithValues("name", fmt.Sprintf("%s/%s", req.NamespacedName.Namespace, siteMeta.Spec.SiteName))
 	debugLogger = logger.V(int(zapcore.WarnLevel))
+
+	if siteMeta.DeletionTimestamp != nil {
+		if siteMeta.Spec.ID > 0 && !siteMeta.Spec.Reclaim {
+			reply, err := r.Cred.Site().Delete(siteMeta.Spec.ID)
+			if err != nil {
+				return ctrl.Result{}, fmt.Errorf("{deleteSite} %s", err)
+			}
+			resp, err := http.ParseAPIResponse(reply.Data)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+			if !resp.IsSuccess && reply.StatusCode != 404 {
+				return ctrl.Result{}, fmt.Errorf(resp.Message)
+			}
+		}
+
+		siteMeta.SetFinalizers(nil)
+		siteCtx, siteCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer siteCancel()
+		err := r.Update(siteCtx, siteMeta.DeepCopyObject(), &client.UpdateOptions{})
+		if client.IgnoreNotFound(err) != nil {
+			return ctrl.Result{RequeueAfter: requeueInterval}, fmt.Errorf("{DeleteSiteMetaCR Finalizer} %s", err)
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	if siteMeta.GetFinalizers() == nil {
+		siteMeta.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
+		siteCtx, siteCancel := context.WithTimeout(cntxt, contextTimeout)
+		defer siteCancel()
+		err := r.Patch(siteCtx, siteMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		if err != nil {
+			logger.Error(fmt.Errorf("{Patch SiteMeta Finalizer} %s", err), "")
+			return ctrl.Result{RequeueAfter: requeueInterval}, nil
+		}
+	}
 
 	u := uniReconciler{
 		Client:      r.Client,
@@ -188,16 +225,18 @@ func (r *SiteMetaReconciler) createSite(siteMeta *k8sv1alpha1.SiteMeta) (ctrl.Re
 		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
 	}
 
-	id := 0
+	idStruct := struct {
+		ID int `json:"id"`
+	}{}
 	debugLogger.Info("response Data", "payload", resp.Data)
-	err = http.Decode(resp.Data, &id)
+	err = http.Decode(resp.Data, &idStruct)
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
 
-	debugLogger.Info("Site Created", "id", id)
+	debugLogger.Info("Site Created", "id", idStruct.ID)
 
-	siteMeta.Spec.ID = id
+	siteMeta.Spec.ID = idStruct.ID
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
@@ -206,12 +245,12 @@ func (r *SiteMetaReconciler) createSite(siteMeta *k8sv1alpha1.SiteMeta) (ctrl.Re
 		return ctrl.Result{}, err, err
 	}
 
-	debugLogger.Info("ID patched to meta", "id", id)
+	debugLogger.Info("ID patched to meta", "id", idStruct.ID)
 	return ctrl.Result{}, nil, nil
 }
 
-func updateSite(id int, site *site.SiteAdd, cred *api.Clientset) (ctrl.Result, error, error) {
-	reply, err := cred.Site().Update(site)
+func updateSite(id int, site *site.Site, cred *api.Clientset) (ctrl.Result, error, error) {
+	reply, err := cred.Site().Update(id, site)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("{updateSite} %s", err), err
 	}

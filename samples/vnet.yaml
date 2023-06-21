@@ -8,8 +8,11 @@ spec:
   sites:
     - name: santa-clara
       gateways:
-        - 100.71.56.1/24
-        - 2001:db8:acad::fffe/64
+        - prefix: 100.71.56.1/24
+          dhcp: enabled
+          dhcpOptionSet: Default
+          dhcpStartIP: 100.71.56.10
+          dhcpEndIP: 100.71.56.250
       switchPorts:
         - name: swp5@my-sw01
           vlanId: 1050

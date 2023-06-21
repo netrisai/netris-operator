@@ -44,7 +44,7 @@ func (r *SubnetReconciler) SubnetToSubnetMeta(subnet *k8sv1alpha1.Subnet) (*k8sv
 		if site, ok := r.NStorage.SitesStorage.FindByName(s); ok {
 			sites = append(sites, site.ID)
 		} else {
-			return nil, fmt.Errorf("Invalid site '%s'", s)
+			return nil, fmt.Errorf("invalid site '%s'", s)
 		}
 	}
 
@@ -52,7 +52,7 @@ func (r *SubnetReconciler) SubnetToSubnetMeta(subnet *k8sv1alpha1.Subnet) (*k8sv
 	if tenant, ok := r.NStorage.TenantsStorage.FindByName(subnet.Spec.Tenant); ok {
 		tenantID = tenant.ID
 	} else {
-		return nil, fmt.Errorf("Invalid tenant '%s'", subnet.Spec.Tenant)
+		return nil, fmt.Errorf("invalid tenant '%s'", subnet.Spec.Tenant)
 	}
 
 	subnetMeta := &k8sv1alpha1.SubnetMeta{

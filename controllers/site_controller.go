@@ -29,7 +29,6 @@ import (
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	"github.com/netrisai/netriswebapi/http"
 	api "github.com/netrisai/netriswebapi/v2"
 )
 
@@ -89,12 +88,14 @@ func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if site.DeletionTimestamp != nil {
 		logger.Info("Go to delete")
-		_, err := r.deleteSite(site, siteMeta)
+		result, err := r.deleteSite(site, siteMeta)
 		if err != nil {
 			logger.Error(fmt.Errorf("{deleteSite} %s", err), "")
 			return u.patchSiteStatus(site, "Failure", err.Error())
 		}
-		logger.Info("Site deleted")
+		if result.IsZero() {
+			logger.Info("Site deleted")
+		}
 		return ctrl.Result{}, nil
 	}
 
@@ -155,6 +156,7 @@ func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 
 		siteMeta.Spec.SiteCRGeneration = site.GetGeneration()
+		siteMeta.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 
 		siteMetaCreateCtx, siteMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer siteMetaCreateCancel()
@@ -168,19 +170,6 @@ func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 
 func (r *SiteReconciler) deleteSite(site *k8sv1alpha1.Site, siteMeta *k8sv1alpha1.SiteMeta) (ctrl.Result, error) {
-	if siteMeta != nil && siteMeta.Spec.ID > 0 && !siteMeta.Spec.Reclaim {
-		reply, err := r.Cred.Site().Delete(siteMeta.Spec.ID)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("{deleteSite} %s", err)
-		}
-		resp, err := http.ParseAPIResponse(reply.Data)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		if !resp.IsSuccess && resp.Meta.StatusCode != 404 {
-			return ctrl.Result{}, fmt.Errorf("{deleteSite} %s", fmt.Errorf(resp.Message))
-		}
-	}
 	return r.deleteCRs(site, siteMeta)
 }
 
@@ -190,9 +179,11 @@ func (r *SiteReconciler) deleteCRs(site *k8sv1alpha1.Site, siteMeta *k8sv1alpha1
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("{deleteCRs} %s", err)
 		}
+	} else {
+		return r.deleteSiteCR(site)
 	}
 
-	return r.deleteSiteCR(site)
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
 func (r *SiteReconciler) deleteSiteCR(site *k8sv1alpha1.Site) (ctrl.Result, error) {
@@ -214,7 +205,7 @@ func (r *SiteReconciler) deleteSiteMetaCR(siteMeta *k8sv1alpha1.SiteMeta) (ctrl.
 		return ctrl.Result{}, fmt.Errorf("{deleteSiteMetaCR} %s", err)
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
 
 // SetupWithManager .
