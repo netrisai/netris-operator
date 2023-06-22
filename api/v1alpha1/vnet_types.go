@@ -118,6 +118,8 @@ type VNetSwitchPort struct {
 	// +kubebuilder:validation:Maximum=4094
 	VlanID int    `json:"vlanId,omitempty"`
 	State  string `json:"state,omitempty"`
+	// +kubebuilder:validation:Enum=yes;no
+	Untagged string `json:"untagged,omitempty"`
 }
 
 func init() {

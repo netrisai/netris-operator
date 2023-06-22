@@ -126,22 +126,35 @@ func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*
 	sites := []vnet.VNetAddSite{}
 	vlanid := vnetMeta.Spec.VlanID
 	members := []vnet.VNetAddPort{}
+	vnetTypeOne := false
 
 	for _, site := range vnetMeta.Spec.Sites {
 		sites = append(sites, vnet.VNetAddSite{Name: site.Name})
 	}
 
 	for _, port := range vnetMeta.Spec.Members {
+		accessMode := false
+		if port.Untagged == "yes" {
+			accessMode = true
+		}
 		vID := vlanid
-		if (port.Vlan != "1" || vlanid == "") && vlanid != "auto" {
+		if (port.Vlan != "1" || vlanid == "") && vlanid != "auto" && vlanid != port.Vlan {
 			vID = port.Vlan
+			vnetTypeOne = true
+			if vID == "1" {
+				accessMode = true
+			}
+		}
+		if vlanid != "" && port.Untagged != "no" {
+			accessMode = true
 		}
 		members = append(members, vnet.VNetAddPort{
-			Name:  port.Name,
-			Vlan:  vID,
-			Lacp:  port.Lacp,
-			State: "active",
-			ID:    port.ID,
+			AccessMode: accessMode,
+			Name:       port.Name,
+			Vlan:       vID,
+			Lacp:       port.Lacp,
+			State:      "active",
+			ID:         port.ID,
 		})
 	}
 
@@ -169,6 +182,14 @@ func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*
 		guestTenants = append(guestTenants, vnet.VNetAddTenant{Name: tenant})
 	}
 
+	var vlanidInterface any
+
+	if vnetTypeOne {
+		vlanidInterface = 0
+	} else {
+		vlanidInterface = vlanid
+	}
+
 	vnetAdd := &vnet.VNetAdd{
 		Name:         vnetMeta.Spec.VnetName,
 		Sites:        sites,
@@ -178,7 +199,7 @@ func (r *VNetMetaReconciler) VnetMetaToNetris(vnetMeta *k8sv1alpha1.VNetMeta) (*
 		Gateways:     apiGateways,
 		Ports:        members,
 		NativeVlan:   1,
-		Vlan:         vnetMeta.Spec.VlanID,
+		Vlan:         vlanidInterface,
 		Tags:         []string{},
 	}
 
@@ -192,22 +213,35 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 	sites := []vnet.VNetUpdateSite{}
 	vlanid := vnetMeta.Spec.VlanID
 	members := []vnet.VNetUpdatePort{}
+	vnetTypeOne := false
 
 	for _, site := range vnetMeta.Spec.Sites {
 		sites = append(sites, vnet.VNetUpdateSite{Name: site.Name})
 	}
 
 	for _, port := range vnetMeta.Spec.Members {
+		accessMode := false
+		if port.Untagged == "yes" {
+			accessMode = true
+		}
 		vID := vlanid
-		if (port.Vlan != "1" || vlanid == "") && vlanid != "auto" {
+		if (port.Vlan != "1" || vlanid == "") && vlanid != "auto" && vlanid != port.Vlan {
 			vID = port.Vlan
+			vnetTypeOne = true
+			if vID == "1" {
+				accessMode = true
+			}
+		}
+		if vlanid != "" && port.Untagged != "no" {
+			accessMode = true
 		}
 		members = append(members, vnet.VNetUpdatePort{
-			Name:  port.Name,
-			Vlan:  vID,
-			Lacp:  port.Lacp,
-			State: "active",
-			ID:    port.ID,
+			AccessMode: accessMode,
+			Name:       port.Name,
+			Vlan:       vID,
+			Lacp:       port.Lacp,
+			State:      "active",
+			ID:         port.ID,
 		})
 	}
 
@@ -234,6 +268,14 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 		guestTenants = append(guestTenants, vnet.VNetUpdateGuestTenant{Name: tenant})
 	}
 
+	var vlanidInterface any
+
+	if vnetTypeOne {
+		vlanidInterface = 0
+	} else {
+		vlanidInterface = vlanid
+	}
+
 	vnetUpdate := &vnet.VNetUpdate{
 		Name:         vnetMeta.Spec.VnetName,
 		Sites:        sites,
@@ -242,7 +284,7 @@ func VnetMetaToNetrisUpdate(vnetMeta *k8sv1alpha1.VNetMeta) (*vnet.VNetUpdate, e
 		Gateways:     apiGateways,
 		Ports:        members,
 		NativeVlan:   1,
-		Vlan:         vnetMeta.Spec.VlanID,
+		Vlan:         vlanidInterface,
 		Tags:         []string{},
 	}
 
@@ -319,6 +361,40 @@ func compareVNetMetaAPIVnetMembers(vnetMetaMembers []k8sv1alpha1.VNetMetaMember,
 	return len(changelog) <= 0
 }
 
+func compareVNetMetaAPIVnetMembersUntagged(vnetMetaSpec k8sv1alpha1.VNetMetaSpec, apiVnetMembers []vnet.VNetDetailedPort) bool {
+	type member struct {
+		Untagged string `diff:"untagged"`
+	}
+
+	vnetMembers := []member{}
+	apiMembers := []member{}
+	vnetMetaMembers := vnetMetaSpec.Members
+
+	for _, m := range vnetMetaMembers {
+		vnetMembers = append(vnetMembers, member{
+			Untagged: m.Untagged,
+		})
+	}
+
+	for i, m := range apiVnetMembers {
+		untagged := ""
+		if m.AccessMode && len(vnetMembers[i].Untagged) == 0 {
+			untagged = ""
+		} else if m.AccessMode && len(vnetMembers[i].Untagged) > 0 {
+			untagged = "yes"
+		} else if !m.AccessMode && len(vnetMembers[i].Untagged) > 0 {
+			untagged = "no"
+		} else if !m.AccessMode && len(vnetMembers[i].Untagged) == 0 && vnetMetaSpec.VlanID != "0" && vnetMetaSpec.VlanID != "" {
+			untagged = "no"
+		}
+		apiMembers = append(apiMembers, member{
+			Untagged: untagged,
+		})
+	}
+	changelog, _ := diff.Diff(vnetMembers, apiMembers)
+	return len(changelog) <= 0
+}
+
 func compareVNetMetaAPIVnetTenants(vnetMetaTenants []string, apiVnetTenants []vnet.VNetDetailedGuestTenant) bool {
 	tenantList := []string{}
 	for _, tenant := range apiVnetTenants {
@@ -358,6 +434,10 @@ func compareVNetMetaAPIVnet(vnetMeta *k8sv1alpha1.VNetMeta, apiVnet *vnet.VNetDe
 		}
 	}
 	if ok := compareVNetMetaAPIVnetMembers(vnetMeta.Spec.Members, apiVnet.Ports); !ok && !vlanAuto {
+		return false
+	}
+
+	if ok := compareVNetMetaAPIVnetMembersUntagged(vnetMeta.Spec, apiVnet.Ports); !ok {
 		return false
 	}
 

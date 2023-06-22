@@ -108,6 +108,11 @@ spec:
                             type: string
                           state:
                             type: string
+                          untagged:
+                            enum:
+                            - "yes"
+                            - "no"
+                            type: string
                           vlanId:
                             maximum: 4094
                             minimum: 2

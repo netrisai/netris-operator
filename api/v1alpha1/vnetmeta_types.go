@@ -52,12 +52,13 @@ type VNetMetaSite struct {
 
 // VNetMetaMember .
 type VNetMetaMember struct {
-	Name   string `json:"name"`
-	Access bool   `json:"access"`
-	ID     int    `json:"id"`
-	Lacp   string `json:"lacp"`
-	State  string `json:"state"`
-	Vlan   string `json:"vlan"`
+	Name     string `json:"name"`
+	Access   bool   `json:"access"`
+	ID       int    `json:"id"`
+	Lacp     string `json:"lacp"`
+	State    string `json:"state"`
+	Vlan     string `json:"vlan"`
+	Untagged string `json:"untagged,omitempty"`
 }
 
 // VNetMetaGateway .
