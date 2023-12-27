@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
@@ -135,7 +134,7 @@ func NatMetaToNetris(natMeta *k8sv1alpha1.NatMeta) (*nat.NATw, error) {
 		SnatToIP:           natMeta.Spec.SnatToIP,
 		SnatToPool:         natMeta.Spec.SnatToPool,
 		DnatToIP:           natMeta.Spec.DnatToIP,
-		DnatToPort:         strconv.Itoa(natMeta.Spec.DnatToPort),
+		DnatToPort:         natMeta.Spec.DnatToPort,
 	}
 
 	return natAdd, nil
@@ -157,7 +156,7 @@ func NatMetaToNetrisUpdate(natMeta *k8sv1alpha1.NatMeta) (*nat.NATw, error) {
 		SnatToIP:           natMeta.Spec.SnatToIP,
 		SnatToPool:         natMeta.Spec.SnatToPool,
 		DnatToIP:           natMeta.Spec.DnatToIP,
-		DnatToPort:         strconv.Itoa(natMeta.Spec.DnatToPort),
+		DnatToPort:         natMeta.Spec.DnatToPort,
 	}
 
 	return natAdd, nil

@@ -242,6 +242,8 @@ github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRW
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
 github.com/netrisai/netriswebapi v0.0.0-20230404043848-3cf45f0ba07d h1:w3bDLlD+UWOgn+AF1Qt/GN/XtpH1dZSyceVouvVeGVY=
 github.com/netrisai/netriswebapi v0.0.0-20230404043848-3cf45f0ba07d/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
+github.com/netrisai/netriswebapi v0.0.0-20231227220649-64aa510b4db1 h1:ET2jCGf2QrNLMvVV9S5kYOv/7YDROgYisfsgzZKB5Tw=
+github.com/netrisai/netriswebapi v0.0.0-20231227220649-64aa510b4db1/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=

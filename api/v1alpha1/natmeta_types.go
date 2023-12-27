@@ -45,7 +45,7 @@ type NatMetaSpec struct {
 	SnatToIP   string `json:"snatToIp,omitempty"`
 	SnatToPool string `json:"snatToPool,omitempty"`
 	DnatToIP   string `json:"dnatToIp,omitempty"`
-	DnatToPort int    `json:"dnatToPort,omitempty"`
+	DnatToPort string `json:"dnatToPort,omitempty"`
 }
 
 // NatMetaStatus defines the observed state of NatMeta

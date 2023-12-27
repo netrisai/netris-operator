@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/go-logr/logr v0.1.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/netrisai/netriswebapi v0.0.0-20230404043848-3cf45f0ba07d
+	github.com/netrisai/netriswebapi v0.0.0-20231227220649-64aa510b4db1
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.19.0
 	github.com/r3labs/diff/v2 v2.9.1
