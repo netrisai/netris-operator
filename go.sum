@@ -246,6 +246,8 @@ github.com/netrisai/netriswebapi v0.0.0-20230612115147-822e91521d5b h1:7DugRUR8D
 github.com/netrisai/netriswebapi v0.0.0-20230612115147-822e91521d5b/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
 github.com/netrisai/netriswebapi v0.0.0-20230612164134-c158192abfb2 h1:IEg2CAAmFDShUJS8vyiTPj3+aPOvryZ7T5HuN47as68=
 github.com/netrisai/netriswebapi v0.0.0-20230612164134-c158192abfb2/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
+github.com/netrisai/netriswebapi v0.0.0-20231121004246-72bab01d3ef5 h1:H0MMXpuyLnpLPjJPMUmJcBmP8KKU1QYck9gSVEoDirM=
+github.com/netrisai/netriswebapi v0.0.0-20231121004246-72bab01d3ef5/go.mod h1:GLLz33Jc07/hIPwEYZDWEtNtHjX/QZjVzf9xLnfSiqs=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
