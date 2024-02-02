@@ -66,7 +66,7 @@ func (r *BGPReconciler) BGPToBGPMeta(bgp *k8sv1alpha1.BGP) (*k8sv1alpha1.BGPMeta
 		} else if bgp.Spec.Transport.Name != "" {
 			return nil, fmt.Errorf("coundn't find port %s", bgp.Spec.Transport.Name)
 		}
-		vlanID = 1
+		vlanID = -1
 	} else {
 		vnets, err := r.Cred.VNet().Get()
 		if err != nil {
@@ -214,6 +214,11 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
 		hwID = "auto"
 	}
 
+	var untagged bool = false
+	if bgpMeta.Spec.Vlan == -1 {
+		untagged = true
+	}
+
 	bgpAdd := &bgp.EBGPAdd{
 		AllowAsIn:          bgpMeta.Spec.AllowasIn,
 		BgpPassword:        bgpMeta.Spec.BgpPassword,
@@ -245,6 +250,7 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
 		Vlan:               bgpMeta.Spec.Vlan,
 		Weight:             bgpMeta.Spec.Weight,
 		Tags:               []string{},
+		Untagged:           untagged,
 	}
 
 	return bgpAdd, nil
@@ -418,8 +424,10 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, u uni
 		return false
 	}
 	if apiBGP.Vlan != bgpMeta.Spec.Vlan {
-		u.DebugLogger.Info("Vlan changed", "netrisValue", apiBGP.Vlan, "k8sValue", bgpMeta.Spec.Vlan)
-		return false
+		if bgpMeta.Spec.Vlan != -1 {
+			u.DebugLogger.Info("Vlan changed", "netrisValue", apiBGP.Vlan, "k8sValue", bgpMeta.Spec.Vlan)
+			return false
+		}
 	}
 	if apiBGP.Weight != bgpMeta.Spec.Weight {
 		u.DebugLogger.Info("Weight changed", "netrisValue", apiBGP.Weight, "k8sValue", bgpMeta.Spec.Weight)

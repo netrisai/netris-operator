@@ -24,7 +24,6 @@ import (
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netris-operator/netrisstorage"
-	"github.com/netrisai/netriswebapi/v2/types/vnet"
 )
 
 func init() {
@@ -36,7 +35,7 @@ func init() {
 
 func (r *VNetReconciler) getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([]k8sv1alpha1.VNetMetaMember, error) {
 	members := []k8sv1alpha1.VNetMetaMember{}
-	hwPorts := make(map[string]*vnet.VNetAddPort)
+	hwPorts := make(map[string]*k8sv1alpha1.VNetMetaMember)
 	for _, port := range portNames {
 		vlanID := "1"
 		if port.VlanID > 1 {
@@ -50,10 +49,18 @@ func (r *VNetReconciler) getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([
 			}
 		}
 
-		hwPorts[port.Name] = &vnet.VNetAddPort{
-			Vlan:  vlanID,
-			Lacp:  "off",
-			State: state,
+		untagged := ""
+		if len(port.Untagged) > 0 {
+			if port.Untagged == "yes" || port.Untagged == "no" {
+				untagged = port.Untagged
+			}
+		}
+
+		hwPorts[port.Name] = &k8sv1alpha1.VNetMetaMember{
+			Vlan:     vlanID,
+			Lacp:     "off",
+			State:    state,
+			Untagged: untagged,
 		}
 
 	}
@@ -69,11 +76,12 @@ func (r *VNetReconciler) getPortsMeta(portNames []k8sv1alpha1.VNetSwitchPort) ([
 
 	for _, member := range hwPorts {
 		members = append(members, k8sv1alpha1.VNetMetaMember{
-			Name:  member.Name,
-			Lacp:  member.Lacp,
-			State: member.State,
-			ID:    member.ID,
-			Vlan:  member.Vlan,
+			Name:     member.Name,
+			Lacp:     member.Lacp,
+			State:    member.State,
+			ID:       member.ID,
+			Vlan:     member.Vlan,
+			Untagged: member.Untagged,
 		})
 	}
 	return members, nil

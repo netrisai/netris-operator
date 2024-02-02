@@ -89,7 +89,7 @@ type BGPMultihop struct {
 type BGPTransport struct {
 	// +kubebuilder:validation:Enum=port;vnet
 	Type string `json:"type,omitempty"`
-	// +kubebuilder:validation:Pattern=`(^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-z0-9])?(\.[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?)*$)`
+	// +kubebuilder:validation:Pattern=`(^[a-zA-Z0-9]+@[a-zA-Z0-9-]+$)|(^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?)*$)`
 	Name   string `json:"name"`
 	VlanID int    `json:"vlanId,omitempty"`
 }
