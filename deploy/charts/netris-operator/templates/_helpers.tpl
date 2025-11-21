@@ -119,4 +119,6 @@ Create netris-opeator controller envs
   value: {{ .Values.calicoASNRange | default "4230000000-4239999999" }}
 - name: NOPERATOR_L4LB_TENANT
   value: {{ .Values.l4lbTenant | default "" | quote }}
+- name: NOPERATOR_L4LB_VPC
+  value: {{ .Values.l4lbVPC | default "" | quote }}
 {{- end -}}

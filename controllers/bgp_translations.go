@@ -227,7 +227,7 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
 		Vnet:               bgp.IDNone{ID: vnetID},
 		Port:               bgp.IDName{ID: bgpMeta.Spec.PortID},
 		Description:        bgpMeta.Spec.Description,
-		InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
+		InboundRouteMap:    optionalRouteMapID(bgpMeta.Spec.InboundRouteMap),
 		IPFamily:           bgpMeta.Spec.IPVersion,
 		LocalIP:            bgpMeta.Spec.LocalIP,
 		LocalPreference:    bgpMeta.Spec.LocalPreference,
@@ -236,7 +236,7 @@ func BGPMetaToNetris(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPAdd, error) {
 		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
 		NeighborAS:         bgpMeta.Spec.NeighborAs,
 		DefaultOriginate:   bgpMeta.Spec.Originate,
-		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
+		OutboundRouteMap:   optionalRouteMapID(bgpMeta.Spec.OutboundRouteMap),
 		PrefixLength:       bgpMeta.Spec.PrefixLength,
 		PrefixInboundMax:   bgpMeta.Spec.PrefixLimit,
 		PrefixListInbound:  bgpMeta.Spec.PrefixListInbound,
@@ -276,7 +276,7 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPUpdate, error
 		BgpPassword:        bgpMeta.Spec.BgpPassword,
 		BgpCommunity:       bgpMeta.Spec.Community,
 		Description:        bgpMeta.Spec.Description,
-		InboundRouteMap:    bgpMeta.Spec.InboundRouteMap,
+		InboundRouteMap:    optionalRouteMapID(bgpMeta.Spec.InboundRouteMap),
 		IPFamily:           bgpMeta.Spec.IPVersion,
 		LocalIP:            bgpMeta.Spec.LocalIP,
 		LocalPreference:    bgpMeta.Spec.LocalPreference,
@@ -285,7 +285,7 @@ func BGPMetaToNetrisUpdate(bgpMeta *k8sv1alpha1.BGPMeta) (*bgp.EBGPUpdate, error
 		NeighborAddress:    bgpMeta.Spec.NeighborAddress,
 		NeighborAS:         bgpMeta.Spec.NeighborAs,
 		DefaultOriginate:   bgpMeta.Spec.Originate,
-		OutboundRouteMap:   bgpMeta.Spec.OutboundRouteMap,
+		OutboundRouteMap:   optionalRouteMapID(bgpMeta.Spec.OutboundRouteMap),
 		PrefixLength:       bgpMeta.Spec.PrefixLength,
 		PrefixInboundMax:   bgpMeta.Spec.PrefixLimit,
 		PrefixListInbound:  bgpMeta.Spec.PrefixListInbound,
@@ -435,4 +435,12 @@ func compareBGPMetaAPIEBGP(bgpMeta *k8sv1alpha1.BGPMeta, apiBGP *bgp.EBGP, u uni
 	}
 
 	return true
+}
+
+func optionalRouteMapID(value int) *int {
+	if value <= 0 {
+		return nil
+	}
+	v := value
+	return &v
 }

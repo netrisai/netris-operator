@@ -43,6 +43,9 @@ calicoASNRange: 4230000000-4239999999
 # Set the default Tenant for L4LB resources. If set, a tenant autodetection for L4LB resources will be disabled
 l4lbTenant: ""
 
+# Set VPC name to handle
+l4lbVPC: ""
+
 rbac:
   # Specifies whether RBAC resources should be created
   create: true

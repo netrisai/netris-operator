@@ -5,6 +5,7 @@ metadata:
 spec:
   ownerTenant: Admin
   site: santa-clara
+  vpc: prod-vpc
   state: active
   protocol: tcp
   frontend:

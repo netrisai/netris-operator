@@ -37,6 +37,8 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 
 	tenantID := 0
 	siteID := 0
+	vpcID := 0
+	vpcName := ""
 	var state string
 	var timeout string
 	proto := "tcp"
@@ -92,6 +94,19 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 			siteID = site.ID
 		} else {
 			return nil, fmt.Errorf("'%s' site not found", l4lb.Spec.Site)
+		}
+	}
+
+	vpcNameInput := l4lb.Spec.VPC
+	if r.L4LBVPC != "" {
+		vpcNameInput = r.L4LBVPC
+	}
+	if vpcNameInput != "" {
+		if vpc, ok := r.NStorage.VPCStorage.FindByName(vpcNameInput); ok {
+			vpcID = vpc.ID
+			vpcName = vpc.Name
+		} else {
+			return nil, fmt.Errorf("vpc '%s' not found", vpcNameInput)
 		}
 	}
 
@@ -152,6 +167,8 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 			L4LBName:    l4lb.Name,
 			SiteID:      siteID,
 			SiteName:    l4lb.Spec.Site,
+			VPCID:       vpcID,
+			VPCName:     vpcName,
 			Tenant:      tenantID,
 			Status:      state,
 			Automatic:   automatic,
@@ -228,13 +245,16 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *l4lb.LoadBa
 	if l4lbMeta.Spec.Protocol != apiL4LB.Protocol {
 		return false
 	}
-	if l4lbMeta.Spec.SiteID != apiL4LB.SiteID {
+	if l4lbMeta.Spec.SiteID != apiL4LB.Site.ID {
 		return false
 	}
-	if l4lbMeta.Spec.Tenant != apiL4LB.TenantID {
+	if l4lbMeta.Spec.Tenant != apiL4LB.Tenant.ID {
 		return false
 	}
 	if l4lbMeta.Spec.Status != apiL4LB.Status {
+		return false
+	}
+	if l4lbMeta.Spec.VPCID != apiL4LB.Vpc.ID {
 		return false
 	}
 	if ok := compareL4LBMetaAPIL4LBHealthCheck(*l4lbMeta.Spec.HealthCheck, apiL4LB.HealthCheck); !ok {
@@ -280,10 +300,17 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*l4lb.LoadBalancerAdd, er
 		ip = l4lbMeta.Spec.IP
 	}
 
+	tenant := l4lb.IDName{ID: l4lbMeta.Spec.Tenant}
+	site := l4lb.IDName{ID: l4lbMeta.Spec.SiteID, Name: l4lbMeta.Spec.SiteName}
+	var vpc *l4lb.IDName
+	if l4lbMeta.Spec.VPCID > 0 {
+		vpc = &l4lb.IDName{ID: l4lbMeta.Spec.VPCID, Name: l4lbMeta.Spec.VPCName}
+	}
+
 	l4lbAdd := &l4lb.LoadBalancerAdd{
 		Name:        l4lbMeta.Spec.L4LBName,
-		Tenant:      l4lbMeta.Spec.Tenant,
-		SiteID:      l4lbMeta.Spec.SiteID,
+		Tenant:      tenant,
+		Site:        site,
 		Automatic:   l4lbMeta.Spec.Automatic,
 		Protocol:    l4lbMeta.Spec.Protocol,
 		IP:          ip,
@@ -292,6 +319,7 @@ func L4LBMetaToNetris(l4lbMeta *k8sv1alpha1.L4LBMeta) (*l4lb.LoadBalancerAdd, er
 		RequestPath: requestPath,
 		Timeout:     timeOut,
 		Backend:     lbBackends,
+		Vpc:         vpc,
 	}
 
 	if healthCheck != "" {
@@ -329,10 +357,17 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*l4lb.LoadBalancerU
 		})
 	}
 
+	tenant := l4lb.IDName{ID: l4lbMeta.Spec.Tenant}
+	site := l4lb.IDName{ID: l4lbMeta.Spec.SiteID, Name: l4lbMeta.Spec.SiteName}
+	var vpc *l4lb.IDName
+	if l4lbMeta.Spec.VPCID > 0 {
+		vpc = &l4lb.IDName{ID: l4lbMeta.Spec.VPCID, Name: l4lbMeta.Spec.VPCName}
+	}
+
 	l4lbUpdate := &l4lb.LoadBalancerUpdate{
 		Name:        l4lbMeta.Spec.L4LBName,
-		TenantID:    l4lbMeta.Spec.Tenant,
-		SiteID:      l4lbMeta.Spec.SiteID,
+		Tenant:      tenant,
+		Site:        site,
 		SiteName:    l4lbMeta.Spec.SiteName,
 		Automatic:   l4lbMeta.Spec.Automatic,
 		Protocol:    l4lbMeta.Spec.Protocol,
@@ -342,6 +377,7 @@ func L4LBMetaToNetrisUpdate(l4lbMeta *k8sv1alpha1.L4LBMeta) (*l4lb.LoadBalancerU
 		RequestPath: requestPath,
 		Timeout:     timeOut,
 		BackendIPs:  lbBackends,
+		Vpc:         vpc,
 	}
 
 	if healthCheck != "" {

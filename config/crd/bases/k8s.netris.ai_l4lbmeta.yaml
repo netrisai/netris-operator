@@ -103,6 +103,10 @@ spec:
                 type: integer
               siteName:
                 type: string
+              vpcId:
+                type: integer
+              vpcName:
+                type: string
               status:
                 type: string
               tenantId:
