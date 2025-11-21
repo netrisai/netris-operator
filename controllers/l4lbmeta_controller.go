@@ -136,6 +136,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if l4lb, ok := r.NStorage.L4LBStorage.FindByName(l4lbMeta.Spec.L4LBName); ok {
 				debugLogger.Info("Imported yaml mode. L4LB found")
 				l4lbMeta.Spec.ID = l4lb.ID
+				l4lbMeta.Spec.VPCID = l4lb.Vpc.ID
 				l4lbMeta.Spec.IP = l4lb.IP
 				l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(l4lb.ModifiedDate/1000), 0))
 				l4lbMetaPatchCtx, l4lbMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
@@ -238,8 +239,9 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	}
 
 	var id int
+	var vpcid int
 	ip := l4lbMeta.Spec.IP
-	idStruct := l4lb.LoadBalancerAddResponse{}
+	idStruct := l4lb.LoadBalancer{}
 	if l4lbMeta.Spec.Automatic {
 		err = http.Decode(resp.Data, &idStruct)
 		if err != nil {
@@ -247,6 +249,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 		}
 		id = idStruct.ID
 		ip = idStruct.IP
+		vpcid = idStruct.Vpc.ID
 	} else {
 		err = http.Decode(resp.Data, &id)
 		if err != nil {
@@ -256,6 +259,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 
 	l4lbMeta.Spec.ID = id
 	l4lbMeta.Spec.IP = ip
+	l4lbMeta.Spec.VPCID = vpcid
 
 	debugLogger.Info("L4LB Created", "id", id)
 

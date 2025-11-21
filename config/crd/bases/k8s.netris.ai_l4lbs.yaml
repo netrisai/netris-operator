@@ -104,14 +104,14 @@ spec:
                 type: string
               site:
                 type: string
-              vpc:
-                type: string
               state:
                 description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                   Important: Run "make" to regenerate code after modifying this file'
                 enum:
                 - active
                 - disable
+                type: string
+              vpc:
                 type: string
             required:
             - backend
