@@ -120,5 +120,5 @@ Create netris-opeator controller envs
 - name: NOPERATOR_L4LB_TENANT
   value: {{ .Values.l4lbTenant | default "" | quote }}
 - name: NOPERATOR_VPC_ID
-  value: {{ .Values.vpcid | default 0 | quote }}
+  value: {{ .Values.vpcid | default 1 | quote }}
 {{- end -}}

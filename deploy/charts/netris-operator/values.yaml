@@ -44,7 +44,7 @@ calicoASNRange: 4230000000-4239999999
 l4lbTenant: ""
 
 # Set VPC ID to handle (integer)
-vpcid: 0
+vpcid: 1
 
 rbac:
   # Specifies whether RBAC resources should be created

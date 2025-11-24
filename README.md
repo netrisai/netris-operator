@@ -35,6 +35,7 @@ Netris Operator managing resources samples are available in the `samples/` [fold
   | `v1.X`           | `v3.0`             |
   | `v2.X`           | `v3.1+`            |
   | `v3.X`           | `v4.1+`            |
+  | `v4.X`           | `v4.3+`            |
 
 
 ## Features

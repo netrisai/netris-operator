@@ -146,6 +146,11 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "BGPMeta")
 		os.Exit(1)
 	}
+	vpcid := configloader.Root.VPCID
+	if vpcid == 0 {
+		vpcid = 1
+	}
+
 	if err = (&controllers.L4LBReconciler{
 		Client:     mgr.GetClient(),
 		Log:        ctrl.Log.WithName("L4LB"),
@@ -153,7 +158,7 @@ func main() {
 		Cred:       cred,
 		NStorage:   nStorage,
 		L4LBTenant: configloader.Root.L4lbTenant,
-		VPCID:      configloader.Root.VPCID,
+		VPCID:      vpcid,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L4LB")
 		os.Exit(1)
@@ -164,7 +169,7 @@ func main() {
 		Scheme:   mgr.GetScheme(),
 		Cred:     cred,
 		NStorage: nStorage,
-		VPCID:    configloader.Root.VPCID,
+		VPCID:    vpcid,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L4LBMeta")
 		os.Exit(1)

@@ -35,4 +35,4 @@ spec:
             - name: NOPERATOR_L4LB_TENANT
               value: ""
             - name: NOPERATOR_VPC_ID
-              value: "0"
+              value: "1"
