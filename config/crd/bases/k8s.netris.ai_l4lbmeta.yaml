@@ -107,6 +107,10 @@ spec:
                 type: string
               tenantId:
                 type: integer
+              vpcId:
+                type: integer
+              vpcName:
+                type: string
             required:
             - automatic
             - backendIps

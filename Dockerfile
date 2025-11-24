@@ -1,6 +1,15 @@
 # syntax=docker/dockerfile:experimental
+# Build arguments provided by buildx
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+ARG TARGETPLATFORM=linux/amd64
+ARG BUILDPLATFORM=linux/amd64
+
 # Build the manager binary
-FROM golang:1.18 as builder
+FROM --platform=$BUILDPLATFORM golang:1.18 as builder
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETPLATFORM
 
 WORKDIR /workspace
 
@@ -25,11 +34,12 @@ COPY calicowatcher/ calicowatcher/
 COPY netrisstorage/ netrisstorage/
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -a -o manager main.go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} GO111MODULE=on go build -a -o manager main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot
+FROM --platform=$TARGETPLATFORM gcr.io/distroless/static:nonroot
+ARG TARGETPLATFORM
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER nonroot:nonroot

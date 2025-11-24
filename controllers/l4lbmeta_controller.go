@@ -43,6 +43,7 @@ type L4LBMetaReconciler struct {
 	Scheme   *runtime.Scheme
 	Cred     *api.Clientset
 	NStorage *netrisstorage.Storage
+	VPCID    int
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta,verbs=get;list;watch;create;update;patch;delete
@@ -135,6 +136,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if l4lb, ok := r.NStorage.L4LBStorage.FindByName(l4lbMeta.Spec.L4LBName); ok {
 				debugLogger.Info("Imported yaml mode. L4LB found")
 				l4lbMeta.Spec.ID = l4lb.ID
+				l4lbMeta.Spec.VPCID = l4lb.Vpc.ID
 				l4lbMeta.Spec.IP = l4lb.IP
 				l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(l4lb.ModifiedDate/1000), 0))
 				l4lbMetaPatchCtx, l4lbMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
@@ -152,6 +154,10 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			debugLogger.Info("Imported yaml mode. L4LB not found")
 		}
 
+		if err := r.populateMetaVPC(l4lbMeta, l4lbCR); err != nil {
+			logger.Error(fmt.Errorf("{populateMetaVPC} %s", err), "")
+			return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
+		}
 		logger.Info("Creating L4LB")
 		if _, err, errMsg := r.createL4LB(l4lbMeta); err != nil {
 			logger.Error(fmt.Errorf("{createL4LB} %s", err), "")
@@ -163,6 +169,10 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if !ok {
 			debugLogger.Info("L4LB not found in Netris")
 			debugLogger.Info("Going to create L4LB")
+			if err := r.populateMetaVPC(l4lbMeta, l4lbCR); err != nil {
+				logger.Error(fmt.Errorf("{populateMetaVPC} %s", err), "")
+				return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
+			}
 			logger.Info("Creating L4LB")
 			if _, err, errMsg := r.createL4LB(l4lbMeta); err != nil {
 				logger.Error(fmt.Errorf("{createL4LB} %s", err), "")
@@ -171,6 +181,11 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			logger.Info("L4LB Created")
 		} else {
 			l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiL4LB.ModifiedDate/1000), 0))
+			// Populate VPC before comparison to ensure VPCID is set correctly
+			if err := r.populateMetaVPC(l4lbMeta, l4lbCR); err != nil {
+				logger.Error(fmt.Errorf("{populateMetaVPC} %s", err), "")
+				return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
+			}
 			debugLogger.Info("Comparing L4LBMeta with Netris L4LB")
 			if ok := compareL4LBMetaAPIL4LB(l4lbMeta, apiL4LB); ok {
 				debugLogger.Info("Nothing Changed")
@@ -225,8 +240,9 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 	}
 
 	var id int
+	var vpcid int
 	ip := l4lbMeta.Spec.IP
-	idStruct := l4lb.LoadBalancerAddResponse{}
+	idStruct := l4lb.LoadBalancer{}
 	if l4lbMeta.Spec.Automatic {
 		err = http.Decode(resp.Data, &idStruct)
 		if err != nil {
@@ -234,6 +250,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 		}
 		id = idStruct.ID
 		ip = idStruct.IP
+		vpcid = idStruct.Vpc.ID
 	} else {
 		err = http.Decode(resp.Data, &id)
 		if err != nil {
@@ -243,6 +260,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 
 	l4lbMeta.Spec.ID = id
 	l4lbMeta.Spec.IP = ip
+	l4lbMeta.Spec.VPCID = vpcid
 
 	debugLogger.Info("L4LB Created", "id", id)
 
@@ -289,7 +307,7 @@ func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *k8sv1alpha1.L4LB, l4lbMet
 	if l4lbCR.Spec.OwnerTenant == "" || l4lbCR.Spec.Site == "" || l4lbCR.Spec.Frontend.IP == "" {
 		_ = u.NStorage.L4LBStorage.Download()
 		if updatedL4LB, ok := u.NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID); ok {
-			l4lbCR.Spec.OwnerTenant = updatedL4LB.TenantName
+			l4lbCR.Spec.OwnerTenant = updatedL4LB.Tenant.Name
 			l4lbCR.Spec.Site = updatedL4LB.SiteName
 			l4lbCR.Spec.Frontend.IP = updatedL4LB.IP
 			shouldUpdateCR = true
@@ -302,4 +320,26 @@ func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *k8sv1alpha1.L4LB, l4lbMet
 		}
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *L4LBMetaReconciler) populateMetaVPC(l4lbMeta *k8sv1alpha1.L4LBMeta, l4lbCR *k8sv1alpha1.L4LB) error {
+	vpcIDInput := r.VPCID
+
+	if vpcIDInput == 0 {
+		l4lbMeta.Spec.VPCID = 0
+		l4lbMeta.Spec.VPCName = ""
+		return nil
+	}
+
+	if l4lbMeta.Spec.VPCID == vpcIDInput {
+		return nil
+	}
+
+	if vpc, ok := r.NStorage.VPCStorage.FindByID(vpcIDInput); ok {
+		l4lbMeta.Spec.VPCID = vpc.ID
+		l4lbMeta.Spec.VPCName = vpc.Name
+		return nil
+	}
+
+	return fmt.Errorf("vpc with id '%d' not found", vpcIDInput)
 }

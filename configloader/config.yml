@@ -8,3 +8,4 @@ controller:
 # requeueinterval: 15                             # overwrite env: NOPERATOR_REQUEUE_INTERVAL
 # calicoasnrange: 4230000000-4239999999           # overwrite env: NOPERATOR_CALICO_ASN_RANGE
 # l4lbtenant:                                     # overwrite env: NOPERATOR_L4LB_TENANT
+# vpcid: 1                                         # overwrite env: NOPERATOR_VPC_ID (VPC ID, integer)

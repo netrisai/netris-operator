@@ -109,8 +109,8 @@ func linkUpdateDefaultAnnotations(link *k8sv1alpha1.Link) {
 }
 
 // LinkMetaToNetris converts the k8s Link resource to Netris type and used for add the Link for Netris API.
-func LinkMetaToNetris(linkMeta *k8sv1alpha1.LinkMeta) (*link.Link, error) {
-	linkAdd := &link.Link{
+func LinkMetaToNetris(linkMeta *k8sv1alpha1.LinkMeta) (*link.Linkw, error) {
+	linkAdd := &link.Linkw{
 		Local:  link.LinkIDName{ID: linkMeta.Spec.Local},
 		Remote: link.LinkIDName{ID: linkMeta.Spec.Remote},
 	}
@@ -119,8 +119,8 @@ func LinkMetaToNetris(linkMeta *k8sv1alpha1.LinkMeta) (*link.Link, error) {
 }
 
 // LinkMetaToNetrisUpdate converts the k8s Link resource to Netris type and used for update the Link for Netris API.
-func LinkMetaToNetrisUpdate(linkMeta *k8sv1alpha1.LinkMeta) (*link.Link, error) {
-	linkAdd := &link.Link{
+func LinkMetaToNetrisUpdate(linkMeta *k8sv1alpha1.LinkMeta) (*link.Linkw, error) {
+	linkAdd := &link.Linkw{
 		Local:  link.LinkIDName{ID: linkMeta.Spec.Local},
 		Remote: link.LinkIDName{ID: linkMeta.Spec.Remote},
 	}

@@ -37,6 +37,8 @@ type L4LBMetaSpec struct {
 	Tenant    int    `json:"tenantId"`
 	SiteID    int    `json:"siteId"`
 	SiteName  string `json:"siteName"`
+	VPCID     int    `json:"vpcId,omitempty"`
+	VPCName   string `json:"vpcName,omitempty"`
 	Automatic bool   `json:"automatic"`
 
 	KubenetInfoString string `json:"kubenet_info"`
