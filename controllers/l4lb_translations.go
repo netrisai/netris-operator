@@ -97,16 +97,18 @@ func (r *L4LBReconciler) L4LBToL4LBMeta(l4lb *k8sv1alpha1.L4LB) (*k8sv1alpha1.L4
 		}
 	}
 
-	vpcNameInput := l4lb.Spec.VPC
-	if r.L4LBVPC != "" {
-		vpcNameInput = r.L4LBVPC
+	vpcIDInput := 0
+	if r.VPCID > 0 {
+		vpcIDInput = r.VPCID
+	} else if l4lb.Spec.VPCID > 0 {
+		vpcIDInput = l4lb.Spec.VPCID
 	}
-	if vpcNameInput != "" {
-		if vpc, ok := r.NStorage.VPCStorage.FindByName(vpcNameInput); ok {
+	if vpcIDInput > 0 {
+		if vpc, ok := r.NStorage.VPCStorage.FindByID(vpcIDInput); ok {
 			vpcID = vpc.ID
 			vpcName = vpc.Name
 		} else {
-			return nil, fmt.Errorf("vpc '%s' not found", vpcNameInput)
+			return nil, fmt.Errorf("vpc with id '%d' not found", vpcIDInput)
 		}
 	}
 

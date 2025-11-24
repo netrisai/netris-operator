@@ -111,8 +111,8 @@ spec:
                 - active
                 - disable
                 type: string
-              vpc:
-                type: string
+              vpcid:
+                type: integer
             required:
             - backend
             - frontend

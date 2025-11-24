@@ -43,7 +43,7 @@ type L4LBMetaReconciler struct {
 	Scheme   *runtime.Scheme
 	Cred     *api.Clientset
 	NStorage *netrisstorage.Storage
-	L4LBVPC  string
+	VPCID    int
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta,verbs=get;list;watch;create;update;patch;delete
@@ -303,8 +303,8 @@ func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *k8sv1alpha1.L4LB, l4lbMet
 		l4lbCR.Spec.Frontend.IP = l4lbMeta.Spec.IP
 		shouldUpdateCR = true
 	}
-	if l4lbCR.Spec.VPC == "" && l4lbMeta.Spec.VPCName != "" {
-		l4lbCR.Spec.VPC = l4lbMeta.Spec.VPCName
+	if l4lbCR.Spec.VPCID == 0 && l4lbMeta.Spec.VPCID > 0 {
+		l4lbCR.Spec.VPCID = l4lbMeta.Spec.VPCID
 		shouldUpdateCR = true
 	}
 	if l4lbCR.Spec.OwnerTenant == "" || l4lbCR.Spec.Site == "" || l4lbCR.Spec.Frontend.IP == "" {
@@ -313,8 +313,8 @@ func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *k8sv1alpha1.L4LB, l4lbMet
 			l4lbCR.Spec.OwnerTenant = updatedL4LB.Tenant.Name
 			l4lbCR.Spec.Site = updatedL4LB.SiteName
 			l4lbCR.Spec.Frontend.IP = updatedL4LB.IP
-			if l4lbCR.Spec.VPC == "" && updatedL4LB.Vpc.Name != "" {
-				l4lbCR.Spec.VPC = updatedL4LB.Vpc.Name
+			if l4lbCR.Spec.VPCID == 0 && updatedL4LB.Vpc.ID > 0 {
+				l4lbCR.Spec.VPCID = updatedL4LB.Vpc.ID
 			}
 			shouldUpdateCR = true
 		}
@@ -329,31 +329,31 @@ func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *k8sv1alpha1.L4LB, l4lbMet
 }
 
 func (r *L4LBMetaReconciler) populateMetaVPC(l4lbMeta *k8sv1alpha1.L4LBMeta, l4lbCR *k8sv1alpha1.L4LB) error {
-	if l4lbCR == nil {
-		return nil
+	vpcIDInput := 0
+	if r.VPCID > 0 {
+		vpcIDInput = r.VPCID
+	} else if l4lbCR != nil && l4lbCR.Spec.VPCID > 0 {
+		vpcIDInput = l4lbCR.Spec.VPCID
 	}
 
-	vpcName := l4lbCR.Spec.VPC
-	if r.L4LBVPC != "" {
-		vpcName = r.L4LBVPC
-		l4lbCR.Spec.VPC = r.L4LBVPC
-	}
-
-	if vpcName == "" {
+	if vpcIDInput == 0 {
 		l4lbMeta.Spec.VPCID = 0
 		l4lbMeta.Spec.VPCName = ""
 		return nil
 	}
 
-	if l4lbMeta.Spec.VPCID > 0 && l4lbMeta.Spec.VPCName == vpcName {
+	if l4lbMeta.Spec.VPCID == vpcIDInput {
 		return nil
 	}
 
-	if vpc, ok := r.NStorage.VPCStorage.FindByName(vpcName); ok {
+	if vpc, ok := r.NStorage.VPCStorage.FindByID(vpcIDInput); ok {
 		l4lbMeta.Spec.VPCID = vpc.ID
 		l4lbMeta.Spec.VPCName = vpc.Name
+		if l4lbCR != nil {
+			l4lbCR.Spec.VPCID = vpc.ID
+		}
 		return nil
 	}
 
-	return fmt.Errorf("vpc '%s' not found", vpcName)
+	return fmt.Errorf("vpc with id '%d' not found", vpcIDInput)
 }

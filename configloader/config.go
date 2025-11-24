@@ -12,7 +12,7 @@ type config struct {
 	RequeueInterval int        `yaml:"requeueinterval" envconfig:"NOPERATOR_REQUEUE_INTERVAL"`
 	CalicoASNRange  string     `yaml:"calicoasnrange" envconfig:"NOPERATOR_CALICO_ASN_RANGE"`
 	L4lbTenant      string     `yaml:"l4lbtenant" envconfig:"NOPERATOR_L4LB_TENANT"`
-	L4lbVPC         string     `yaml:"l4lbvpc" envconfig:"NOPERATOR_L4LB_VPC"`
+	VPCID           int        `yaml:"vpcid" envconfig:"NOPERATOR_VPC_ID"`
 }
 
 type controller struct {
