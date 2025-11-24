@@ -33,7 +33,6 @@ type L4LBSpec struct {
 	Check       L4LBCheck `json:"check,omitempty"`
 	OwnerTenant string    `json:"ownerTenant,omitempty"`
 	Site        string    `json:"site,omitempty"`
-	VPCID       int       `json:"vpcid,omitempty"`
 
 	// +kubebuilder:validation:Enum=tcp;udp
 	Protocol string `json:"protocol,omitempty"`

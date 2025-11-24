@@ -304,19 +304,12 @@ func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *k8sv1alpha1.L4LB, l4lbMet
 		l4lbCR.Spec.Frontend.IP = l4lbMeta.Spec.IP
 		shouldUpdateCR = true
 	}
-	if l4lbCR.Spec.VPCID == 0 && l4lbMeta.Spec.VPCID > 0 {
-		l4lbCR.Spec.VPCID = l4lbMeta.Spec.VPCID
-		shouldUpdateCR = true
-	}
 	if l4lbCR.Spec.OwnerTenant == "" || l4lbCR.Spec.Site == "" || l4lbCR.Spec.Frontend.IP == "" {
 		_ = u.NStorage.L4LBStorage.Download()
 		if updatedL4LB, ok := u.NStorage.L4LBStorage.FindByID(l4lbMeta.Spec.ID); ok {
 			l4lbCR.Spec.OwnerTenant = updatedL4LB.Tenant.Name
 			l4lbCR.Spec.Site = updatedL4LB.SiteName
 			l4lbCR.Spec.Frontend.IP = updatedL4LB.IP
-			if l4lbCR.Spec.VPCID == 0 && updatedL4LB.Vpc.ID > 0 {
-				l4lbCR.Spec.VPCID = updatedL4LB.Vpc.ID
-			}
 			shouldUpdateCR = true
 		}
 	}
@@ -330,12 +323,7 @@ func (u *uniReconciler) updateL4LBIfNeccesarry(l4lbCR *k8sv1alpha1.L4LB, l4lbMet
 }
 
 func (r *L4LBMetaReconciler) populateMetaVPC(l4lbMeta *k8sv1alpha1.L4LBMeta, l4lbCR *k8sv1alpha1.L4LB) error {
-	vpcIDInput := 0
-	if r.VPCID > 0 {
-		vpcIDInput = r.VPCID
-	} else if l4lbCR != nil && l4lbCR.Spec.VPCID > 0 {
-		vpcIDInput = l4lbCR.Spec.VPCID
-	}
+	vpcIDInput := r.VPCID
 
 	if vpcIDInput == 0 {
 		l4lbMeta.Spec.VPCID = 0
@@ -350,9 +338,6 @@ func (r *L4LBMetaReconciler) populateMetaVPC(l4lbMeta *k8sv1alpha1.L4LBMeta, l4l
 	if vpc, ok := r.NStorage.VPCStorage.FindByID(vpcIDInput); ok {
 		l4lbMeta.Spec.VPCID = vpc.ID
 		l4lbMeta.Spec.VPCName = vpc.Name
-		if l4lbCR != nil {
-			l4lbCR.Spec.VPCID = vpc.ID
-		}
 		return nil
 	}
 
