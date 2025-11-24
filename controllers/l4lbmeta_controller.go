@@ -181,16 +181,17 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			logger.Info("L4LB Created")
 		} else {
 			l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiL4LB.ModifiedDate/1000), 0))
+			// Populate VPC before comparison to ensure VPCID is set correctly
+			if err := r.populateMetaVPC(l4lbMeta, l4lbCR); err != nil {
+				logger.Error(fmt.Errorf("{populateMetaVPC} %s", err), "")
+				return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
+			}
 			debugLogger.Info("Comparing L4LBMeta with Netris L4LB")
 			if ok := compareL4LBMetaAPIL4LB(l4lbMeta, apiL4LB); ok {
 				debugLogger.Info("Nothing Changed")
 			} else {
 				debugLogger.Info("Something changed")
 				debugLogger.Info("Go to update L4LB in Netris")
-				if err := r.populateMetaVPC(l4lbMeta, l4lbCR); err != nil {
-					logger.Error(fmt.Errorf("{populateMetaVPC} %s", err), "")
-					return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
-				}
 				logger.Info("Updating L4LB")
 				l4lbUpdate, err := L4LBMetaToNetrisUpdate(l4lbMeta)
 				if err != nil {

@@ -256,7 +256,9 @@ func compareL4LBMetaAPIL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta, apiL4LB *l4lb.LoadBa
 	if l4lbMeta.Spec.Status != apiL4LB.Status {
 		return false
 	}
-	if l4lbMeta.Spec.VPCID != apiL4LB.Vpc.ID {
+	// Vpc is a value type, so if not set, ID will be 0
+	apiVPCID := apiL4LB.Vpc.ID
+	if l4lbMeta.Spec.VPCID != apiVPCID {
 		return false
 	}
 	if ok := compareL4LBMetaAPIL4LBHealthCheck(*l4lbMeta.Spec.HealthCheck, apiL4LB.HealthCheck); !ok {
