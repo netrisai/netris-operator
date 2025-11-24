@@ -40,7 +40,7 @@ type L4LBReconciler struct {
 	Cred       *api.Clientset
 	NStorage   *netrisstorage.Storage
 	L4LBTenant string
-	L4LBVPC    string
+	VPCID      int
 }
 
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbs,verbs=get;list;watch;create;update;patch;delete

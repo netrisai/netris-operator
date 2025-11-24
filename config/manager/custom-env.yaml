@@ -34,3 +34,5 @@ spec:
               value: "4230000000-4239999999"
             - name: NOPERATOR_L4LB_TENANT
               value: ""
+            - name: NOPERATOR_VPC_ID
+              value: "0"

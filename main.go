@@ -153,7 +153,7 @@ func main() {
 		Cred:       cred,
 		NStorage:   nStorage,
 		L4LBTenant: configloader.Root.L4lbTenant,
-		L4LBVPC:    configloader.Root.L4lbVPC,
+		VPCID:      configloader.Root.VPCID,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L4LB")
 		os.Exit(1)
@@ -164,7 +164,7 @@ func main() {
 		Scheme:   mgr.GetScheme(),
 		Cred:     cred,
 		NStorage: nStorage,
-		L4LBVPC:  configloader.Root.L4lbVPC,
+		VPCID:    configloader.Root.VPCID,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "L4LBMeta")
 		os.Exit(1)
