@@ -8,6 +8,7 @@ resources:
   - switch.yaml
   - controller.yaml
   - vnet.yaml
+  - vpc.yaml
   - l4lb.yaml
   - bgp.yaml
   - link.yaml

@@ -126,6 +126,27 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.VPCReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("VPC"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VPC")
+		os.Exit(1)
+	}
+	if err = (&controllers.VPCMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("VPCMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VPCMeta")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.BGPReconciler{
 		Client:   mgr.GetClient(),
 		Log:      ctrl.Log.WithName("BGP"),

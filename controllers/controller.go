@@ -321,3 +321,18 @@ func (u *uniReconciler) patchController(controller *k8sv1alpha1.Controller) (ctr
 	}
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
+
+func (u *uniReconciler) patchVPCStatus(vpc *k8sv1alpha1.VPC, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	vpc.Status.Status = status
+	vpc.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, vpc.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
