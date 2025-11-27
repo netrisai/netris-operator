@@ -77,7 +77,7 @@ metadata:
 spec:
   tenant: Admin                                          # [1]
   description: My Switch01                               # [2] optional
-  nos: cumulus_linux                                     # [3]
+  nos: arista_eos                                        # [3]
   site: santa-clara                                      # [4]
   asn: 4200000021                                        # [5] optional
   profile: my-profile                                    # [6] optional
@@ -90,7 +90,7 @@ Ref | Attribute                              | Default       | Description
 ----| -------------------------------------- | ------------- | ----------------
 [1] | tenant                                 | ""            | Users of this tenant will be permitted to edit this unit.
 [2] | description                            | ""            | Optional. Switch description.
-[3] | nos                                    | ""            | Switch OS. Possible values: `cumulus_linux`, `sonic`, `ubuntu_switch_dev`.
+[3] | nos                                    | ""            | Switch OS. Possible values: `arista_eos`, `cumulus_nvue`, `dell_sonic`, `ec_sonic`.
 [4] | site                                   | ""            | The site where this device belongs.
 [5] | asn                                    | automatically | Optional. Switch AS numbers. If `asn` key isn't set, the controller will assign automatically from `System ASN range`.
 [6] | profile                                | ""            | Optional. An inventory profile name to define global configuration (NTP, DNS, timezone, etc…).

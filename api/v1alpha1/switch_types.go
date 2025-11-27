@@ -31,7 +31,7 @@ type SwitchSpec struct {
 	Tenant      string `json:"tenant,omitempty"`
 	Description string `json:"description,omitempty"`
 
-	// +kubebuilder:validation:Enum=cumulus_linux;ubuntu_switch_dev;sonic
+	// +kubebuilder:validation:Enum=arista_eos;cumulus_nvue;dell_sonic;ec_sonic
 	NOS  string `json:"nos,omitempty"`
 	Site string `json:"site,omitempty"`
 
