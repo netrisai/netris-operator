@@ -275,6 +275,26 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "SoftgateMeta")
 		os.Exit(1)
 	}
+	if err = (&controllers.ServerReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("Server"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Server")
+		os.Exit(1)
+	}
+	if err = (&controllers.ServerMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("ServerMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServerMeta")
+		os.Exit(1)
+	}
 	if err = (&controllers.SwitchReconciler{
 		Client:   mgr.GetClient(),
 		Log:      ctrl.Log.WithName("Switch"),

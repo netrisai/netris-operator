@@ -1,0 +1,71 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Server
+metadata:
+  name: my-server01
+spec:
+  tenant: Admin
+  description: My Server01
+  site: santa-clara
+  profile: my-profile
+  # mainIp: 198.51.100.1
+  # mgmtIp: 192.0.2.1
+  # uuid: 550e8400-e29b-41d4-a716-446655440000
+  # asn: 65000
+  # portsCount: 48
+  # srvRole: compute
+  # tags:
+  #   - production
+  #   - compute
+---
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Server
+metadata:
+  name: my-server02
+spec:
+  tenant: Admin
+  description: My Server02
+  site: santa-clara
+  profile: my-profile
+  # mainIp: 198.51.100.2
+  # mgmtIp: 192.0.2.2
+---
+# Example: Link connecting server01 to switch
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Link
+metadata:
+  name: server01-to-sw01
+spec:
+  ports:
+  - eth0@my-server01
+  - swp1@my-sw01
+---
+# Example: Link connecting server02 to switch
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Link
+metadata:
+  name: server02-to-sw01
+spec:
+  ports:
+  - eth0@my-server02
+  - swp2@my-sw01
+---
+# Example: Link connecting two servers
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Link
+metadata:
+  name: server01-to-server02
+spec:
+  ports:
+  - eth1@my-server01
+  - eth1@my-server02
+---
+# Example: Link connecting server02 to another switch
+apiVersion: k8s.netris.ai/v1alpha1
+kind: Link
+metadata:
+  name: server02-to-sw02
+spec:
+  ports:
+  - eth2@my-server02
+  - swp1@my-sw02
+
