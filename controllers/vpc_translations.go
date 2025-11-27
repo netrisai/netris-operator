@@ -69,7 +69,7 @@ func (r *VPCReconciler) VPCToVPCMeta(vpcCR *k8sv1alpha1.VPC) (*k8sv1alpha1.VPCMe
 			AdminTenantID:   adminTenantID,
 			GuestTenants:    guestTenantNames,
 			GuestTenantIDs:  guestTenantIDs,
-			Tags:            vpcCR.Spec.Tags,
+			Tags:            normalizeVPCTags(vpcCR.Spec.Tags),
 		},
 	}
 
@@ -92,7 +92,7 @@ func (r *VPCMetaReconciler) VPCMetaToNetris(vpcMeta *k8sv1alpha1.VPCMeta) (*vpc.
 		Name:        vpcMeta.Spec.VPCName,
 		AdminTenant: adminTenant,
 		GuestTenant: guestTenants,
-		Tags:        vpcMeta.Spec.Tags,
+		Tags:        normalizeVPCTags(vpcMeta.Spec.Tags),
 	}
 
 	return vpcAdd, nil
@@ -114,7 +114,7 @@ func VPCMetaToNetrisUpdate(vpcMeta *k8sv1alpha1.VPCMeta) (*vpc.VPCw, error) {
 		Name:        vpcMeta.Spec.VPCName,
 		AdminTenant: adminTenant,
 		GuestTenant: guestTenants,
-		Tags:        vpcMeta.Spec.Tags,
+		Tags:        normalizeVPCTags(vpcMeta.Spec.Tags),
 	}
 
 	return vpcUpdate, nil
@@ -150,8 +150,17 @@ func compareVPCMetaAPIVPCGuestTenants(vpcMetaTenantIDs []int, apiVPCTenants []vp
 }
 
 func compareVPCMetaAPIVPCTags(vpcMetaTags []string, apiVPCTags []string) bool {
-	changelog, _ := diff.Diff(vpcMetaTags, apiVPCTags)
+	normalizedMetaTags := normalizeVPCTags(vpcMetaTags)
+	normalizedAPITags := normalizeVPCTags(apiVPCTags)
+	changelog, _ := diff.Diff(normalizedMetaTags, normalizedAPITags)
 	return len(changelog) <= 0
+}
+
+func normalizeVPCTags(tags []string) []string {
+	if tags == nil {
+		return []string{}
+	}
+	return tags
 }
 
 func vpcCompareFieldsForNewMeta(vpcCR *k8sv1alpha1.VPC, vpcMeta *k8sv1alpha1.VPCMeta) bool {
