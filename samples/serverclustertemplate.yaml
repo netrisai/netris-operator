@@ -1,0 +1,11 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: ServerClusterTemplate
+metadata:
+  name: my-server-cluster-template
+spec:
+  vnets:
+    - name: vnet1
+      site: site1
+    - name: vnet2
+      site: site2
+

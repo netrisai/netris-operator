@@ -321,3 +321,74 @@ func (u *uniReconciler) patchController(controller *k8sv1alpha1.Controller) (ctr
 	}
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil
 }
+
+func (u *uniReconciler) patchVPCStatus(vpc *k8sv1alpha1.VPC, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	vpc.Status.Status = status
+	vpc.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, vpc.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchServerStatus(server *k8sv1alpha1.Server, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	server.Status.Status = status
+	server.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, server.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchServerClusterTemplateStatus(sct *k8sv1alpha1.ServerClusterTemplate, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	sct.Status.Status = status
+	sct.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, sct.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchServerClusterStatus(sc *k8sv1alpha1.ServerCluster, status, message string) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching Status", "status", status, "message", message)
+
+	sc.Status.Status = status
+	sc.Status.Message = message
+
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Status().Patch(ctx, sc.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}
+
+func (u *uniReconciler) patchServer(server *k8sv1alpha1.Server) (ctrl.Result, error) {
+	u.DebugLogger.Info("Patching")
+	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
+	defer cancel()
+	err := u.Patch(ctx, server.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	if err != nil {
+		u.DebugLogger.Info("{r.Patch()}", "error", err)
+	}
+	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+}

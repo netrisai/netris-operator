@@ -547,6 +547,162 @@ rules:
   - apiGroups:
       - k8s.netris.ai
     resources:
+      - servermeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - servermeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - servermeta/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - servers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - servers/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - servers/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplates
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplates/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplates/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplatemeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplatemeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplatemeta/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclusters
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclusters/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclusters/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustermeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustermeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustermeta/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
       - subnetmeta
     verbs:
       - create
@@ -696,6 +852,58 @@ rules:
       - k8s.netris.ai
     resources:
       - vnets/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - vpcmeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - vpcmeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - vpcmeta/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - vpcs
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - vpcs/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - vpcs/status
     verbs:
       - get
       - patch

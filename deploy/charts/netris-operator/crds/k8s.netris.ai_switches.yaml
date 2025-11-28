@@ -96,6 +96,7 @@ spec:
                 - 48
                 - 54
                 - 56
+                - 64
                 type: integer
               profile:
                 type: string
