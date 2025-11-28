@@ -1,0 +1,107 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: serverclusters.k8s.netris.ai
+spec:
+  group: k8s.netris.ai
+  names:
+    kind: ServerCluster
+    listKind: ServerClusterList
+    plural: serverclusters
+    singular: servercluster
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.admin
+      name: Admin
+      type: string
+    - jsonPath: .spec.site
+      name: Site
+      type: string
+    - jsonPath: .spec.vpc
+      name: VPC
+      type: string
+    - jsonPath: .spec.template
+      name: Template
+      type: string
+    - jsonPath: .status.status
+      name: Status
+      type: string
+    - jsonPath: .status.modified
+      name: Modified
+      priority: 1
+      type: date
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ServerCluster is the Schema for the serverclusters API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ServerClusterSpec defines the desired state of ServerCluster
+            properties:
+              admin:
+                type: string
+              site:
+                type: string
+              tags:
+                items:
+                  type: string
+                type: array
+              template:
+                type: string
+              vpc:
+                type: string
+            required:
+            - admin
+            - site
+            - template
+            - vpc
+            type: object
+          status:
+            description: ServerClusterStatus defines the observed state of ServerCluster
+            properties:
+              message:
+                type: string
+              modified:
+                format: date-time
+                type: string
+              status:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+

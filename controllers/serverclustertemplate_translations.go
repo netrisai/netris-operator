@@ -17,12 +17,11 @@ limitations under the License.
 package controllers
 
 import (
-	"encoding/json"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/go-logr/logr"
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netriswebapi/v2/types/serverclustertemplate"
-	"github.com/r3labs/diff/v2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ServerClusterTemplateToServerClusterTemplateMeta converts the ServerClusterTemplate resource to ServerClusterTemplateMeta type.
@@ -73,32 +72,18 @@ func ServerClusterTemplateMetaToNetrisUpdate(sctMeta *k8sv1alpha1.ServerClusterT
 	return sctUpdate, nil
 }
 
-func compareServerClusterTemplateMetaAPIServerClusterTemplate(sctMeta *k8sv1alpha1.ServerClusterTemplateMeta, apiSCT *serverclustertemplate.ServerClusterTemplate) bool {
+func compareServerClusterTemplateMetaAPIServerClusterTemplate(sctMeta *k8sv1alpha1.ServerClusterTemplateMeta, apiSCT *serverclustertemplate.ServerClusterTemplate, debugLogger logr.InfoLogger) bool {
 	if sctMeta.Spec.ServerClusterTemplateName != apiSCT.Name {
+		debugLogger.Info("Name changed", "metaName", sctMeta.Spec.ServerClusterTemplateName, "apiName", apiSCT.Name)
 		return false
 	}
 
-	// Compare Vnets by marshaling to JSON and comparing
-	metaVnetsJSON, err := json.Marshal(sctMeta.Spec.Vnets)
-	if err != nil {
-		return false
-	}
-	apiVnetsJSON, err := json.Marshal(apiSCT.Vnets)
-	if err != nil {
-		return false
-	}
-
-	// Compare as JSON strings
-	var metaVnets, apiVnets interface{}
-	if err := json.Unmarshal(metaVnetsJSON, &metaVnets); err != nil {
-		return false
-	}
-	if err := json.Unmarshal(apiVnetsJSON, &apiVnets); err != nil {
-		return false
-	}
-
-	changelog, _ := diff.Diff(metaVnets, apiVnets)
-	return len(changelog) <= 0
+	// Vnets field is ignored in comparison - API returns Vnets with IDs that are assigned by the API
+	// and not present in the CR, causing false positives. Since Vnets cannot be updated via the API
+	// when the template is in use, we skip comparing them.
+	debugLogger.Info("Skipping Vnets comparison (field ignored)")
+	
+	return true
 }
 
 func serverClusterTemplateCompareFieldsForNewMeta(sctCR *k8sv1alpha1.ServerClusterTemplate, sctMeta *k8sv1alpha1.ServerClusterTemplateMeta) bool {

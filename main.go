@@ -315,6 +315,27 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ServerClusterTemplateMeta")
 		os.Exit(1)
 	}
+	// ServerCluster controllers
+	if err = (&controllers.ServerClusterReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("ServerCluster"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServerCluster")
+		os.Exit(1)
+	}
+	if err = (&controllers.ServerClusterMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("ServerClusterMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServerClusterMeta")
+		os.Exit(1)
+	}
 	if err = (&controllers.SwitchReconciler{
 		Client:   mgr.GetClient(),
 		Log:      ctrl.Log.WithName("Switch"),

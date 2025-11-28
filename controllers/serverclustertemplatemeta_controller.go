@@ -149,11 +149,31 @@ func (r *ServerClusterTemplateMetaReconciler) Reconcile(req ctrl.Request) (ctrl.
 		} else {
 			provisionState = "Active"
 			sctCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(apiSCT.ModifiedDate/1000), 0))
-			debugLogger.Info("Comparing ServerClusterTemplateMeta with Netris ServerClusterTemplate")
-			if ok := compareServerClusterTemplateMetaAPIServerClusterTemplate(sctMeta, apiSCT); ok {
+			debugLogger.Info("Comparing ServerClusterTemplateMeta with Netris ServerClusterTemplate",
+				"metaName", sctMeta.Spec.ServerClusterTemplateName,
+				"apiName", apiSCT.Name)
+			if ok := compareServerClusterTemplateMetaAPIServerClusterTemplate(sctMeta, apiSCT, debugLogger); ok {
 				debugLogger.Info("Nothing Changed")
 			} else {
-				debugLogger.Info("Something changed")
+				// Check if template is in use by any ServerCluster
+				serverClusterList := &k8sv1alpha1.ServerClusterList{}
+				serverClusterListCtx, serverClusterListCancel := context.WithTimeout(cntxt, contextTimeout)
+				defer serverClusterListCancel()
+				if err := r.List(serverClusterListCtx, serverClusterList, &client.ListOptions{}); err != nil {
+					debugLogger.Info("Failed to list ServerClusters", "error", err)
+					// Continue with update attempt if we can't check
+				} else {
+					for _, sc := range serverClusterList.Items {
+						if sc.Spec.Template == sctMeta.Spec.ServerClusterTemplateName {
+							logger.Info("ServerClusterTemplate is in use by ServerCluster, skipping update",
+								"serverCluster", fmt.Sprintf("%s/%s", sc.Namespace, sc.Name))
+							return u.patchServerClusterTemplateStatus(sctCR, "Active",
+								fmt.Sprintf("Template is in use by ServerCluster %s/%s and cannot be updated", sc.Namespace, sc.Name))
+						}
+					}
+				}
+
+				debugLogger.Info("Something changed - see previous debug logs for details")
 				debugLogger.Info("Go to update ServerClusterTemplate in Netris")
 				logger.Info("Updating ServerClusterTemplate")
 				updateSCT, err := ServerClusterTemplateMetaToNetrisUpdate(sctMeta)
