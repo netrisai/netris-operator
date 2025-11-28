@@ -600,6 +600,58 @@ rules:
   - apiGroups:
       - k8s.netris.ai
     resources:
+      - serverclustertemplates
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplates/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplates/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplatemeta
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplatemeta/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
+      - serverclustertemplatemeta/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - k8s.netris.ai
+    resources:
       - subnetmeta
   verbs:
   - create

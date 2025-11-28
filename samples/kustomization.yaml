@@ -6,6 +6,7 @@ resources:
   - subnet.yaml
   - softgate.yaml
   - server.yaml
+  - serverclustertemplate.yaml
   - switch.yaml
   - controller.yaml
   - vnet.yaml
