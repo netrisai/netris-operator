@@ -186,7 +186,7 @@ func (r *SwitchReconciler) deleteSwitch(switchH *k8sv1alpha1.Switch, switchMeta 
 			return ctrl.Result{}, err
 		}
 		if !resp.IsSuccess && resp.Meta.StatusCode != 404 {
-			return ctrl.Result{}, fmt.Errorf("{deleteSwitch} %s", fmt.Errorf(resp.Message))
+			return ctrl.Result{}, fmt.Errorf("{deleteSwitch} %s", resp.Message)
 		}
 	}
 	return r.deleteCRs(switchH, switchMeta)

@@ -193,7 +193,7 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	idStruct := struct {

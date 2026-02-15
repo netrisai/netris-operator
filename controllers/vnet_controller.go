@@ -184,7 +184,7 @@ func (r *VNetMetaReconciler) updateVNet(id int, vnet *vnet.VNetUpdate) (ctrl.Res
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateVNet} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil
@@ -202,7 +202,7 @@ func (r *VNetReconciler) deleteVNet(vnet *k8sv1alpha1.VNet, vnetMeta *k8sv1alpha
 		}
 		if !resp.IsSuccess {
 			if resp.Message != "Invalid circuit ID" {
-				return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", fmt.Errorf(resp.Message))
+				return ctrl.Result{}, fmt.Errorf("{deleteVNet} %s", resp.Message)
 			}
 		}
 	}

@@ -80,7 +80,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				return ctrl.Result{}, err
 			}
 			if !resp.IsSuccess && resp.Message != "Invalid load balancer" {
-				return ctrl.Result{}, fmt.Errorf(resp.Message)
+				return ctrl.Result{}, fmt.Errorf("%s", resp.Message)
 			}
 		}
 
@@ -236,7 +236,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	var id int
@@ -285,7 +285,7 @@ func (r *L4LBMetaReconciler) updateL4LB(id int, l4lb *l4lb.LoadBalancerUpdate) (
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateL4LB} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateL4LB} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil

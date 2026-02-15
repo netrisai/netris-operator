@@ -198,7 +198,7 @@ func (r *SubnetMetaReconciler) createSubnet(subnetMeta *k8sv1alpha1.SubnetMeta) 
 	}
 
 	if reply.StatusCode != 200 {
-		return ctrl.Result{}, fmt.Errorf(data.Message), fmt.Errorf(data.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", data.Message), fmt.Errorf("%s", data.Message)
 	}
 
 	idStruct.ID = int(data.Data.(map[string]interface{})["id"].(float64))
@@ -228,7 +228,7 @@ func updateSubnet(id int, subnet *ipam.Subnet, cred *api.Clientset) (ctrl.Result
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateSubnet} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateSubnet} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil
