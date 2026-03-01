@@ -96,7 +96,7 @@ Ref | Attribute                              | Default       | Description
 [6] | profile                                | ""            | Optional. An inventory profile name to define global configuration (NTP, DNS, timezone, etc…).
 [7] | mainIp                                 | automatically | Optional. A unique IP address which will be used as a loopback address of this unit. If `mainIp` key isn't set the controller will assign automatically from subnets with relevant purpose.
 [8] | mgmtIp                                 | automatically | Optional. A unique IP address to be used on out of band management interface. If `mgmtIp` key isn't set the controller will assign automatically from subnets with relevant purpose.
-[9] | portsCount                             | nil           | Preliminary port count is used for definition of topology. Possible values: `16`, `32`, `48`, `54`, `56`.
+[9] | portsCount                             | nil           | Preliminary port count is used for definition of topology. Possible values: `16`, `32`, `48`, `54`, `56`, `64`.
 
 
 ### Softgate Attributes

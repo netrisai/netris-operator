@@ -6,54 +6,43 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
-  name: switches.k8s.netris.ai
+  name: serverclusters.k8s.netris.ai
 spec:
   group: k8s.netris.ai
   names:
-    kind: Switch
-    listKind: SwitchList
-    plural: switches
-    singular: switch
+    kind: ServerCluster
+    listKind: ServerClusterList
+    plural: serverclusters
+    singular: servercluster
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.tenant
-      name: Tenant
-      type: string
-    - jsonPath: .spec.nos
-      name: NOS
+    - jsonPath: .spec.admin
+      name: Admin
       type: string
     - jsonPath: .spec.site
       name: Site
       type: string
-    - jsonPath: .spec.asn
-      name: ASN
+    - jsonPath: .spec.vpc
+      name: VPC
       type: string
-    - jsonPath: .spec.profile
-      name: Profile
-      type: string
-    - jsonPath: .spec.mainIp
-      name: Main IP
-      type: string
-    - jsonPath: .spec.mgmtIp
-      name: Management IP
-      type: string
-    - jsonPath: .spec.portsCount
-      name: Ports Count
-      type: string
-    - jsonPath: .spec.macAddress
-      name: MAC
+    - jsonPath: .spec.template
+      name: Template
       type: string
     - jsonPath: .status.status
       name: Status
       type: string
+    - jsonPath: .status.modified
+      name: Modified
+      priority: 1
+      type: date
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Switch is the Schema for the switches API
+        description: ServerCluster is the Schema for the serverclusters API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -68,51 +57,42 @@ spec:
           metadata:
             type: object
           spec:
-            description: SwitchSpec defines the desired state of Switch
+            description: ServerClusterSpec defines the desired state of ServerCluster
             properties:
-              asn:
-                type: integer
-              description:
-                type: string
-              macAddress:
-                pattern: ^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$
-                type: string
-              mainIp:
-                pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
-                type: string
-              mgmtIp:
-                pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
-                type: string
-              nos:
-                enum:
-                - cumulus_linux
-                - ubuntu_switch_dev
-                - sonic
-                type: string
-              portsCount:
-                enum:
-                - 16
-                - 32
-                - 48
-                - 54
-                - 56
-                - 64
-                type: integer
-              profile:
+              admin:
                 type: string
               site:
                 type: string
-              tenant:
+              tags:
+                items:
+                  type: string
+                type: array
+              template:
                 type: string
+              vpc:
+                type: string
+            required:
+            - admin
+            - site
+            - template
+            - vpc
             type: object
           status:
-            description: SwitchStatus defines the observed state of Switch
+            description: ServerClusterStatus defines the observed state of ServerCluster
             properties:
               message:
                 type: string
+              modified:
+                format: date-time
+                type: string
               status:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
                 type: string
             type: object
+        required:
+        - spec
         type: object
     served: true
     storage: true
@@ -124,3 +104,4 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+

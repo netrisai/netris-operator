@@ -1,0 +1,101 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: vpcmeta.k8s.netris.ai
+spec:
+  group: k8s.netris.ai
+  names:
+    kind: VPCMeta
+    listKind: VPCMetaList
+    plural: vpcmeta
+    singular: vpcmeta
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: VPCMeta is the Schema for the vpcmeta API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: VPCMetaSpec defines the desired state of VPCMeta
+            properties:
+              adminTenant:
+                type: string
+              adminTenantId:
+                type: integer
+              guestTenantIds:
+                items:
+                  type: integer
+                type: array
+              guestTenants:
+                items:
+                  type: string
+                type: array
+              id:
+                type: integer
+              imported:
+                type: boolean
+              isDefault:
+                type: boolean
+              isSystem:
+                type: boolean
+              name:
+                type: string
+              reclaimPolicy:
+                type: boolean
+              tags:
+                items:
+                  type: string
+                type: array
+              vni:
+                type: integer
+              vpcGeneration:
+                format: int64
+                type: integer
+              vpcName:
+                type: string
+            required:
+            - adminTenant
+            - adminTenantId
+            - guestTenantIds
+            - guestTenants
+            - id
+            - imported
+            - name
+            - reclaimPolicy
+            - tags
+            - vpcGeneration
+            - vpcName
+            type: object
+          status:
+            description: VPCMetaStatus defines the observed state of VPCMeta
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+

@@ -126,6 +126,27 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.VPCReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("VPC"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VPC")
+		os.Exit(1)
+	}
+	if err = (&controllers.VPCMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("VPCMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VPCMeta")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.BGPReconciler{
 		Client:   mgr.GetClient(),
 		Log:      ctrl.Log.WithName("BGP"),
@@ -252,6 +273,67 @@ func main() {
 		NStorage: nStorage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SoftgateMeta")
+		os.Exit(1)
+	}
+	if err = (&controllers.ServerReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("Server"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Server")
+		os.Exit(1)
+	}
+	if err = (&controllers.ServerMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("ServerMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServerMeta")
+		os.Exit(1)
+	}
+	if err = (&controllers.ServerClusterTemplateReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("ServerClusterTemplate"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServerClusterTemplate")
+		os.Exit(1)
+	}
+	if err = (&controllers.ServerClusterTemplateMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("ServerClusterTemplateMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServerClusterTemplateMeta")
+		os.Exit(1)
+	}
+	// ServerCluster controllers
+	if err = (&controllers.ServerClusterReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("ServerCluster"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServerCluster")
+		os.Exit(1)
+	}
+	if err = (&controllers.ServerClusterMetaReconciler{
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("ServerClusterMeta"),
+		Scheme:   mgr.GetScheme(),
+		Cred:     cred,
+		NStorage: nStorage,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServerClusterMeta")
 		os.Exit(1)
 	}
 	if err = (&controllers.SwitchReconciler{
