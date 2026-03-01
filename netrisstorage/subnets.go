@@ -19,6 +19,7 @@ package netrisstorage
 import (
 	"sync"
 
+	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netriswebapi/v2/types/ipam"
 )
 
@@ -120,7 +121,11 @@ func (p *SubnetsStorage) findByID(id int, typo string) (*ipam.IPAM, bool) {
 
 // Download .
 func (p *SubnetsStorage) download() error {
-	items, err := Cred.IPAM().Get()
+	vpcid := configloader.Root.VPCID
+	if vpcid == 0 {
+		vpcid = 1
+	}
+	items, err := Cred.IPAM().GetByVPC(vpcid)
 	if err != nil {
 		return err
 	}

@@ -25,6 +25,7 @@ import (
 
 	k8sv1alpha1 "github.com/netrisai/netris-operator/api/v1alpha1"
 	"github.com/netrisai/netris-operator/calicowatcher"
+	"github.com/netrisai/netris-operator/configloader"
 	"github.com/netrisai/netriswebapi/v2/types/ipam"
 	"github.com/netrisai/netriswebapi/v2/types/l4lb"
 	"github.com/r3labs/diff/v2"
@@ -429,7 +430,11 @@ func l4lbUpdateDefaultAnnotations(l4lb *k8sv1alpha1.L4LB) {
 
 func (r *L4LBReconciler) findSiteByIP(ip string) (int, error) {
 	siteID := 0
-	subnets, err := r.Cred.IPAM().Get()
+	vpcid := configloader.Root.VPCID
+	if vpcid == 0 {
+		vpcid = 1
+	}
+	subnets, err := r.Cred.IPAM().GetByVPC(vpcid)
 	if err != nil {
 		return siteID, err
 	}
