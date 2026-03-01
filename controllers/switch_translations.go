@@ -173,6 +173,7 @@ func SwitchMetaToNetris(switchMeta *k8sv1alpha1.SwitchMeta) (*inventory.HWSwitch
 		MgmtAddress: mgmtIP,
 		PortCount:   switchMeta.Spec.PortsCount,
 		MacAddress:  switchMeta.Spec.MacAddress,
+		Tags:        []string{},
 		Links:       []inventory.HWLink{},
 	}
 
@@ -208,6 +209,7 @@ func SwitchMetaToNetrisUpdate(switchMeta *k8sv1alpha1.SwitchMeta) (*inventory.HW
 		MgmtAddress: mgmtIP,
 		PortCount:   switchMeta.Spec.PortsCount,
 		MacAddress:  "",
+		Tags:        []string{},
 		Links:       []inventory.HWLink{},
 	}
 

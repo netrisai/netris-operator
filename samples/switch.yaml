@@ -5,7 +5,7 @@ metadata:
 spec:
   tenant: Admin
   description: My Switch01
-  nos: cumulus_linux
+  nos: arista_eos
   site: santa-clara
   # asn: 4200000021
   profile: my-profile
@@ -20,7 +20,7 @@ metadata:
 spec:
   tenant: Admin
   description: My Switch02
-  nos: ubuntu_switch_dev
+  nos: cumulus_nvue
   site: santa-clara
   # asn: 4200000021
   profile: my-profile
