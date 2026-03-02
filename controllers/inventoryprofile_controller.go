@@ -186,7 +186,7 @@ func (r *InventoryProfileReconciler) deleteInventoryProfile(inventoryProfile *k8
 			return ctrl.Result{}, err
 		}
 		if !resp.IsSuccess {
-			return ctrl.Result{}, fmt.Errorf("{deleteInventoryProfile} %s", fmt.Errorf(resp.Message))
+			return ctrl.Result{}, fmt.Errorf("{deleteInventoryProfile} %s", resp.Message)
 		}
 	}
 	return r.deleteCRs(inventoryProfile, inventoryProfileMeta)
