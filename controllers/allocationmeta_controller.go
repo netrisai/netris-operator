@@ -196,7 +196,7 @@ func (r *AllocationMetaReconciler) createAllocation(allocationMeta *k8sv1alpha1.
 	}
 
 	if reply.StatusCode != 200 {
-		return ctrl.Result{}, fmt.Errorf(data.Message), fmt.Errorf(data.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", data.Message), fmt.Errorf("%s", data.Message)
 	}
 
 	idStruct.ID = int(data.Data.(map[string]interface{})["id"].(float64))
@@ -226,7 +226,7 @@ func updateAllocation(id int, allocation *ipam.Allocation, cred *api.Clientset) 
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateAllocation} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateAllocation} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil

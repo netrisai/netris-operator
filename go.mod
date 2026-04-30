@@ -1,6 +1,8 @@
 module github.com/netrisai/netris-operator
 
-go 1.18
+go 1.25
+
+toolchain go1.25.0
 
 require (
 	github.com/go-logr/logr v0.1.0

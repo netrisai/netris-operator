@@ -186,7 +186,7 @@ func (r *NatReconciler) deleteNat(nat *k8sv1alpha1.Nat, natMeta *k8sv1alpha1.Nat
 			return ctrl.Result{}, err
 		}
 		if !resp.IsSuccess {
-			return ctrl.Result{}, fmt.Errorf("{deleteNat} %s", fmt.Errorf(resp.Message))
+			return ctrl.Result{}, fmt.Errorf("{deleteNat} %s", resp.Message)
 		}
 	}
 	return r.deleteCRs(nat, natMeta)

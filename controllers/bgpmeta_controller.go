@@ -219,7 +219,7 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	idStruct := struct {
@@ -263,7 +263,7 @@ func updateBGP(id int, bgp *bgp.EBGPUpdate, cred *api.Clientset) (ctrl.Result, e
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateBGP} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateBGP} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil

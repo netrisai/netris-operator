@@ -207,7 +207,7 @@ func (r *ControllerMetaReconciler) createController(controllerMeta *k8sv1alpha1.
 	}
 
 	if reply.StatusCode != 200 {
-		return ctrl.Result{}, fmt.Errorf(data.Message), fmt.Errorf(data.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", data.Message), fmt.Errorf("%s", data.Message)
 	}
 
 	idStruct.ID = int(data.Data.(map[string]interface{})["id"].(float64))
@@ -237,7 +237,7 @@ func updateController(id int, controller *inventory.HWControllerUpdate, cred *ap
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateController} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateController} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil

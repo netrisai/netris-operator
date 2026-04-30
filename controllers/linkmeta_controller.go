@@ -169,7 +169,7 @@ func (r *LinkMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				}
 
 				if !resp.IsSuccess {
-					return ctrl.Result{}, fmt.Errorf("{deleteLink} %s", fmt.Errorf(resp.Message))
+					return ctrl.Result{}, fmt.Errorf("{deleteLink} %s", resp.Message)
 				}
 
 				linkMeta.Spec.ID = ""
@@ -215,7 +215,7 @@ func (r *LinkMetaReconciler) createLink(linkMeta *k8sv1alpha1.LinkMeta) (ctrl.Re
 		return ctrl.Result{}, err, err
 	}
 	if reply.StatusCode != 200 {
-		return ctrl.Result{}, fmt.Errorf(string(reply.Data)), fmt.Errorf(string(reply.Data))
+		return ctrl.Result{}, fmt.Errorf("%s", string(reply.Data)), fmt.Errorf("%s", string(reply.Data))
 	}
 
 	linkMeta.Spec.ID = fmt.Sprintf("%d-%d", linkMeta.Spec.Local, linkMeta.Spec.Remote)

@@ -219,7 +219,7 @@ func (r *SwitchMetaReconciler) createSwitch(switchMeta *k8sv1alpha1.SwitchMeta) 
 	}
 
 	if reply.StatusCode != 200 {
-		return ctrl.Result{}, fmt.Errorf(data.Message), fmt.Errorf(data.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", data.Message), fmt.Errorf("%s", data.Message)
 	}
 
 	idStruct.ID = int(data.Data.(map[string]interface{})["id"].(float64))
@@ -249,7 +249,7 @@ func updateSwitch(id int, switchH *inventory.HWSwitchUpdate, cred *api.Clientset
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateSwitch} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateSwitch} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil

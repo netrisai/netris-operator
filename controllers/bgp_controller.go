@@ -182,7 +182,7 @@ func (r *BGPReconciler) deleteBGP(bgp *k8sv1alpha1.BGP, bgpMeta *k8sv1alpha1.BGP
 			return ctrl.Result{}, err
 		}
 		if !resp.IsSuccess && resp.Meta.StatusCode != 400 {
-			return ctrl.Result{}, fmt.Errorf("{deleteBGP} %s", fmt.Errorf(resp.Message))
+			return ctrl.Result{}, fmt.Errorf("{deleteBGP} %s", resp.Message)
 		}
 	}
 	return r.deleteCRs(bgp, bgpMeta)

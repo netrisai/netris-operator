@@ -191,7 +191,7 @@ func (r *LinkReconciler) deleteLink(linkCR *k8sv1alpha1.Link, linkMeta *k8sv1alp
 			return ctrl.Result{}, err
 		}
 		if !resp.IsSuccess {
-			return ctrl.Result{}, fmt.Errorf("{deleteLink} %s", fmt.Errorf(resp.Message))
+			return ctrl.Result{}, fmt.Errorf("{deleteLink} %s", resp.Message)
 		}
 	}
 	return r.deleteCRs(linkCR, linkMeta)

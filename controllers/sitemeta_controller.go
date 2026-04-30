@@ -78,7 +78,7 @@ func (r *SiteMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				return ctrl.Result{}, err
 			}
 			if !resp.IsSuccess && reply.StatusCode != 404 {
-				return ctrl.Result{}, fmt.Errorf(resp.Message)
+				return ctrl.Result{}, fmt.Errorf("%s", resp.Message)
 			}
 		}
 
@@ -222,7 +222,7 @@ func (r *SiteMetaReconciler) createSite(siteMeta *k8sv1alpha1.SiteMeta) (ctrl.Re
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	idStruct := struct {
@@ -259,7 +259,7 @@ func updateSite(id int, site *site.Site, cred *api.Clientset) (ctrl.Result, erro
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateSite} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateSite} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil

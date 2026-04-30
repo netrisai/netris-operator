@@ -186,7 +186,7 @@ func (r *ControllerReconciler) deleteController(controller *k8sv1alpha1.Controll
 			return ctrl.Result{}, err
 		}
 		if !resp.IsSuccess && resp.Meta.StatusCode != 404 {
-			return ctrl.Result{}, fmt.Errorf("{deleteController} %s", fmt.Errorf(resp.Message))
+			return ctrl.Result{}, fmt.Errorf("{deleteController} %s", resp.Message)
 		}
 	}
 	return r.deleteCRs(controller, controllerMeta)

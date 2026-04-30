@@ -215,7 +215,7 @@ func (r *SoftgateMetaReconciler) createSoftgate(softgateMeta *k8sv1alpha1.Softga
 	}
 
 	if reply.StatusCode != 200 {
-		return ctrl.Result{}, fmt.Errorf(data.Message), fmt.Errorf(data.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", data.Message), fmt.Errorf("%s", data.Message)
 	}
 
 	idStruct.ID = int(data.Data.(map[string]interface{})["id"].(float64))
@@ -245,7 +245,7 @@ func updateSoftgate(id int, softgate *inventory.HWSoftgateUpdate, cred *api.Clie
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateSoftgate} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateSoftgate} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil

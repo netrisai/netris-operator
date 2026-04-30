@@ -186,7 +186,7 @@ func (r *SoftgateReconciler) deleteSoftgate(softgate *k8sv1alpha1.Softgate, soft
 			return ctrl.Result{}, err
 		}
 		if !resp.IsSuccess && resp.Meta.StatusCode != 404 {
-			return ctrl.Result{}, fmt.Errorf("{deleteSoftgate} %s", fmt.Errorf(resp.Message))
+			return ctrl.Result{}, fmt.Errorf("{deleteSoftgate} %s", resp.Message)
 		}
 	}
 	return r.deleteCRs(softgate, softgateMeta)

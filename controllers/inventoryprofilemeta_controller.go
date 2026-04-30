@@ -193,7 +193,7 @@ func (r *InventoryProfileMetaReconciler) createInventoryProfile(inventoryProfile
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	idStruct := struct {
@@ -230,7 +230,7 @@ func updateInventoryProfile(id int, inventoryProfile *inventoryprofile.ProfileW,
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateInventoryProfile} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateInventoryProfile} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil

@@ -193,7 +193,7 @@ func (r *NatMetaReconciler) createNat(natMeta *k8sv1alpha1.NatMeta) (ctrl.Result
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf(resp.Message), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("%s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	idStruct := struct {
@@ -230,7 +230,7 @@ func updateNat(id int, nat *nat.NATw, cred *api.Clientset) (ctrl.Result, error, 
 		return ctrl.Result{}, err, err
 	}
 	if !resp.IsSuccess {
-		return ctrl.Result{}, fmt.Errorf("{updateNat} %s", fmt.Errorf(resp.Message)), fmt.Errorf(resp.Message)
+		return ctrl.Result{}, fmt.Errorf("{updateNat} %s", resp.Message), fmt.Errorf("%s", resp.Message)
 	}
 
 	return ctrl.Result{}, nil, nil
