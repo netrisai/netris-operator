@@ -6,28 +6,22 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
-  name: switches.k8s.netris.ai
+  name: servers.k8s.netris.ai
 spec:
   group: k8s.netris.ai
   names:
-    kind: Switch
-    listKind: SwitchList
-    plural: switches
-    singular: switch
+    kind: Server
+    listKind: ServerList
+    plural: servers
+    singular: server
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.tenant
       name: Tenant
       type: string
-    - jsonPath: .spec.nos
-      name: NOS
-      type: string
     - jsonPath: .spec.site
       name: Site
-      type: string
-    - jsonPath: .spec.asn
-      name: ASN
       type: string
     - jsonPath: .spec.profile
       name: Profile
@@ -38,12 +32,6 @@ spec:
     - jsonPath: .spec.mgmtIp
       name: Management IP
       type: string
-    - jsonPath: .spec.portsCount
-      name: Ports Count
-      type: string
-    - jsonPath: .spec.macAddress
-      name: MAC
-      type: string
     - jsonPath: .status.status
       name: Status
       type: string
@@ -53,7 +41,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Switch is the Schema for the switches API
+        description: Server is the Schema for the servers API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -68,14 +56,13 @@ spec:
           metadata:
             type: object
           spec:
-            description: SwitchSpec defines the desired state of Switch
+            description: ServerSpec defines the desired state of Server
             properties:
               asn:
                 type: integer
-              description:
+              customData:
                 type: string
-              macAddress:
-                pattern: ^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$
+              description:
                 type: string
               mainIp:
                 pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
@@ -83,30 +70,25 @@ spec:
               mgmtIp:
                 pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
                 type: string
-              nos:
-                enum:
-                - cumulus_linux
-                - ubuntu_switch_dev
-                - sonic
-                type: string
               portsCount:
-                enum:
-                - 16
-                - 32
-                - 48
-                - 54
-                - 56
-                - 64
                 type: integer
               profile:
                 type: string
               site:
                 type: string
+              srvRole:
+                type: string
+              tags:
+                items:
+                  type: string
+                type: array
               tenant:
+                type: string
+              uuid:
                 type: string
             type: object
           status:
-            description: SwitchStatus defines the observed state of Switch
+            description: ServerStatus defines the observed state of Server
             properties:
               message:
                 type: string
@@ -124,3 +106,4 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+

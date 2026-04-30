@@ -1,0 +1,13 @@
+apiVersion: k8s.netris.ai/v1alpha1
+kind: ServerCluster
+metadata:
+  name: my-server-cluster
+spec:
+  admin: Admin
+  site: santa-clara
+  vpc: my-vpc
+  template: my-server-cluster-template
+  tags:
+    - production
+    - compute
+

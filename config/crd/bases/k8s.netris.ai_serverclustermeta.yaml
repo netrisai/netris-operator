@@ -1,0 +1,84 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: serverclustermeta.k8s.netris.ai
+spec:
+  group: k8s.netris.ai
+  names:
+    kind: ServerClusterMeta
+    listKind: ServerClusterMetaList
+    plural: serverclustermeta
+    singular: serverclustermeta
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ServerClusterMeta is the Schema for the serverclustermeta API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ServerClusterMetaSpec defines the desired state of ServerClusterMeta
+            properties:
+              admin:
+                type: string
+              adminId:
+                type: integer
+              imported:
+                type: boolean
+              name:
+                type: string
+              reclaimPolicy:
+                type: boolean
+              serverClusterGeneration:
+                type: integer
+              serverClusterName:
+                type: string
+              site:
+                type: string
+              siteId:
+                type: integer
+              tags:
+                items:
+                  type: string
+                type: array
+              template:
+                type: string
+              templateId:
+                type: integer
+              vpc:
+                type: string
+              vpcId:
+                type: integer
+            type: object
+          status:
+            description: ServerClusterMetaStatus defines the observed state of ServerClusterMeta
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+
