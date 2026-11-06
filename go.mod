@@ -1,6 +1,6 @@
 module github.com/netrisai/netris-operator
 
-go 1.18
+go 1.26.0
 
 require (
 	github.com/go-logr/logr v0.1.0
@@ -9,7 +9,7 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.19.0
 	github.com/r3labs/diff/v2 v2.9.1
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.3
 	go.uber.org/zap v1.10.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.18.6
@@ -20,7 +20,8 @@ require (
 
 require (
 	cloud.google.com/go v0.38.0 // indirect
-	github.com/beorn7/perks v1.0.0 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
@@ -34,27 +35,28 @@ require (
 	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
-	github.com/json-iterator/go v1.1.10 // indirect
+	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
-	github.com/pkg/errors v0.8.1 // indirect
-	github.com/prometheus/client_golang v1.0.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/client_golang v1.11.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.4.1 // indirect
-	github.com/prometheus/procfs v0.0.11 // indirect
+	github.com/prometheus/common v0.26.0 // indirect
+	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
-	golang.org/x/sys v0.2.0 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/crypto v0.58.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
+	golang.org/x/oauth2 v0.37.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/term v0.47.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.0.1 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
