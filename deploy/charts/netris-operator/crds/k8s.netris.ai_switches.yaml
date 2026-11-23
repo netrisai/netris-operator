@@ -85,9 +85,10 @@ spec:
                 type: string
               nos:
                 enum:
-                - cumulus_linux
-                - ubuntu_switch_dev
-                - sonic
+                - arista_eos
+                - cumulus_nvue
+                - dell_sonic
+                - ec_sonic
                 type: string
               portsCount:
                 enum:
