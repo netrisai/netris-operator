@@ -25,9 +25,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	api "github.com/netrisai/netriswebapi/v2"
 
@@ -93,12 +93,11 @@ func main() {
 	go nStorage.DownloadWithInterval()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Namespace:          "",
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		Port:               9443,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "abac3abe.netris.ai",
+		Scheme:                     scheme,
+		Metrics:                    metricsserver.Options{BindAddress: metricsAddr},
+		LeaderElection:             enableLeaderElection,
+		LeaderElectionID:           "abac3abe.netris.ai",
+		LeaderElectionResourceLock: "leases",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

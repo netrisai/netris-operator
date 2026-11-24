@@ -57,7 +57,7 @@ type NatMetaReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *NatMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *NatMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	natMeta := &k8sv1alpha1.NatMeta{}
@@ -112,7 +112,7 @@ func (r *NatMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 				natMetaPatchCtx, natMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer natMetaPatchCancel()
-				err := r.Patch(natMetaPatchCtx, natMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(natMetaPatchCtx, natMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch natmeta.Spec.ID} %s", err), "")
 					return u.patchNatStatus(natCR, "Failure", err.Error())
@@ -211,7 +211,7 @@ func (r *NatMetaReconciler) createNat(natMeta *k8sv1alpha1.NatMeta) (ctrl.Result
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, natMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, natMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

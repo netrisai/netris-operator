@@ -54,7 +54,7 @@ type AllocationMetaReconciler struct {
 // the AllocationMeta object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
-func (r *AllocationMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *AllocationMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	allocationMeta := &k8sv1alpha1.AllocationMeta{}
@@ -109,7 +109,7 @@ func (r *AllocationMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 
 				allocationMetaPatchCtx, allocationMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer allocationMetaPatchCancel()
-				err := r.Patch(allocationMetaPatchCtx, allocationMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(allocationMetaPatchCtx, allocationMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch allocationmeta.Spec.ID} %s", err), "")
 					return u.patchAllocationStatus(allocationCR, "Failure", err.Error())
@@ -207,7 +207,7 @@ func (r *AllocationMetaReconciler) createAllocation(allocationMeta *k8sv1alpha1.
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, allocationMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, allocationMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

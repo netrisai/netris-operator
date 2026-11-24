@@ -51,7 +51,7 @@ type BGPReconciler struct {
 // +kubebuilder:rbac:groups=crd.projectcalico.org,resources=ippools,verbs=get;list;watch
 
 // Reconcile is the main reconciler for the appropriate resource type
-func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *BGPReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	bgp := &k8sv1alpha1.BGP{}
@@ -107,7 +107,7 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		bgpUpdateDefaultAnnotations(bgp)
 		bgpPatchCtx, bgpPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer bgpPatchCancel()
-		err := r.Patch(bgpPatchCtx, bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(bgpPatchCtx, bgp.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch BGP default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -131,7 +131,7 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			bgpMetaUpdateCtx, bgpMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer bgpMetaUpdateCancel()
-			err = r.Update(bgpMetaUpdateCtx, bgpMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(bgpMetaUpdateCtx, bgpMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{bgpMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -144,7 +144,7 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			bgpPatchCtx, bgpPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer bgpPatchCancel()
-			err := r.Patch(bgpPatchCtx, bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(bgpPatchCtx, bgp.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch BGP Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -162,7 +162,7 @@ func (r *BGPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		bgpMetaCreateCtx, bgpMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer bgpMetaCreateCancel()
-		if err := r.Create(bgpMetaCreateCtx, bgpMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(bgpMetaCreateCtx, bgpMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{bgpMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -204,7 +204,7 @@ func (r *BGPReconciler) deleteBGPCR(bgp *k8sv1alpha1.BGP) (ctrl.Result, error) {
 	bgp.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, bgp.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, bgp.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteBGPCR} %s", err)
 	}
 
@@ -214,7 +214,7 @@ func (r *BGPReconciler) deleteBGPCR(bgp *k8sv1alpha1.BGP) (ctrl.Result, error) {
 func (r *BGPReconciler) deleteBGPMetaCR(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, bgpMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, bgpMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteBGPMetaCR} %s", err)
 	}
 

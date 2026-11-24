@@ -58,7 +58,7 @@ type SwitchMetaReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *SwitchMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *SwitchMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	switchMeta := &k8sv1alpha1.SwitchMeta{}
@@ -116,7 +116,7 @@ func (r *SwitchMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 				switchMetaPatchCtx, switchMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer switchMetaPatchCancel()
-				err := r.Patch(switchMetaPatchCtx, switchMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(switchMetaPatchCtx, switchMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch switchmeta.Spec.ID} %s", err), "")
 					return u.patchSwitchStatus(switchCR, "Failure", err.Error())
@@ -230,7 +230,7 @@ func (r *SwitchMetaReconciler) createSwitch(switchMeta *k8sv1alpha1.SwitchMeta) 
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, switchMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, switchMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

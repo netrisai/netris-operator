@@ -17,10 +17,10 @@
 
 
 ## Deploying the Operator
-The current version of netris-operator requires Kubernetes >= 1.16.
+The current version of netris-operator requires Kubernetes >= 1.20
 
 ### GitOps
-Kubernetes manifests are located in the `deploy/` folder. To deploy the operator manually using Kubernetes manifests or to integrate it into your GitOps flow please follow [these instructions](./deploy/). 
+Kubernetes manifests are located in the `deploy/` folder. To deploy the operator manually using Kubernetes manifests or to integrate it into your GitOps flow please follow [these instructions](./deploy/).
 
 ### Helm Charts
 

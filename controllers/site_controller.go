@@ -46,7 +46,7 @@ type SiteReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=sites/finalizers,verbs=update
 
 // Reconcile is the main reconciler for the appropriate resource type
-func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *SiteReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	site := &k8sv1alpha1.Site{}
@@ -104,7 +104,7 @@ func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		siteUpdateDefaultAnnotations(site)
 		sitePatchCtx, sitePatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer sitePatchCancel()
-		err := r.Patch(sitePatchCtx, site.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(sitePatchCtx, site.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch Site default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -128,7 +128,7 @@ func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			siteMetaUpdateCtx, siteMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer siteMetaUpdateCancel()
-			err = r.Update(siteMetaUpdateCtx, siteMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(siteMetaUpdateCtx, siteMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{siteMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -141,7 +141,7 @@ func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			sitePatchCtx, sitePatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer sitePatchCancel()
-			err := r.Patch(sitePatchCtx, site.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(sitePatchCtx, site.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch Site Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -160,7 +160,7 @@ func (r *SiteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		siteMetaCreateCtx, siteMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer siteMetaCreateCancel()
-		if err := r.Create(siteMetaCreateCtx, siteMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(siteMetaCreateCtx, siteMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{siteMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -191,7 +191,7 @@ func (r *SiteReconciler) deleteSiteCR(site *k8sv1alpha1.Site) (ctrl.Result, erro
 	site.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, site.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, site.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteSiteCR} %s", err)
 	}
 
@@ -201,7 +201,7 @@ func (r *SiteReconciler) deleteSiteCR(site *k8sv1alpha1.Site) (ctrl.Result, erro
 func (r *SiteReconciler) deleteSiteMetaCR(siteMeta *k8sv1alpha1.SiteMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, siteMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, siteMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteSiteMetaCR} %s", err)
 	}
 

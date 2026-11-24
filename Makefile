@@ -25,11 +25,14 @@ endif
 all: manager
 
 # Run tests
-ENVTEST_ASSETS_DIR = $(shell pwd)/testbin
-test: generate fmt vet manifests
-	mkdir -p $(ENVTEST_ASSETS_DIR)
-	test -f $(ENVTEST_ASSETS_DIR)/setup-envtest.sh || curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
-	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+ENVTEST = $(shell pwd)/bin/setup-envtest
+ENVTEST_K8S_VERSION ?= 1.37.0
+test: generate fmt vet manifests setup-envtest
+	@assets="$$($(ENVTEST) use -p path $(ENVTEST_K8S_VERSION))" && KUBEBUILDER_ASSETS="$$assets" go test ./... -coverprofile cover.out
+
+.PHONY: setup-envtest
+setup-envtest:
+	$(call go-get-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@v0.25.3)
 
 # Build manager binary
 manager: generate fmt vet

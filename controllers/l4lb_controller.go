@@ -53,7 +53,7 @@ type L4LBReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
 // Reconcile is the main reconciler for the appropriate resource type
-func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *L4LBReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	l4lb := &k8sv1alpha1.L4LB{}
@@ -110,7 +110,7 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		l4lbUpdateDefaultAnnotations(l4lb)
 		l4lbPatchCtx, l4lbPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer l4lbPatchCancel()
-		err := r.Patch(l4lbPatchCtx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(l4lbPatchCtx, l4lb.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch L4LB default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -134,7 +134,7 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			l4lbMetaUpdateCtx, l4lbMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer l4lbMetaUpdateCancel()
-			err = r.Update(l4lbMetaUpdateCtx, l4lbMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(l4lbMetaUpdateCtx, l4lbMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{l4lbMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -146,7 +146,7 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			l4lb.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 			l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer l4lbCancel()
-			err := r.Patch(l4lbCtx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(l4lbCtx, l4lb.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch L4LB Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -165,7 +165,7 @@ func (r *L4LBReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		l4lbCreateCtx, l4lbCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer l4lbCreateCancel()
-		if err := r.Create(l4lbCreateCtx, l4lbMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(l4lbCreateCtx, l4lbMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{l4lbMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -196,7 +196,7 @@ func (r *L4LBReconciler) deleteL4LBCR(l4lb *k8sv1alpha1.L4LB) (ctrl.Result, erro
 	defer cancel()
 	l4lb.ObjectMeta.SetFinalizers(nil)
 	l4lb.SetFinalizers(nil)
-	if err := r.Update(ctx, l4lb.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, l4lb.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteL4LBCR} %s", err)
 	}
 
@@ -206,7 +206,7 @@ func (r *L4LBReconciler) deleteL4LBCR(l4lb *k8sv1alpha1.L4LB) (ctrl.Result, erro
 func (r *L4LBReconciler) deleteL4LBMetaCR(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, l4lbMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, l4lbMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteL4LBMetaCR} %s", err)
 	}
 	return ctrl.Result{RequeueAfter: requeueInterval}, nil

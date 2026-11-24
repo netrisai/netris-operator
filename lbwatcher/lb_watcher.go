@@ -41,7 +41,7 @@ import (
 var (
 	requeueInterval = time.Duration(10 * time.Second)
 	logger          logr.Logger
-	debugLogger     logr.InfoLogger
+	debugLogger     logr.Logger
 	cntxt           = context.Background()
 	contextTimeout  = requeueInterval
 )
@@ -205,7 +205,7 @@ func deleteL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB) []error {
 func deleteL4LB(cl client.Client, lb k8sv1alpha1.L4LB) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	return client.IgnoreNotFound(cl.Delete(ctx, lb.DeepCopyObject(), &client.DeleteOptions{}))
+	return client.IgnoreNotFound(cl.Delete(ctx, lb.DeepCopy(), &client.DeleteOptions{}))
 }
 
 func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
@@ -222,7 +222,7 @@ func updateL4LBs(cl client.Client, lbs []k8sv1alpha1.L4LB, ipAuto map[string]str
 func createL4LB(cl client.Client, lb *k8sv1alpha1.L4LB) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	return cl.Create(ctx, lb.DeepCopyObject(), &client.CreateOptions{})
+	return cl.Create(ctx, lb.DeepCopy(), &client.CreateOptions{})
 }
 
 func createL4LBs(cl client.Client, lbs []*k8sv1alpha1.L4LB, ipAuto map[string]string) []error {
@@ -239,7 +239,7 @@ func createL4LBs(cl client.Client, lbs []*k8sv1alpha1.L4LB, ipAuto map[string]st
 func updateL4LB(cl client.Client, lb k8sv1alpha1.L4LB) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	return cl.Update(ctx, lb.DeepCopyObject(), &client.UpdateOptions{})
+	return cl.Update(ctx, lb.DeepCopy(), &client.UpdateOptions{})
 }
 
 func compareLoadBalancers(LBs []k8sv1alpha1.L4LB, serviceLBs []*k8sv1alpha1.L4LB) ([]*k8sv1alpha1.L4LB, []k8sv1alpha1.L4LB, []k8sv1alpha1.L4LB, map[string]map[string]int) {

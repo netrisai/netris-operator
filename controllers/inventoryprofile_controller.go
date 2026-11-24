@@ -55,7 +55,7 @@ type InventoryProfileReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *InventoryProfileReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *InventoryProfileReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	inventoryProfile := &k8sv1alpha1.InventoryProfile{}
@@ -111,7 +111,7 @@ func (r *InventoryProfileReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 		inventoryProfileUpdateDefaultAnnotations(inventoryProfile)
 		inventoryProfilePatchCtx, inventoryProfilePatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer inventoryProfilePatchCancel()
-		err := r.Patch(inventoryProfilePatchCtx, inventoryProfile.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(inventoryProfilePatchCtx, inventoryProfile.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch InventoryProfile default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -135,7 +135,7 @@ func (r *InventoryProfileReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 
 			inventoryProfileMetaUpdateCtx, inventoryProfileMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer inventoryProfileMetaUpdateCancel()
-			err = r.Update(inventoryProfileMetaUpdateCtx, inventoryProfileMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(inventoryProfileMetaUpdateCtx, inventoryProfileMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{inventoryProfileMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -148,7 +148,7 @@ func (r *InventoryProfileReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 
 			inventoryProfilePatchCtx, inventoryProfilePatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer inventoryProfilePatchCancel()
-			err := r.Patch(inventoryProfilePatchCtx, inventoryProfile.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(inventoryProfilePatchCtx, inventoryProfile.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch InventoryProfile Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -166,7 +166,7 @@ func (r *InventoryProfileReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 
 		inventoryProfileMetaCreateCtx, inventoryProfileMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer inventoryProfileMetaCreateCancel()
-		if err := r.Create(inventoryProfileMetaCreateCtx, inventoryProfileMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(inventoryProfileMetaCreateCtx, inventoryProfileMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{inventoryProfileMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -208,7 +208,7 @@ func (r *InventoryProfileReconciler) deleteInventoryProfileCR(inventoryProfile *
 	inventoryProfile.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, inventoryProfile.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, inventoryProfile.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteInventoryProfileCR} %s", err)
 	}
 
@@ -218,7 +218,7 @@ func (r *InventoryProfileReconciler) deleteInventoryProfileCR(inventoryProfile *
 func (r *InventoryProfileReconciler) deleteInventoryProfileMetaCR(inventoryProfileMeta *k8sv1alpha1.InventoryProfileMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, inventoryProfileMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, inventoryProfileMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteInventoryProfileMetaCR} %s", err)
 	}
 

@@ -40,7 +40,7 @@ var (
 type uniReconciler struct {
 	client.Client
 	Logger      logr.Logger
-	DebugLogger logr.InfoLogger
+	DebugLogger logr.Logger
 	Cred        *api.Clientset
 	NStorage    *netrisstorage.Storage
 }
@@ -59,7 +59,7 @@ func (u *uniReconciler) patchVNetStatus(vnet *k8sv1alpha1.VNet, status, message 
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, vnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, vnet.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -80,7 +80,7 @@ func (u *uniReconciler) patchBGPStatus(bgp *k8sv1alpha1.BGP, status, message str
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, bgp.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, bgp.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -101,7 +101,7 @@ func (u *uniReconciler) patchL4LBStatus(l4lb *k8sv1alpha1.L4LB, status, message 
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, l4lb.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -112,7 +112,7 @@ func (u *uniReconciler) patchL4LB(l4lb *k8sv1alpha1.L4LB) (ctrl.Result, error) {
 	u.DebugLogger.Info("Patching")
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Patch(ctx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Patch(ctx, l4lb.DeepCopy(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Patch()}", "error", err)
 	}
@@ -127,7 +127,7 @@ func (u *uniReconciler) patchSiteStatus(l4lb *k8sv1alpha1.Site, status, message 
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, l4lb.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, l4lb.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -142,7 +142,7 @@ func (u *uniReconciler) patchAllocationStatus(allocation *k8sv1alpha1.Allocation
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, allocation.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, allocation.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -157,7 +157,7 @@ func (u *uniReconciler) patchSubnetStatus(subnet *k8sv1alpha1.Subnet, status, me
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, subnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, subnet.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -172,7 +172,7 @@ func (u *uniReconciler) patchSoftgateStatus(softgate *k8sv1alpha1.Softgate, stat
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, softgate.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, softgate.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -187,7 +187,7 @@ func (u *uniReconciler) patchSwitchStatus(switchH *k8sv1alpha1.Switch, status, m
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, switchH.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, switchH.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -202,7 +202,7 @@ func (u *uniReconciler) patchControllerStatus(controller *k8sv1alpha1.Controller
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, controller.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, controller.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -217,7 +217,7 @@ func (u *uniReconciler) patchNatStatus(nat *k8sv1alpha1.Nat, status, message str
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, nat.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, nat.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -266,7 +266,7 @@ func (u *uniReconciler) patchInventoryProfileStatus(inventoryProfile *k8sv1alpha
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, inventoryProfile.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, inventoryProfile.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -282,7 +282,7 @@ func (u *uniReconciler) patchLinkStatus(link *k8sv1alpha1.Link, status, message 
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Status().Patch(ctx, link.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Status().Patch(ctx, link.DeepCopy(), client.Merge)
 	if err != nil {
 		u.DebugLogger.Info("{r.Status().Patch}", "error", err, "action", "status update")
 	}
@@ -293,7 +293,7 @@ func (u *uniReconciler) patchSoftgate(softgate *k8sv1alpha1.Softgate) (ctrl.Resu
 	u.DebugLogger.Info("Patching")
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Patch(ctx, softgate.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Patch(ctx, softgate.DeepCopy(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Patch()}", "error", err)
 	}
@@ -304,7 +304,7 @@ func (u *uniReconciler) patchSwitch(switchH *k8sv1alpha1.Switch) (ctrl.Result, e
 	u.DebugLogger.Info("Patching")
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Patch(ctx, switchH.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Patch(ctx, switchH.DeepCopy(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Patch()}", "error", err)
 	}
@@ -315,7 +315,7 @@ func (u *uniReconciler) patchController(controller *k8sv1alpha1.Controller) (ctr
 	u.DebugLogger.Info("Patching")
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err := u.Patch(ctx, controller.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+	err := u.Patch(ctx, controller.DeepCopy(), client.Merge, &client.PatchOptions{})
 	if err != nil {
 		u.DebugLogger.Info("{r.Patch()}", "error", err)
 	}

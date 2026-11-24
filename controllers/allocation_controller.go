@@ -52,7 +52,7 @@ type AllocationReconciler struct {
 // the Allocation object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
-func (r *AllocationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *AllocationReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	allocation := &k8sv1alpha1.Allocation{}
@@ -108,7 +108,7 @@ func (r *AllocationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		allocationUpdateDefaultAnnotations(allocation)
 		allocationPatchCtx, allocationPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer allocationPatchCancel()
-		err := r.Patch(allocationPatchCtx, allocation.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(allocationPatchCtx, allocation.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch Allocation default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -132,7 +132,7 @@ func (r *AllocationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 			allocationMetaUpdateCtx, allocationMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer allocationMetaUpdateCancel()
-			err = r.Update(allocationMetaUpdateCtx, allocationMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(allocationMetaUpdateCtx, allocationMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{allocationMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -145,7 +145,7 @@ func (r *AllocationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 			allocationPatchCtx, allocationPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer allocationPatchCancel()
-			err := r.Patch(allocationPatchCtx, allocation.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(allocationPatchCtx, allocation.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch Allocation Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -163,7 +163,7 @@ func (r *AllocationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 		allocationMetaCreateCtx, allocationMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer allocationMetaCreateCancel()
-		if err := r.Create(allocationMetaCreateCtx, allocationMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(allocationMetaCreateCtx, allocationMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{allocationMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -205,7 +205,7 @@ func (r *AllocationReconciler) deleteAllocationCR(allocation *k8sv1alpha1.Alloca
 	allocation.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, allocation.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, allocation.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteAllocationCR} %s", err)
 	}
 
@@ -215,7 +215,7 @@ func (r *AllocationReconciler) deleteAllocationCR(allocation *k8sv1alpha1.Alloca
 func (r *AllocationReconciler) deleteAllocationMetaCR(allocationMeta *k8sv1alpha1.AllocationMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, allocationMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, allocationMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteAllocationMetaCR} %s", err)
 	}
 

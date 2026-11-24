@@ -51,7 +51,7 @@ type L4LBMetaReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=l4lbmeta/finalizers,verbs=update
 
 // Reconcile is the main reconciler for the appropriate resource type
-func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *L4LBMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	l4lbMeta := &k8sv1alpha1.L4LBMeta{}
@@ -87,7 +87,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		l4lbMeta.SetFinalizers(nil)
 		l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer l4lbCancel()
-		err := r.Update(l4lbCtx, l4lbMeta.DeepCopyObject(), &client.UpdateOptions{})
+		err := r.Update(l4lbCtx, l4lbMeta.DeepCopy(), &client.UpdateOptions{})
 		if client.IgnoreNotFound(err) != nil {
 			return ctrl.Result{RequeueAfter: requeueInterval}, fmt.Errorf("{DeleteL4LBMetaCR Finalizer} %s", err)
 		}
@@ -99,7 +99,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		l4lbMeta.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 		l4lbCtx, l4lbCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer l4lbCancel()
-		err := r.Patch(l4lbCtx, l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(l4lbCtx, l4lbMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch L4LBMeta Finalizer} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -141,7 +141,7 @@ func (r *L4LBMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				l4lbCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(l4lb.ModifiedDate/1000), 0))
 				l4lbMetaPatchCtx, l4lbMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer l4lbMetaPatchCancel()
-				err := r.Patch(l4lbMetaPatchCtx, l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(l4lbMetaPatchCtx, l4lbMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch l4lbMeta.Spec.ID} %s", err), "")
 					return u.patchL4LBStatus(l4lbCR, "Failure", err.Error())
@@ -266,7 +266,7 @@ func (r *L4LBMetaReconciler) createL4LB(l4lbMeta *k8sv1alpha1.L4LBMeta) (ctrl.Re
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, l4lbMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, l4lbMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}
