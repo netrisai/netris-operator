@@ -52,7 +52,7 @@ type BGPMetaReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=bgpmeta/finalizers,verbs=update
 
 // Reconcile is the main reconciler for the appropriate resource type
-func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *BGPMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	bgpMeta := &k8sv1alpha1.BGPMeta{}
@@ -123,7 +123,7 @@ func (r *BGPMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 				bgpMetaPatchCtx, bgpMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer bgpMetaPatchCancel()
-				err := r.Patch(bgpMetaPatchCtx, bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(bgpMetaPatchCtx, bgpMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch bgpmeta.Spec.ID} %s", err), "")
 					return u.patchBGPStatus(bgpCR, "Failure", err.Error())
@@ -237,7 +237,7 @@ func (r *BGPMetaReconciler) createBGP(bgpMeta *k8sv1alpha1.BGPMeta) (ctrl.Result
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, bgpMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, bgpMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

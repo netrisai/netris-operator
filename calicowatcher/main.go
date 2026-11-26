@@ -49,7 +49,7 @@ import (
 var (
 	requeueInterval = time.Duration(10 * time.Second)
 	logger          logr.Logger
-	debugLogger     logr.InfoLogger
+	debugLogger     logr.Logger
 	cntxt           = context.Background()
 	contextTimeout  = requeueInterval
 )
@@ -502,7 +502,7 @@ func (w *Watcher) createBGPs(BGPs []*v1alpha1.BGP) []error {
 func (w *Watcher) createBGP(bgp *v1alpha1.BGP) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	return w.client.Create(ctx, bgp.DeepCopyObject(), &client.CreateOptions{})
+	return w.client.Create(ctx, bgp.DeepCopy(), &client.CreateOptions{})
 }
 
 func (w *Watcher) updateBGPs(BGPs []*v1alpha1.BGP) []error {
@@ -518,7 +518,7 @@ func (w *Watcher) updateBGPs(BGPs []*v1alpha1.BGP) []error {
 func (w *Watcher) updateBGP(bgp *v1alpha1.BGP) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	return w.client.Update(ctx, bgp.DeepCopyObject(), &client.UpdateOptions{})
+	return w.client.Update(ctx, bgp.DeepCopy(), &client.UpdateOptions{})
 }
 
 func (w *Watcher) deleteBGPs(BGPs []*v1alpha1.BGP) []error {
@@ -534,7 +534,7 @@ func (w *Watcher) deleteBGPs(BGPs []*v1alpha1.BGP) []error {
 func (w *Watcher) deleteBGP(bgp *v1alpha1.BGP) error {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	return w.client.Delete(ctx, bgp.DeepCopyObject(), &client.DeleteAllOfOptions{})
+	return w.client.Delete(ctx, bgp.DeepCopy(), &client.DeleteOptions{})
 }
 
 func (w *Watcher) compareBGPs() ([]*v1alpha1.BGP, []*v1alpha1.BGP, []*v1alpha1.BGP) {

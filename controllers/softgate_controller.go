@@ -55,7 +55,7 @@ type SoftgateReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *SoftgateReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *SoftgateReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	softgate := &k8sv1alpha1.Softgate{}
@@ -111,7 +111,7 @@ func (r *SoftgateReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		softgateUpdateDefaultAnnotations(softgate)
 		softgatePatchCtx, softgatePatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer softgatePatchCancel()
-		err := r.Patch(softgatePatchCtx, softgate.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(softgatePatchCtx, softgate.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch Softgate default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -135,7 +135,7 @@ func (r *SoftgateReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			softgateMetaUpdateCtx, softgateMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer softgateMetaUpdateCancel()
-			err = r.Update(softgateMetaUpdateCtx, softgateMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(softgateMetaUpdateCtx, softgateMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{softgateMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -148,7 +148,7 @@ func (r *SoftgateReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			softgatePatchCtx, softgatePatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer softgatePatchCancel()
-			err := r.Patch(softgatePatchCtx, softgate.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(softgatePatchCtx, softgate.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch Softgate Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -166,7 +166,7 @@ func (r *SoftgateReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		softgateMetaCreateCtx, softgateMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer softgateMetaCreateCancel()
-		if err := r.Create(softgateMetaCreateCtx, softgateMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(softgateMetaCreateCtx, softgateMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{softgateMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -208,7 +208,7 @@ func (r *SoftgateReconciler) deleteSoftgateCR(softgate *k8sv1alpha1.Softgate) (c
 	softgate.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, softgate.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, softgate.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteSoftgateCR} %s", err)
 	}
 
@@ -218,7 +218,7 @@ func (r *SoftgateReconciler) deleteSoftgateCR(softgate *k8sv1alpha1.Softgate) (c
 func (r *SoftgateReconciler) deleteSoftgateMetaCR(softgateMeta *k8sv1alpha1.SoftgateMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, softgateMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, softgateMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteSoftgateMetaCR} %s", err)
 	}
 

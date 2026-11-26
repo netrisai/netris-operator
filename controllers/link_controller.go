@@ -56,7 +56,7 @@ type LinkReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *LinkReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *LinkReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	link := &k8sv1alpha1.Link{}
@@ -112,7 +112,7 @@ func (r *LinkReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		linkUpdateDefaultAnnotations(link)
 		linkPatchCtx, linkPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer linkPatchCancel()
-		err := r.Patch(linkPatchCtx, link.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(linkPatchCtx, link.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch Link default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -136,7 +136,7 @@ func (r *LinkReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			linkMetaUpdateCtx, linkMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer linkMetaUpdateCancel()
-			err = r.Update(linkMetaUpdateCtx, linkMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(linkMetaUpdateCtx, linkMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{linkMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -149,7 +149,7 @@ func (r *LinkReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			linkPatchCtx, linkPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer linkPatchCancel()
-			err := r.Patch(linkPatchCtx, link.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(linkPatchCtx, link.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch Link Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -167,7 +167,7 @@ func (r *LinkReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		linkMetaCreateCtx, linkMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer linkMetaCreateCancel()
-		if err := r.Create(linkMetaCreateCtx, linkMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(linkMetaCreateCtx, linkMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{linkMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -213,7 +213,7 @@ func (r *LinkReconciler) deleteLinkCR(link *k8sv1alpha1.Link) (ctrl.Result, erro
 	link.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, link.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, link.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteLinkCR} %s", err)
 	}
 
@@ -223,7 +223,7 @@ func (r *LinkReconciler) deleteLinkCR(link *k8sv1alpha1.Link) (ctrl.Result, erro
 func (r *LinkReconciler) deleteLinkMetaCR(linkMeta *k8sv1alpha1.LinkMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, linkMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, linkMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteLinkMetaCR} %s", err)
 	}
 

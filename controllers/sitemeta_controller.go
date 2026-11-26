@@ -49,7 +49,7 @@ type SiteMetaReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=sitemeta/finalizers,verbs=update
 
 // Reconcile is the main reconciler for the appropriate resource type
-func (r *SiteMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *SiteMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	siteMeta := &k8sv1alpha1.SiteMeta{}
@@ -85,7 +85,7 @@ func (r *SiteMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		siteMeta.SetFinalizers(nil)
 		siteCtx, siteCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer siteCancel()
-		err := r.Update(siteCtx, siteMeta.DeepCopyObject(), &client.UpdateOptions{})
+		err := r.Update(siteCtx, siteMeta.DeepCopy(), &client.UpdateOptions{})
 		if client.IgnoreNotFound(err) != nil {
 			return ctrl.Result{RequeueAfter: requeueInterval}, fmt.Errorf("{DeleteSiteMetaCR Finalizer} %s", err)
 		}
@@ -97,7 +97,7 @@ func (r *SiteMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		siteMeta.SetFinalizers([]string{"resource.k8s.netris.ai/delete"})
 		siteCtx, siteCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer siteCancel()
-		err := r.Patch(siteCtx, siteMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(siteCtx, siteMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch SiteMeta Finalizer} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -141,7 +141,7 @@ func (r *SiteMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 				siteMetaPatchCtx, siteMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer siteMetaPatchCancel()
-				err := r.Patch(siteMetaPatchCtx, siteMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(siteMetaPatchCtx, siteMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch sitemeta.Spec.ID} %s", err), "")
 					return u.patchSiteStatus(siteCR, "Failure", err.Error())
@@ -240,7 +240,7 @@ func (r *SiteMetaReconciler) createSite(siteMeta *k8sv1alpha1.SiteMeta) (ctrl.Re
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, siteMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, siteMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

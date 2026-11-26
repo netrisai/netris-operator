@@ -50,7 +50,7 @@ type VNetMetaReconciler struct {
 // +kubebuilder:rbac:groups=k8s.netris.ai,resources=vnetmeta/finalizers,verbs=update
 
 // Reconcile .
-func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *VNetMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	vnetMeta := &k8sv1alpha1.VNetMeta{}
@@ -105,7 +105,7 @@ func (r *VNetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				vnetCR.Status.ModifiedDate = metav1.NewTime(time.Unix(int64(vnet.ModifiedDate/1000), 0))
 				vnetMetaPatchCtx, vnetMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer vnetMetaPatchCancel()
-				err := r.Patch(vnetMetaPatchCtx, vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(vnetMetaPatchCtx, vnetMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch vnetmeta.Spec.ID} %s", err), "")
 					return u.patchVNetStatus(vnetCR, "Failure", err.Error())
@@ -210,7 +210,7 @@ func (r *VNetMetaReconciler) createVNet(vnetMeta *k8sv1alpha1.VNetMeta) (ctrl.Re
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, vnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, vnetMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

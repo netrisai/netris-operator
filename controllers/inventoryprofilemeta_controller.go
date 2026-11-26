@@ -57,7 +57,7 @@ type InventoryProfileMetaReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *InventoryProfileMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *InventoryProfileMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	inventoryProfileMeta := &k8sv1alpha1.InventoryProfileMeta{}
@@ -112,7 +112,7 @@ func (r *InventoryProfileMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Resul
 
 				inventoryProfileMetaPatchCtx, inventoryProfileMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer inventoryProfileMetaPatchCancel()
-				err := r.Patch(inventoryProfileMetaPatchCtx, inventoryProfileMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(inventoryProfileMetaPatchCtx, inventoryProfileMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch inventoryProfilemeta.Spec.ID} %s", err), "")
 					return u.patchInventoryProfileStatus(inventoryProfileCR, "Failure", err.Error())
@@ -211,7 +211,7 @@ func (r *InventoryProfileMetaReconciler) createInventoryProfile(inventoryProfile
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, inventoryProfileMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, inventoryProfileMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

@@ -57,7 +57,7 @@ type ControllerMetaReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *ControllerMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *ControllerMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	controllerMeta := &k8sv1alpha1.ControllerMeta{}
@@ -113,7 +113,7 @@ func (r *ControllerMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 
 				controllerMetaPatchCtx, controllerMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer controllerMetaPatchCancel()
-				err := r.Patch(controllerMetaPatchCtx, controllerMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(controllerMetaPatchCtx, controllerMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch controllermeta.Spec.ID} %s", err), "")
 					return u.patchControllerStatus(controllerCR, "Failure", err.Error())
@@ -218,7 +218,7 @@ func (r *ControllerMetaReconciler) createController(controllerMeta *k8sv1alpha1.
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, controllerMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, controllerMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

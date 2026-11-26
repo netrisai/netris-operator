@@ -52,7 +52,7 @@ type SubnetReconciler struct {
 // the Subnet object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
-func (r *SubnetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *SubnetReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	subnet := &k8sv1alpha1.Subnet{}
@@ -108,7 +108,7 @@ func (r *SubnetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		subnetUpdateDefaultAnnotations(subnet)
 		subnetPatchCtx, subnetPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer subnetPatchCancel()
-		err := r.Patch(subnetPatchCtx, subnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(subnetPatchCtx, subnet.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch Subnet default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -132,7 +132,7 @@ func (r *SubnetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			subnetMetaUpdateCtx, subnetMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer subnetMetaUpdateCancel()
-			err = r.Update(subnetMetaUpdateCtx, subnetMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(subnetMetaUpdateCtx, subnetMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{subnetMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -145,7 +145,7 @@ func (r *SubnetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			subnetPatchCtx, subnetPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer subnetPatchCancel()
-			err := r.Patch(subnetPatchCtx, subnet.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(subnetPatchCtx, subnet.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch Subnet Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -163,7 +163,7 @@ func (r *SubnetReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		subnetMetaCreateCtx, subnetMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer subnetMetaCreateCancel()
-		if err := r.Create(subnetMetaCreateCtx, subnetMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(subnetMetaCreateCtx, subnetMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{subnetMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -205,7 +205,7 @@ func (r *SubnetReconciler) deleteSubnetCR(subnet *k8sv1alpha1.Subnet) (ctrl.Resu
 	subnet.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, subnet.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, subnet.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteSubnetCR} %s", err)
 	}
 
@@ -215,7 +215,7 @@ func (r *SubnetReconciler) deleteSubnetCR(subnet *k8sv1alpha1.Subnet) (ctrl.Resu
 func (r *SubnetReconciler) deleteSubnetMetaCR(subnetMeta *k8sv1alpha1.SubnetMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, subnetMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, subnetMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteSubnetMetaCR} %s", err)
 	}
 

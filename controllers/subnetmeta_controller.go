@@ -57,7 +57,7 @@ type SubnetMetaReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *SubnetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *SubnetMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	subnetMeta := &k8sv1alpha1.SubnetMeta{}
@@ -112,7 +112,7 @@ func (r *SubnetMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 				subnetMetaPatchCtx, subnetMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer subnetMetaPatchCancel()
-				err := r.Patch(subnetMetaPatchCtx, subnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(subnetMetaPatchCtx, subnetMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch subnetmeta.Spec.ID} %s", err), "")
 					return u.patchSubnetStatus(subnetCR, "Failure", err.Error())
@@ -209,7 +209,7 @@ func (r *SubnetMetaReconciler) createSubnet(subnetMeta *k8sv1alpha1.SubnetMeta) 
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, subnetMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, subnetMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

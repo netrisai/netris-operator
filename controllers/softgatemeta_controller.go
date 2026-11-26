@@ -58,7 +58,7 @@ type SoftgateMetaReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *SoftgateMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *SoftgateMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	softgateMeta := &k8sv1alpha1.SoftgateMeta{}
@@ -115,7 +115,7 @@ func (r *SoftgateMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 
 				softgateMetaPatchCtx, softgateMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer softgateMetaPatchCancel()
-				err := r.Patch(softgateMetaPatchCtx, softgateMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(softgateMetaPatchCtx, softgateMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch softgatemeta.Spec.ID} %s", err), "")
 					return u.patchSoftgateStatus(softgateCR, "Failure", err.Error())
@@ -226,7 +226,7 @@ func (r *SoftgateMetaReconciler) createSoftgate(softgateMeta *k8sv1alpha1.Softga
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, softgateMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, softgateMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

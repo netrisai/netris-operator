@@ -59,7 +59,7 @@ type LinkMetaReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *LinkMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *LinkMetaReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	debugLogger := r.Log.WithValues("name", req.NamespacedName).V(int(zapcore.WarnLevel))
 
 	linkMeta := &k8sv1alpha1.LinkMeta{}
@@ -113,7 +113,7 @@ func (r *LinkMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				linkMeta.Spec.ID = fmt.Sprintf("%d-%d", link.Local.ID, link.Remote.ID)
 				linkMetaPatchCtx, linkMetaPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 				defer linkMetaPatchCancel()
-				err := r.Patch(linkMetaPatchCtx, linkMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+				err := r.Patch(linkMetaPatchCtx, linkMeta.DeepCopy(), client.Merge, &client.PatchOptions{})
 				if err != nil {
 					logger.Error(fmt.Errorf("{patch linkmeta.Spec.ID} %s", err), "")
 					return u.patchLinkStatus(linkCR, "Failure", err.Error())
@@ -175,7 +175,7 @@ func (r *LinkMetaReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				linkMeta.Spec.ID = ""
 				lCtx, cancel := context.WithTimeout(cntxt, contextTimeout)
 				defer cancel()
-				err = r.Patch(lCtx, linkMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+				err = r.Patch(lCtx, linkMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 				if err != nil {
 					logger.Error(fmt.Errorf("{patchLinkID} %s", err), "")
 					return u.patchLinkStatus(linkCR, "Failure", err.Error())
@@ -224,7 +224,7 @@ func (r *LinkMetaReconciler) createLink(linkMeta *k8sv1alpha1.LinkMeta) (ctrl.Re
 
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	err = r.Patch(ctx, linkMeta.DeepCopyObject(), client.Merge, &client.PatchOptions{}) // requeue
+	err = r.Patch(ctx, linkMeta.DeepCopy(), client.Merge, &client.PatchOptions{}) // requeue
 	if err != nil {
 		return ctrl.Result{}, err, err
 	}

@@ -55,7 +55,7 @@ type NatReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *NatReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *NatReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	nat := &k8sv1alpha1.Nat{}
@@ -111,7 +111,7 @@ func (r *NatReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		natUpdateDefaultAnnotations(nat)
 		natPatchCtx, natPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer natPatchCancel()
-		err := r.Patch(natPatchCtx, nat.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(natPatchCtx, nat.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch Nat default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -135,7 +135,7 @@ func (r *NatReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			natMetaUpdateCtx, natMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer natMetaUpdateCancel()
-			err = r.Update(natMetaUpdateCtx, natMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(natMetaUpdateCtx, natMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{natMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -148,7 +148,7 @@ func (r *NatReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			natPatchCtx, natPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer natPatchCancel()
-			err := r.Patch(natPatchCtx, nat.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(natPatchCtx, nat.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch Nat Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -166,7 +166,7 @@ func (r *NatReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		natMetaCreateCtx, natMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer natMetaCreateCancel()
-		if err := r.Create(natMetaCreateCtx, natMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(natMetaCreateCtx, natMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{natMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -208,7 +208,7 @@ func (r *NatReconciler) deleteNatCR(nat *k8sv1alpha1.Nat) (ctrl.Result, error) {
 	nat.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, nat.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, nat.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteNatCR} %s", err)
 	}
 
@@ -218,7 +218,7 @@ func (r *NatReconciler) deleteNatCR(nat *k8sv1alpha1.Nat) (ctrl.Result, error) {
 func (r *NatReconciler) deleteNatMetaCR(natMeta *k8sv1alpha1.NatMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, natMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, natMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteNatMetaCR} %s", err)
 	}
 

@@ -55,7 +55,7 @@ type SwitchReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *SwitchReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *SwitchReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	switchH := &k8sv1alpha1.Switch{}
@@ -111,7 +111,7 @@ func (r *SwitchReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		switchUpdateDefaultAnnotations(switchH)
 		switchPatchCtx, switchPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer switchPatchCancel()
-		err := r.Patch(switchPatchCtx, switchH.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(switchPatchCtx, switchH.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch Switch default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -135,7 +135,7 @@ func (r *SwitchReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			switchMetaUpdateCtx, switchMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer switchMetaUpdateCancel()
-			err = r.Update(switchMetaUpdateCtx, switchMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(switchMetaUpdateCtx, switchMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{switchMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -148,7 +148,7 @@ func (r *SwitchReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 			switchPatchCtx, switchPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer switchPatchCancel()
-			err := r.Patch(switchPatchCtx, switchH.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(switchPatchCtx, switchH.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch Switch Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -166,7 +166,7 @@ func (r *SwitchReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		switchMetaCreateCtx, switchMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer switchMetaCreateCancel()
-		if err := r.Create(switchMetaCreateCtx, switchMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(switchMetaCreateCtx, switchMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{switchMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -208,7 +208,7 @@ func (r *SwitchReconciler) deleteSwitchCR(switchH *k8sv1alpha1.Switch) (ctrl.Res
 	switchH.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, switchH.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, switchH.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteSwitchCR} %s", err)
 	}
 
@@ -218,7 +218,7 @@ func (r *SwitchReconciler) deleteSwitchCR(switchH *k8sv1alpha1.Switch) (ctrl.Res
 func (r *SwitchReconciler) deleteSwitchMetaCR(switchMeta *k8sv1alpha1.SwitchMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, switchMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, switchMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteSwitchMetaCR} %s", err)
 	}
 

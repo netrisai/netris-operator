@@ -55,7 +55,7 @@ type ControllerReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *ControllerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *ControllerReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("name", req.NamespacedName)
 	debugLogger := logger.V(int(zapcore.WarnLevel))
 	controller := &k8sv1alpha1.Controller{}
@@ -111,7 +111,7 @@ func (r *ControllerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		controllerUpdateDefaultAnnotations(controller)
 		controllerPatchCtx, controllerPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer controllerPatchCancel()
-		err := r.Patch(controllerPatchCtx, controller.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+		err := r.Patch(controllerPatchCtx, controller.DeepCopy(), client.Merge, &client.PatchOptions{})
 		if err != nil {
 			logger.Error(fmt.Errorf("{Patch Controller default annotations} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -135,7 +135,7 @@ func (r *ControllerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 			controllerMetaUpdateCtx, controllerMetaUpdateCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer controllerMetaUpdateCancel()
-			err = r.Update(controllerMetaUpdateCtx, controllerMeta.DeepCopyObject(), &client.UpdateOptions{})
+			err = r.Update(controllerMetaUpdateCtx, controllerMeta.DeepCopy(), &client.UpdateOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{controllerMeta Update} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -148,7 +148,7 @@ func (r *ControllerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 			controllerPatchCtx, controllerPatchCancel := context.WithTimeout(cntxt, contextTimeout)
 			defer controllerPatchCancel()
-			err := r.Patch(controllerPatchCtx, controller.DeepCopyObject(), client.Merge, &client.PatchOptions{})
+			err := r.Patch(controllerPatchCtx, controller.DeepCopy(), client.Merge, &client.PatchOptions{})
 			if err != nil {
 				logger.Error(fmt.Errorf("{Patch Controller Finalizer} %s", err), "")
 				return ctrl.Result{RequeueAfter: requeueInterval}, nil
@@ -166,7 +166,7 @@ func (r *ControllerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 		controllerMetaCreateCtx, controllerMetaCreateCancel := context.WithTimeout(cntxt, contextTimeout)
 		defer controllerMetaCreateCancel()
-		if err := r.Create(controllerMetaCreateCtx, controllerMeta.DeepCopyObject(), &client.CreateOptions{}); err != nil {
+		if err := r.Create(controllerMetaCreateCtx, controllerMeta.DeepCopy(), &client.CreateOptions{}); err != nil {
 			logger.Error(fmt.Errorf("{controllerMeta Create} %s", err), "")
 			return ctrl.Result{RequeueAfter: requeueInterval}, nil
 		}
@@ -208,7 +208,7 @@ func (r *ControllerReconciler) deleteControllerCR(controller *k8sv1alpha1.Contro
 	controller.SetFinalizers(nil)
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Update(ctx, controller.DeepCopyObject(), &client.UpdateOptions{}); err != nil {
+	if err := r.Update(ctx, controller.DeepCopy(), &client.UpdateOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteControllerCR} %s", err)
 	}
 
@@ -218,7 +218,7 @@ func (r *ControllerReconciler) deleteControllerCR(controller *k8sv1alpha1.Contro
 func (r *ControllerReconciler) deleteControllerMetaCR(controllerMeta *k8sv1alpha1.ControllerMeta) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(cntxt, contextTimeout)
 	defer cancel()
-	if err := r.Delete(ctx, controllerMeta.DeepCopyObject(), &client.DeleteOptions{}); err != nil {
+	if err := r.Delete(ctx, controllerMeta.DeepCopy(), &client.DeleteOptions{}); err != nil {
 		return ctrl.Result{}, fmt.Errorf("{deleteControllerMetaCR} %s", err)
 	}
 
